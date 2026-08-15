@@ -1,0 +1,32 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import type { Plan } from "@/lib/types";
+import { NewMemberForm } from "./NewMemberForm";
+
+export default async function NuevoSocioPage() {
+  const supabase = await createClient();
+
+  const { data: plans } = await supabase
+    .from("plans")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order");
+
+  return (
+    <div className="space-y-4 max-w-lg">
+      <Link
+        href="/panel/socios"
+        className="inline-flex items-center gap-1.5 text-tiny text-txt-soft hover:text-txt transition-colors"
+      >
+        <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+          <path d="M15 19l-7-7 7-7" />
+        </svg>
+        Socios
+      </Link>
+
+      <h1 className="h1">Nuevo socio</h1>
+
+      <NewMemberForm plans={(plans ?? []) as Plan[]} />
+    </div>
+  );
+}

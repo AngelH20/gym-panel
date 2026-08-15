@@ -1,0 +1,245 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Tokens de color, en "R G B" (sin rgb()) para que Tailwind pueda aplicar
+   * opacidad con /NN sobre cualquiera de ellos. El claro es el default; el
+   * oscuro pisa los mismos nombres, así que ninguna clase de componente
+   * necesita saber en qué tema está.
+   *
+   * "ink" (cromo: barra superior, botones oscuros) es el azul marino del
+   * escudo de CAREF y NO cambia entre temas — es la marca, no el fondo.
+   */
+  :root {
+    --color-ink: 21 32 54;
+    --color-ink-raised: 30 45 74;
+    --color-ink-line: 48 64 97;
+
+    --color-txt: 23 27 31;
+    --color-txt-soft: 86 92 92;
+    --color-txt-faint: 138 144 144;
+    --color-txt-onDark: 237 239 236;
+    --color-txt-onDarkSoft: 172 180 191;
+
+    --color-surface: 251 251 250;
+    --color-surface-sunk: 241 242 240;
+    --color-surface-hover: 245 246 244;
+
+    --color-line: 223 225 221;
+    --color-line-strong: 200 204 199;
+
+    --color-plate-red: 162 46 51; /* #A22E33 — rojo de los discos del escudo */
+    --color-plate-blue: 42 109 177; /* #2A6DB1 — azul del escudo */
+    --color-plate-amber: 224 176 36;
+    --color-plate-amber-ink: 138 106 15;
+    --color-plate-green: 46 125 79;
+
+    /* Par categórico para los gráficos de caja (efectivo/transferencia).
+       No son los mismos tokens que plate-blue/plate-green: esos dos se usan
+       sueltos en toda la app (acción primaria, "al día") y no necesitan
+       pasar el chequeo de par adyacente para CVD. Este par sí, porque
+       conviven en la misma barra apilada — validado con
+       scripts/validate_palette.js de la skill de dataviz (los dos modos). */
+    --color-chart-cash: 42 109 177; /* #2A6DB1 */
+    --color-chart-transfer: 46 125 79; /* #2E7D4F */
+  }
+
+  /* Sigue al sistema operativo salvo que el usuario haya tocado el switch
+     (ThemeToggle, que graba data-theme y gana siempre). */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-txt: 230 232 229;
+      --color-txt-soft: 163 169 167;
+      --color-txt-faint: 118 125 123;
+
+      --color-surface: 27 32 37;
+      --color-surface-sunk: 16 19 22;
+      --color-surface-hover: 34 40 45;
+
+      --color-line: 47 54 59;
+      --color-line-strong: 68 76 82;
+
+      --color-plate-red: 224 100 100;
+      --color-plate-blue: 99 156 224;
+      --color-plate-amber: 232 188 64;
+      --color-plate-amber-ink: 245 224 168;
+      --color-plate-green: 79 176 120;
+
+      /* Reestepeadas para el chequeo de banda de luminancia en oscuro
+         (L 0.48–0.67): plate-blue/plate-green quedan un toque más claras
+         de lo que ese par adyacente tolera. */
+      --color-chart-cash: 74 133 201; /* #4A85C9 */
+      --color-chart-transfer: 61 151 100; /* #3D9764 */
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --color-txt: 230 232 229;
+    --color-txt-soft: 163 169 167;
+    --color-txt-faint: 118 125 123;
+
+    --color-surface: 27 32 37;
+    --color-surface-sunk: 16 19 22;
+    --color-surface-hover: 34 40 45;
+
+    --color-line: 47 54 59;
+    --color-line-strong: 68 76 82;
+
+    --color-plate-red: 224 100 100;
+    --color-plate-blue: 99 156 224;
+    --color-plate-amber: 232 188 64;
+    --color-plate-amber-ink: 245 224 168;
+    --color-plate-green: 79 176 120;
+
+    --color-chart-cash: 74 133 201; /* #4A85C9 */
+    --color-chart-transfer: 61 151 100; /* #3D9764 */
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) {
+      color-scheme: dark;
+    }
+  }
+
+  body {
+    @apply bg-surface-sunk text-txt font-sans text-base antialiased;
+    transition: background-color 150ms, color 150ms;
+  }
+
+  /* Números tabulares en todo: las columnas no deben bailar al cambiar. */
+  .font-mono,
+  [data-num] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Foco visible siempre. El panel se opera rápido, a veces con teclado. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--color-plate-blue));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgb(var(--color-plate-amber));
+    color: rgb(var(--color-ink));
+  }
+}
+
+@layer components {
+  /* --- Tipografía de apoyo ------------------------------------------------ */
+
+  /* Etiqueta de sección. Las mayúsculas quedan SOLO acá, donde funcionan. */
+  .eyebrow {
+    @apply font-mono text-micro uppercase text-txt-faint;
+  }
+
+  .h1 {
+    @apply font-display text-display font-bold text-txt;
+  }
+
+  .h2 {
+    @apply font-display text-title font-semibold text-txt;
+  }
+
+  .h3 {
+    @apply font-display text-lg font-semibold text-txt;
+  }
+
+  /* --- Superficies -------------------------------------------------------- */
+
+  .card {
+    @apply bg-surface border border-line rounded-card shadow-card;
+  }
+
+  .card-link {
+    @apply card block transition-shadow hover:shadow-lift hover:border-line-strong;
+  }
+
+  /* --- Controles ---------------------------------------------------------- */
+
+  .field {
+    @apply w-full bg-surface-sunk border border-line rounded-control
+           px-3.5 py-2.5 text-base text-txt
+           placeholder:text-txt-faint
+           transition-colors
+           focus:bg-surface focus:border-plate-blue focus:outline-none
+           focus:ring-2 focus:ring-plate-blue/20;
+  }
+
+  select.field {
+    @apply pr-9 appearance-none bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238A9090' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2
+           rounded-control px-4 py-2.5
+           font-sans text-tiny font-semibold
+           transition-all
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-plate-blue bg-gradient-to-b from-white/15 to-white/0
+           text-white shadow-card
+           hover:brightness-95 active:translate-y-px active:brightness-90;
+  }
+
+  .btn-dark {
+    @apply btn bg-ink bg-gradient-to-b from-white/10 to-white/0
+           text-txt-onDark shadow-card
+           hover:bg-ink-raised active:translate-y-px;
+  }
+
+  .btn-ghost {
+    @apply btn bg-surface border border-line text-txt-soft
+           hover:border-line-strong hover:text-txt hover:bg-surface-hover;
+  }
+
+  .btn-danger {
+    @apply btn bg-surface border border-plate-red/40 text-plate-red
+           hover:bg-plate-red hover:text-white hover:border-plate-red;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-micro tracking-normal normal-case;
+  }
+
+  /* --- Insignias ---------------------------------------------------------- */
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full
+           border px-2.5 py-0.5 text-micro font-medium tracking-normal;
+  }
+
+  /* --- Listas de datos ---------------------------------------------------- */
+
+  .datalist {
+    @apply divide-y divide-line;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
