@@ -8,7 +8,7 @@ export function LoginForm({ volver }: { volver: string }) {
   const [state, action] = useActionState(signIn, null);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="space-y-5">
       <input type="hidden" name="volver" value={volver} />
 
       <Field label="Email">
