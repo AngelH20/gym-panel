@@ -94,7 +94,8 @@ export type CheckInResult = {
     | "NO_MEMBERSHIP"
     | "EXPIRED"
     | "NO_USES_LEFT"
-    | "COOLDOWN";
+    | "COOLDOWN"
+    | "RATE_LIMITED";
   message: string;
   member_name?: string;
   photo_url?: string | null;

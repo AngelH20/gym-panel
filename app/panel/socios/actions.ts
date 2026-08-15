@@ -49,7 +49,8 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
     if (error.code === "23505" || error.message.includes("duplicate")) {
       return { error: "Ya hay un socio con ese email." };
     }
-    return { error: `No se pudo crear el socio: ${error.message}` };
+    console.error("[socios] Error al crear socio:", error);
+    return { error: "No se pudo crear el socio. Probá de nuevo en un momento." };
   }
 
   // Si eligió un plan en el alta, le activamos el pase y registramos el cobro.
@@ -98,7 +99,8 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
     if (error.code === "23505" && error.message.includes("dni")) {
       return { error: "Ya hay otro socio con ese DNI." };
     }
-    return { error: `No se pudo guardar: ${error.message}` };
+    console.error("[socios] Error al actualizar socio:", error);
+    return { error: "No se pudo guardar. Probá de nuevo en un momento." };
   }
 
   revalidatePath("/panel/socios");

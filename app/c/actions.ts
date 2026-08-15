@@ -4,6 +4,16 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { CheckInResult } from "@/lib/types";
 
+const IP_FORMAT = /^[0-9a-fA-F:.]+$/;
+
+/** IP real del que escanea, para el rate limit de perform_check_in_by_dni().
+ *  Vercel siempre manda x-forwarded-for; el primer valor es el cliente. */
+function clientIp(headerList: Headers): string | null {
+  const forwarded = headerList.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const candidate = forwarded || headerList.get("x-real-ip");
+  return candidate && IP_FORMAT.test(candidate) ? candidate : null;
+}
+
 /**
  * Invoca perform_check_in_by_dni() con el service_role: esta ruta es pública
  * y anónima, no hay sesión de admin. El QR fijo del mostrador rota cada 40s
@@ -24,6 +34,7 @@ export async function checkIn(
     p_source: "qr",
     p_user_agent: headerList.get("user-agent"),
     p_qr_token: qrToken || null,
+    p_client_ip: clientIp(headerList),
   });
 
   if (error) {
