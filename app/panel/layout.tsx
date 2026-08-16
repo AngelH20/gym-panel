@@ -3,6 +3,7 @@ import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { PanelNav } from "./PanelNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { IconSettings } from "@/components/icons";
 import { DateRefresher } from "./DateRefresher";
 
 export default async function PanelLayout({
@@ -22,8 +23,8 @@ export default async function PanelLayout({
   const logo = (
     <Link href="/panel" className="flex items-center gap-2.5 min-w-0">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-caref.svg" alt="" className="size-7 shrink-0 object-contain" />
-      <span className="font-display text-lg font-semibold truncate">{gymName}</span>
+      <img src="/logo-caref.svg" alt="" className="size-11 shrink-0 object-contain" />
+      <span className="font-display text-xl font-semibold truncate">{gymName}</span>
     </Link>
   );
 
@@ -47,13 +48,24 @@ export default async function PanelLayout({
         className="hidden md:flex md:flex-col md:w-60 md:shrink-0 md:sticky md:top-0 md:h-dvh
                    bg-ink text-txt-onDark border-r border-ink-raised/50"
       >
-        <div className="h-14 shrink-0 flex items-center px-4 border-b border-ink-raised/50">
+        <div className="h-20 shrink-0 flex items-center px-4 border-b border-ink-raised/50">
           {logo}
         </div>
 
         <PanelNav variant="sidebar" />
 
-        <div className="shrink-0 p-4 flex items-center justify-between gap-3 border-t border-ink-raised/50">
+        <div className="shrink-0 px-3 pt-3 border-t border-ink-raised/50">
+          <Link
+            href="/panel/settings"
+            className="flex items-center gap-3 rounded-control px-3.5 py-2.5 text-base font-medium
+                       text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised/60 transition-colors"
+          >
+            <IconSettings className="size-[18px] shrink-0" />
+            Settings
+          </Link>
+        </div>
+
+        <div className="shrink-0 p-4 flex items-center justify-between gap-3">
           <ThemeToggle />
           {salir}
         </div>
@@ -66,9 +78,18 @@ export default async function PanelLayout({
           pulgar sin competir con la barra de estado del teléfono.
         */}
         <header className="md:hidden bg-ink text-txt-onDark sticky top-0 z-30 shadow-chrome">
-          <div className="px-4 h-14 flex items-center justify-between gap-3">
+          <div className="px-4 h-20 flex items-center justify-between gap-3">
             {logo}
             <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/panel/settings"
+                aria-label="Personalización"
+                title="Personalización"
+                className="flex size-8 items-center justify-center rounded-control
+                           text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised transition-colors"
+              >
+                <IconSettings className="size-4.5" />
+              </Link>
               <ThemeToggle />
               {salir}
             </div>

@@ -101,6 +101,8 @@
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     color-scheme: light;
+    /* Escala global de fuente: la toca el panel de Personalización. */
+    font-size: var(--app-font-scale, 100%);
   }
 
   html[data-theme="dark"] {

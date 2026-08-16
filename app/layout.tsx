@@ -60,6 +60,17 @@ const themeScript = `
       document.documentElement.setAttribute('data-theme', t);
     }
   } catch (e) {}
+  try {
+    var raw = localStorage.getItem('caref:custom-theme');
+    if (raw) {
+      var custom = JSON.parse(raw);
+      var root = document.documentElement.style;
+      if (custom.colors) {
+        for (var k in custom.colors) root.setProperty(k, custom.colors[k]);
+      }
+      if (custom.fontScale) root.setProperty('--app-font-scale', custom.fontScale + '%');
+    }
+  } catch (e) {}
 `;
 
 export default function RootLayout({
