@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Plan } from "@/lib/types";
+import { todayLocal } from "@/lib/labels";
 import { NewMemberForm } from "./NewMemberForm";
 
 export default async function NuevoSocioPage() {
   const supabase = await createClient();
+  const today = todayLocal();
 
-  const { data: plans } = await supabase
-    .from("plans")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order");
+  const [{ data: plans }, { data: opening }, { data: closing }] = await Promise.all([
+    supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
+    supabase.from("cash_openings").select("id").eq("opening_date", today).maybeSingle(),
+    supabase.from("cash_closings").select("id").eq("closing_date", today).maybeSingle(),
+  ]);
+
+  const cajaAbierta = Boolean(opening) && !closing;
 
   return (
-    <div className="space-y-4 max-w-lg">
+    <div className="space-y-4">
       <Link
         href="/panel/socios"
         className="inline-flex items-center gap-1.5 text-tiny text-txt-soft hover:text-txt transition-colors"
@@ -26,7 +30,7 @@ export default async function NuevoSocioPage() {
 
       <h1 className="h1">Nuevo socio</h1>
 
-      <NewMemberForm plans={(plans ?? []) as Plan[]} />
+      <NewMemberForm plans={(plans ?? []) as Plan[]} cajaAbierta={cajaAbierta} />
     </div>
   );
 }
