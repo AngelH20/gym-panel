@@ -69,21 +69,43 @@ export function RotatingQR({
   const low = pct <= 20;
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-md">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={dataUrl}
-        alt="QR para registrar la entrada al gimnasio"
-        className="w-full rounded-control border border-line shadow-chrome"
-      />
-
-      <div className="w-full h-1.5 rounded-full bg-line overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
-            low ? "bg-plate-red" : "bg-plate-blue"
-          }`}
-          style={{ width: `${pct}%` }}
+    <div className="card p-6 sm:p-8 flex flex-col items-center gap-5 w-full max-w-2xl">
+      <div className="w-full bg-white p-4 rounded-control shadow-inner">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={dataUrl}
+          alt="QR para registrar la entrada al gimnasio"
+          className="w-full rounded-sm"
         />
+      </div>
+
+      <div className="w-full space-y-2">
+        <div className="w-full h-1.5 rounded-full bg-line overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
+              low ? "bg-plate-red" : "bg-plate-blue"
+            }`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-tiny text-txt-faint">
+            <span
+              className={`size-1.5 rounded-full animate-pulse ${
+                low ? "bg-plate-red" : "bg-plate-blue"
+              }`}
+            />
+            Se renueva solo
+          </span>
+          <span
+            className={`font-mono text-tiny font-medium tabular-nums ${
+              low ? "text-plate-red" : "text-txt-soft"
+            }`}
+          >
+            {secondsLeft}s
+          </span>
+        </div>
       </div>
     </div>
   );

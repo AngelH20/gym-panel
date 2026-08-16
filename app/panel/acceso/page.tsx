@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { IconQr } from "@/components/icons";
 import { RotatingQR } from "./RotatingQR";
 
 /**
@@ -23,7 +24,7 @@ export default async function AccesoPage() {
   const url = `${siteUrl}/c?t=${token ?? ""}`;
 
   const dataUrl = await QRCode.toDataURL(url, {
-    width: 480,
+    width: 720,
     margin: 1,
     color: { dark: "#16191A", light: "#FBFBFA" },
     errorCorrectionLevel: "M",
@@ -32,7 +33,17 @@ export default async function AccesoPage() {
   const periodSeconds = Math.max(5, Number(secondsRow?.value ?? 30));
 
   return (
-    <div className="flex-1 flex items-center justify-center min-h-[70vh]">
+    <div className="flex-1 flex flex-col items-center justify-center min-h-[70vh] gap-6">
+      <div className="text-center space-y-2">
+        <span className="eyebrow inline-flex items-center gap-1.5 justify-center text-plate-blue">
+          <IconQr className="size-3.5" />
+          Acceso
+        </span>
+        <p className="text-base text-txt-soft whitespace-nowrap">
+          Escaneá este código QR para poder registrar tu entrada al gimnasio.
+        </p>
+      </div>
+
       <RotatingQR
         initialDataUrl={dataUrl}
         initialSecondsLeft={(secondsLeft as number) ?? periodSeconds}
