@@ -81,10 +81,6 @@ export default async function AccesoPage() {
               cada {periodSeconds}s (+{graceSeconds}s de gracia)
             </dd>
           </div>
-          <div className="py-2 flex items-baseline justify-between gap-3">
-            <dt className="text-tiny text-txt-faint">Intentos por dispositivo</dt>
-            <dd className="text-tiny font-mono">12 cada 2 min</dd>
-          </div>
         </dl>
 
         <InvalidateAccessButton />
