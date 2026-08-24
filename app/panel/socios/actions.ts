@@ -92,6 +92,7 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
       email: String(formData.get("email") ?? "").trim() || null,
       photo_url: String(formData.get("photo_url") ?? "").trim() || null,
       notes: String(formData.get("notes") ?? "").trim() || null,
+      welcome_message: String(formData.get("welcome_message") ?? "").trim() || null,
     })
     .eq("id", id);
 

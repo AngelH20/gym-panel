@@ -25,6 +25,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           <Row label="Teléfono" value={member.phone} mono />
           <Row label="Email" value={member.email} />
           <Row label="Socio desde" value={formatDate(member.joined_on)} mono />
+          <Row label="Bienvenida" value={member.welcome_message} />
         </dl>
       </section>
     );
@@ -65,6 +66,19 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
 
       <Field label="Foto (URL)">
         <input name="photo_url" defaultValue={member.photo_url ?? ""} className="field" />
+      </Field>
+
+      <Field
+        label="Mensaje de bienvenida personalizado"
+        hint="Opcional. Reemplaza el saludo genérico en la pantalla de check-in cuando este socio escanea su primera entrada del día."
+      >
+        <textarea
+          name="welcome_message"
+          rows={2}
+          className="field resize-y"
+          placeholder="Bienvenido a CAREF, wachín"
+          defaultValue={member.welcome_message ?? ""}
+        />
       </Field>
 
       <FormError message={state?.error} />

@@ -41,6 +41,7 @@ export type Member = {
   status: MemberStatus;
   notes: string | null;
   qr_token: string;
+  welcome_message: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -68,6 +69,7 @@ export type MemberOverview = {
   checked_in_today: boolean;
   visits_today: number;
   last_check_in_at: string | null;
+  welcome_message: string | null;
 };
 
 export type Membership = {
