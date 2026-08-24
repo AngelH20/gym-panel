@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 
 /**
@@ -73,11 +74,16 @@ const themeScript = `
   } catch (e) {}
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // El middleware genera un nonce por request y lo manda como header de
+  // request (ver lib/supabase/middleware.ts); el CSP solo deja correr este
+  // script inline si trae ese mismo nonce.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   /* suppressHydrationWarning: el script de abajo le agrega data-theme a este
    * elemento ANTES de que React hidrate (para no flashear el tema
    * equivocado). Sin este flag, React compara ese atributo contra el HTML
@@ -86,7 +92,7 @@ export default function RootLayout({
   return (
     <html lang="es-AR" suppressHydrationWarning>
       <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
       </body>
     </html>

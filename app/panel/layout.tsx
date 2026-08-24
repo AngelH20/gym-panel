@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { PanelNav } from "./PanelNav";
@@ -12,6 +13,20 @@ export default async function PanelLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
+
+  // El middleware ya exige que haya una sesión para llegar hasta acá, pero
+  // no chequea la allowlist de admins (para no pagar ese viaje extra a
+  // Supabase en CADA request del sitio, incluido /c). Lo verificamos acá,
+  // que solo corre para /panel/*: si alguna vez se habilita el alta pública
+  // en el proyecto de Supabase, un usuario autenticado no-admin no llega a
+  // ver ni la cáscara del panel (las tablas ya estaban protegidas por RLS,
+  // esto además le corta el paso a la página).
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
+
   const { data: setting } = await supabase
     .from("settings")
     .select("value")

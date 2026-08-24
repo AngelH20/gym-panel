@@ -8,11 +8,25 @@
 type IconProps = { className?: string };
 const base = "size-[18px]";
 
+/** Paleta de pintor: representa mejor "Personalización" (colores + tamaño de
+ *  letra) que el engranaje genérico de configuración que tenía antes. */
 export function IconSettings({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M19.4 13.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2.06 2.06 0 1 1-2.92 2.92l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V19.7a2.06 2.06 0 1 1-4.12 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2.06 2.06 0 1 1-2.92-2.92l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H4.3a2.06 2.06 0 1 1 0-4.12h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2.06 2.06 0 1 1 2.92-2.92l.06.06a1.7 1.7 0 0 0 1.87.34H10.5a1.7 1.7 0 0 0 1.03-1.56V4.3a2.06 2.06 0 1 1 4.12 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2.06 2.06 0 1 1 2.92 2.92l-.06.06a1.7 1.7 0 0 0-.34 1.87V10.5a1.7 1.7 0 0 0 1.56 1.03h.09a2.06 2.06 0 1 1 0 4.12h-.09a1.7 1.7 0 0 0-1.56 1.03Z" />
+      <path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1.1.9-2 2-2h2.3c1.8 0 3.2-1.5 3.2-3.3C21 6.9 17 3 12 3Z" />
+      <circle cx="7.5" cy="10.5" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="9.5" cy="7" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="6.5" r="1.15" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="10" r="1.15" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function IconShield({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3.5 5 6v5.5c0 4.6 2.9 7.9 7 9 4.1-1.1 7-4.4 7-9V6l-7-2.5Z" />
+      <path d="m9 12 2 2 4-4.2" />
     </svg>
   );
 }
