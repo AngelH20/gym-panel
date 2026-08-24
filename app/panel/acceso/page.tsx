@@ -15,12 +15,11 @@ import { InvalidateAccessButton } from "./InvalidateAccessButton";
 export default async function AccesoPage() {
   const supabase = await createClient();
 
-  const [{ data: token }, { data: secondsLeft }, { data: secondsRow }, { data: graceRow }, { data: modeRow }] =
+  const [{ data: token }, { data: secondsLeft }, { data: secondsRow }, { data: modeRow }] =
     await Promise.all([
       supabase.rpc("current_qr_token"),
       supabase.rpc("qr_token_seconds_left"),
       supabase.from("settings").select("value").eq("key", "qr_rotate_seconds").maybeSingle(),
-      supabase.from("settings").select("value").eq("key", "qr_grace_seconds").maybeSingle(),
       supabase.from("settings").select("value").eq("key", "access_mode").maybeSingle(),
     ]);
 
@@ -35,7 +34,6 @@ export default async function AccesoPage() {
   });
 
   const periodSeconds = Math.max(5, Number(secondsRow?.value ?? 30));
-  const graceSeconds = Math.max(0, Number(graceRow?.value ?? 20));
   const accessMode = String(modeRow?.value ?? "off").replace(/"/g, "");
   const protectionOn = accessMode !== "off";
 
@@ -77,8 +75,11 @@ export default async function AccesoPage() {
         <dl className="datalist">
           <div className="py-2 flex items-baseline justify-between gap-3">
             <dt className="text-tiny text-txt-faint">Rotación</dt>
-            <dd className="text-tiny font-mono">
-              cada {periodSeconds}s (+{graceSeconds}s de gracia)
+            <dd className="text-tiny font-mono text-right">
+              cada {periodSeconds}s
+              <span className="block text-micro text-txt-faint font-sans">
+                (tiempo de espera aumentado si justo se está escaneando)
+              </span>
             </dd>
           </div>
         </dl>
