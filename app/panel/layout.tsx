@@ -76,7 +76,7 @@ export default async function PanelLayout({
                        text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised/60 transition-colors"
           >
             <IconSettings className="size-[18px] shrink-0" />
-            Settings
+            Configuración
           </Link>
         </div>
 

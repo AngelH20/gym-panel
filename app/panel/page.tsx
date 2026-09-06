@@ -91,6 +91,27 @@ export default async function PanelHome() {
         </Link>
       </div>
 
+      {/*
+        Solo en celular: para dejar el teléfono apoyado en el mostrador
+        mostrando nada más que el QR (ver app/qr-movil/page.tsx). En
+        escritorio no tiene sentido, por eso md:hidden.
+      */}
+      <Link
+        href="/qr-movil"
+        className="md:hidden card p-4 flex items-center gap-3 text-base font-medium
+                   text-txt hover:bg-surface-hover transition-colors"
+      >
+        <span className="flex size-9 items-center justify-center rounded-control bg-plate-green/12 text-plate-green shrink-0">
+          <IconQr className="size-4.5" />
+        </span>
+        <span className="flex-1 min-w-0">
+          QR vista móvil
+          <span className="block text-tiny font-normal text-txt-faint">
+            Deja el celular mostrando solo el código para que la gente entre
+          </span>
+        </span>
+      </Link>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           label="Entraron hoy"
