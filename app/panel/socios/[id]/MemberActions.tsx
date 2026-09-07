@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { sellMembership, setMemberStatus, deleteMember } from "../actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
-import { formatMoney } from "@/lib/labels";
+import { formatMoney, formatDate, addDaysLocal } from "@/lib/labels";
 import type { MemberOverview, Plan, PaymentMethod } from "@/lib/types";
 
 export function MemberActions({
@@ -20,6 +20,8 @@ export function MemberActions({
   const needsRenewal = member.effective_status !== "active";
 
   const [state, action] = useActionState(sellMembership, null);
+  const [statusState, statusAction] = useActionState(setMemberStatus, null);
+  const [deleteState, deleteAction] = useActionState(deleteMember, null);
   const [planId, setPlanId] = useState(member.plan_id ?? plans[0]?.id ?? "");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [amount, setAmount] = useState("");
@@ -39,6 +41,21 @@ export function MemberActions({
     setAmount(suggested != null ? String(suggested / 100) : "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planId, method]);
+
+  // Si la pantalla queda abierta pasada la medianoche, "today" cambia (ver
+  // DateRefresher). Si el admin no tocó la fecha de pago (seguía en el valor
+  // por defecto), la corremos con él; si ya la había cambiado a mano, la
+  // dejamos como está.
+  const prevToday = useRef(today);
+  useEffect(() => {
+    if (today !== prevToday.current) {
+      setStartDate((current) => (current === prevToday.current ? today : current));
+      prevToday.current = today;
+    }
+  }, [today]);
+
+  const projectedEnd = selectedPlan ? addDaysLocal(startDate, selectedPlan.period_days - 1) : null;
+  const alreadyExpired = projectedEnd != null && projectedEnd < today;
 
   return (
     <section className="card overflow-hidden">
@@ -88,6 +105,13 @@ export function MemberActions({
                   className="field font-mono"
                 />
               </Field>
+
+              {alreadyExpired && (
+                <p className="rounded-control border border-plate-amber/35 bg-plate-amber/12 px-3.5 py-3 text-tiny text-plate-amberInk">
+                  Con esta fecha y este plan, el pase ya vencería el {formatDate(projectedEnd)}.
+                  Revisá la fecha o el plan antes de confirmar.
+                </p>
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 {(["cash", "transfer"] as const).map((m) => (
@@ -177,32 +201,35 @@ export function MemberActions({
         </button>
 
         {showMore && (
-          <div className="px-5 pb-4 pt-1">
-            <form action={setMemberStatus}>
+          <div className="px-5 pb-4 pt-1 space-y-2">
+            <form action={statusAction}>
               <input type="hidden" name="id" value={member.id} />
               <input
                 type="hidden"
                 name="status"
                 value={member.member_status === "suspended" ? "active" : "suspended"}
               />
-              <button className="btn-ghost btn-sm">
+              <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
                 {member.member_status === "suspended"
                   ? "Reactivar socio"
                   : "Suspender socio"}
-              </button>
+              </SubmitButton>
             </form>
+            <FormError message={statusState?.error} />
           </div>
         )}
       </div>
 
-      <div className="border-t border-line px-5 py-4">
+      <div className="border-t border-line px-5 py-4 space-y-2">
         {confirmDelete ? (
-          <form action={deleteMember} className="flex flex-wrap items-center gap-2">
+          <form action={deleteAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="id" value={member.id} />
             <span className="text-tiny text-plate-red">
               ¿Seguro? Se borran también sus entradas y el historial de pases.
             </span>
-            <button className="btn-danger btn-sm">Confirmar borrado</button>
+            <SubmitButton className="btn-danger btn-sm" pendingLabel="Borrando…">
+              Confirmar borrado
+            </SubmitButton>
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
@@ -219,6 +246,7 @@ export function MemberActions({
             Borrar socio
           </button>
         )}
+        <FormError message={deleteState?.error} />
       </div>
     </section>
   );

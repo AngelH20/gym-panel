@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createMember } from "../actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
-import { formatMoney } from "@/lib/labels";
+import { formatMoney, formatDate, addDaysLocal } from "@/lib/labels";
 import type { Plan, PaymentMethod } from "@/lib/types";
 
 const DRAFT_KEY = "caref:nuevo-socio:draft";
@@ -118,6 +118,20 @@ export function NewMemberForm({
   }, [hydrated, fullName, dni, phone, email, photoUrl, notes, planId, method, amount]);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
+
+  // Si la pantalla queda abierta pasada la medianoche, "today" cambia (ver
+  // DateRefresher). Si no se tocó la fecha de pago (seguía en el valor por
+  // defecto), la corremos con él; si ya la habían cambiado a mano, se deja.
+  const prevToday = useRef(today);
+  useEffect(() => {
+    if (today !== prevToday.current) {
+      setStartDate((current) => (current === prevToday.current ? today : current));
+      prevToday.current = today;
+    }
+  }, [today]);
+
+  const projectedEnd = selectedPlan ? addDaysLocal(startDate, selectedPlan.period_days - 1) : null;
+  const alreadyExpired = projectedEnd != null && projectedEnd < today;
 
   function choosePlan(plan: Plan) {
     if (!cajaAbierta) return;
@@ -286,12 +300,20 @@ export function NewMemberForm({
                   <input
                     name="start_date"
                     type="date"
+                    required
                     max={today}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="field font-mono bg-surface"
                   />
                 </Field>
+
+                {alreadyExpired && (
+                  <p className="rounded-control border border-plate-amber/35 bg-plate-amber/12 px-3.5 py-3 text-tiny text-plate-amberInk">
+                    Con esta fecha y este plan, el pase ya vencería el {formatDate(projectedEnd)}.
+                    Revisá la fecha o el plan antes de confirmar.
+                  </p>
+                )}
 
                 <div className="grid grid-cols-2 gap-2">
                   {(["cash", "transfer"] as const).map((m) => (

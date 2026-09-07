@@ -81,7 +81,15 @@ export default async function PanelHome() {
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
 
-  const pasoElPlazo = Number(today.slice(8, 10)) > RENEWAL_DEADLINE_DAY;
+  // El plazo del mes es el 10. Un socio "recién vencido" (ej: venció el 25)
+  // todavía no incumplió esa fecha: su plazo real es el 10 del mes que viene.
+  // Solo entran acá los que ya estaban sin pase antes de que llegara el 10
+  // de este mes y siguen sin renovar.
+  const deadlineThisMonth = `${today.slice(0, 7)}-${String(RENEWAL_DEADLINE_DAY).padStart(2, "0")}`;
+  const pasoElPlazo = today > deadlineThisMonth;
+  const vencidosPasadoElPlazo = vencidos.filter(
+    (m) => m.period_end != null && m.period_end < deadlineThisMonth
+  );
 
   return (
     <div className="space-y-5">
@@ -185,7 +193,7 @@ export default async function PanelHome() {
         </section>
       )}
 
-      {pasoElPlazo && vencidos.length > 0 && (
+      {pasoElPlazo && vencidosPasadoElPlazo.length > 0 && (
         <section className="card p-5 border-plate-red/40 bg-plate-red/5">
           <div className="flex items-center gap-2">
             <span className="text-plate-red" aria-hidden="true">
@@ -194,12 +202,12 @@ export default async function PanelHome() {
             <h2 className="h3">Ya pasó el día {RENEWAL_DEADLINE_DAY}</h2>
           </div>
           <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            El plazo máximo del mes para renovar era el día {RENEWAL_DEADLINE_DAY}. Estos socios
-            todavía no pagaron.
+            Ya estaban sin pase antes del día {RENEWAL_DEADLINE_DAY} de este mes y todavía no
+            renovaron.
           </p>
 
           <ul className="datalist">
-            {vencidos.map((m) => (
+            {vencidosPasadoElPlazo.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}

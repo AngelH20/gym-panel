@@ -110,6 +110,13 @@ export function daysAgoLocal(n: number): string {
   return new Date(Date.UTC(y, m - 1, d - n)).toISOString().slice(0, 10);
 }
 
+/** "YYYY-MM-DD" + N días (puede ser negativo). Mismo truco que daysAgoLocal,
+ *  pero sobre una fecha cualquiera en vez de "hoy". */
+export function addDaysLocal(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
 /** "2026-08-14" -> "vie". Mediodía UTC evita que el huso corra el día. */
 export function weekdayShort(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);

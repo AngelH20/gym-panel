@@ -122,15 +122,27 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
 }
 
 /** Suspender / reactivar. Es el único estado que se toca a mano. */
-export async function setMemberStatus(formData: FormData) {
+export async function setMemberStatus(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
   const status = String(formData.get("status")) as "active" | "suspended";
 
   const supabase = await createClient();
-  await supabase.from("members").update({ status }).eq("id", id);
+  const { error, count } = await supabase
+    .from("members")
+    .update({ status }, { count: "exact" })
+    .eq("id", id);
+
+  if (error) {
+    console.error("[socios] Error al cambiar el estado del socio:", error);
+    return { error: "No se pudo guardar el cambio. Probá de nuevo en un momento." };
+  }
+  if (!count) {
+    return { error: "No se pudo aplicar el cambio: no tenés permiso o el socio ya no existe." };
+  }
 
   revalidatePath("/panel/socios");
   revalidatePath(`/panel/socios/${id}`);
+  return {};
 }
 
 /** Renovar el pase y registrar el cobro: cierra el período anterior, abre uno
@@ -158,10 +170,21 @@ export async function sellMembership(_prev: unknown, formData: FormData): Promis
   return {};
 }
 
-export async function deleteMember(formData: FormData) {
+export async function deleteMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
   const supabase = await createClient();
-  await supabase.from("members").delete().eq("id", id);
+  const { error, count } = await supabase
+    .from("members")
+    .delete({ count: "exact" })
+    .eq("id", id);
+
+  if (error) {
+    console.error("[socios] Error al borrar socio:", error);
+    return { error: "No se pudo borrar. Probá de nuevo en un momento." };
+  }
+  if (!count) {
+    return { error: "No se pudo borrar: no tenés permiso o el socio ya no existe." };
+  }
 
   revalidatePath("/panel/socios");
   redirect("/panel/socios");
