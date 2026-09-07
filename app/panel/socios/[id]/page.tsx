@@ -125,7 +125,12 @@ export default async function SocioPage({
         )}
       </section>
 
-      <MemberActions member={m} plans={(plans ?? []) as Plan[]} today={todayLocal()} />
+      <MemberActions
+        member={m}
+        plans={(plans ?? []) as Plan[]}
+        today={todayLocal()}
+        latestMembership={(history?.[0] as Membership | undefined) ?? null}
+      />
 
       <EditMemberForm member={m} />
 

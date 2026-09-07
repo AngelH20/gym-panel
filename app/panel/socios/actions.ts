@@ -170,6 +170,31 @@ export async function sellMembership(_prev: unknown, formData: FormData): Promis
   return {};
 }
 
+/** Corrige a mano el vencimiento de un pase puntual: para arreglar un
+ *  cálculo raro, o para reactivar un pase que quedó marcado vencido después
+ *  de un check-in rechazado, sin tener que rehacer toda la venta. */
+export async function updateMembershipEnd(_prev: unknown, formData: FormData): Promise<Result> {
+  const membership_id = String(formData.get("membership_id"));
+  const member_id = String(formData.get("member_id"));
+  const period_end = String(formData.get("period_end") ?? "").trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(period_end)) {
+    return { error: "Elegí una fecha válida." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_membership_period_end", {
+    p_membership_id: membership_id,
+    p_period_end: period_end,
+  });
+
+  revalidatePath("/panel/socios");
+  revalidatePath(`/panel/socios/${member_id}`);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function deleteMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
   const supabase = await createClient();

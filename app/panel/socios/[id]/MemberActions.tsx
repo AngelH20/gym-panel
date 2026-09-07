@@ -1,19 +1,21 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { sellMembership, setMemberStatus, deleteMember } from "../actions";
+import { sellMembership, setMemberStatus, deleteMember, updateMembershipEnd } from "../actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
-import type { MemberOverview, Plan, PaymentMethod } from "@/lib/types";
+import type { MemberOverview, Membership, Plan, PaymentMethod } from "@/lib/types";
 
 export function MemberActions({
   member,
   plans,
   today,
+  latestMembership,
 }: {
   member: MemberOverview;
   plans: Plan[];
   today: string;
+  latestMembership: Membership | null;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -22,6 +24,7 @@ export function MemberActions({
   const [state, action] = useActionState(sellMembership, null);
   const [statusState, statusAction] = useActionState(setMemberStatus, null);
   const [deleteState, deleteAction] = useActionState(deleteMember, null);
+  const [expirationState, expirationAction] = useActionState(updateMembershipEnd, null);
   const [planId, setPlanId] = useState(member.plan_id ?? plans[0]?.id ?? "");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [amount, setAmount] = useState("");
@@ -216,6 +219,32 @@ export function MemberActions({
               </SubmitButton>
             </form>
             <FormError message={statusState?.error} />
+
+            {latestMembership && (
+              <>
+                <form action={expirationAction} className="flex flex-wrap items-end gap-2 pt-2">
+                  <input type="hidden" name="membership_id" value={latestMembership.id} />
+                  <input type="hidden" name="member_id" value={member.id} />
+                  <Field
+                    label="Cambiar vencimiento"
+                    hint="Para corregir una fecha mal calculada o reactivar un pase que quedó marcado como vencido."
+                  >
+                    <input
+                      name="period_end"
+                      type="date"
+                      required
+                      min={latestMembership.period_start}
+                      defaultValue={latestMembership.period_end}
+                      className="field font-mono"
+                    />
+                  </Field>
+                  <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
+                    Guardar
+                  </SubmitButton>
+                </form>
+                <FormError message={expirationState?.error} />
+              </>
+            )}
           </div>
         )}
       </div>
