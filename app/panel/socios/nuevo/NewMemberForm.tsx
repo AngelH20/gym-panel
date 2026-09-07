@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createMember } from "../actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
-import { formatMoney, formatDate, addDaysLocal } from "@/lib/labels";
+import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
 import type { Plan, PaymentMethod } from "@/lib/types";
 
 const DRAFT_KEY = "caref:nuevo-socio:draft";
@@ -130,8 +130,7 @@ export function NewMemberForm({
     }
   }, [today]);
 
-  const projectedEnd = selectedPlan ? addDaysLocal(startDate, selectedPlan.period_days - 1) : null;
-  const alreadyExpired = projectedEnd != null && projectedEnd < today;
+  const projectedEnd = selectedPlan ? projectedRenewalEnd(startDate) : null;
 
   function choosePlan(plan: Plan) {
     if (!cajaAbierta) return;
@@ -235,7 +234,7 @@ export function NewMemberForm({
             <div>
               <h2 className="h3">Activar pase ahora</h2>
               <p className="mt-1 text-tiny text-txt-faint">
-                Opcional. El período arranca hoy (o la fecha que elijas) y dura los días del plan.
+                Opcional. El período arranca hoy (o la fecha que elijas) y vence el día 10 de un mes.
               </p>
             </div>
 
@@ -271,7 +270,7 @@ export function NewMemberForm({
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-base font-medium">{p.name}</span>
                       <span className="text-tiny text-txt-faint shrink-0">
-                        {p.uses_per_period} entr. / {p.period_days} días
+                        {p.uses_per_period} entradas
                       </span>
                     </div>
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-tiny">
@@ -308,10 +307,11 @@ export function NewMemberForm({
                   />
                 </Field>
 
-                {alreadyExpired && (
-                  <p className="rounded-control border border-plate-amber/35 bg-plate-amber/12 px-3.5 py-3 text-tiny text-plate-amberInk">
-                    Con esta fecha y este plan, el pase ya vencería el {formatDate(projectedEnd)}.
-                    Revisá la fecha o el plan antes de confirmar.
+                {projectedEnd && (
+                  <p className="rounded-control border border-line bg-surface px-3.5 py-3 text-tiny text-txt-soft">
+                    Con esta fecha, el pase va a valer hasta el{" "}
+                    <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>{" "}
+                    (el vencimiento es siempre el día 10 de un mes).
                   </p>
                 )}
 
