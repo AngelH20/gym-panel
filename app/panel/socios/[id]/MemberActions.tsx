@@ -9,9 +9,11 @@ import type { MemberOverview, Plan, PaymentMethod } from "@/lib/types";
 export function MemberActions({
   member,
   plans,
+  today,
 }: {
   member: MemberOverview;
   plans: Plan[];
+  today: string;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -21,6 +23,7 @@ export function MemberActions({
   const [planId, setPlanId] = useState(member.plan_id ?? plans[0]?.id ?? "");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [amount, setAmount] = useState("");
+  const [startDate, setStartDate] = useState(today);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
   const suggested =
@@ -70,6 +73,21 @@ export function MemberActions({
                   </option>
                 ))}
               </select>
+
+              <Field
+                label="Fecha de pago"
+                hint="Si cobraste este pago hace unos días (por ejemplo, sin internet) poné la fecha real en que te pagaron. El pase arranca ese día."
+              >
+                <input
+                  name="start_date"
+                  type="date"
+                  required
+                  max={today}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="field font-mono"
+                />
+              </Field>
 
               <div className="grid grid-cols-2 gap-2">
                 {(["cash", "transfer"] as const).map((m) => (
@@ -133,8 +151,9 @@ export function MemberActions({
       </div>
 
       {/*
-        Las acciones destructivas quedan plegadas. Renovar es lo que hacés todos
-        los días; borrar un socio, casi nunca. La jerarquía debe reflejarlo.
+        Suspender es lo único que queda plegado: se usa poco y no es
+        destructivo. Borrar socio, en cambio, va siempre visible: es la
+        acción que la gente viene a buscar y no debería costar encontrarla.
       */}
       <div className="border-t border-line">
         <button
@@ -158,7 +177,7 @@ export function MemberActions({
         </button>
 
         {showMore && (
-          <div className="px-5 pb-5 pt-1 flex flex-wrap gap-2">
+          <div className="px-5 pb-4 pt-1">
             <form action={setMemberStatus}>
               <input type="hidden" name="id" value={member.id} />
               <input
@@ -172,31 +191,33 @@ export function MemberActions({
                   : "Suspender socio"}
               </button>
             </form>
-
-            {confirmDelete ? (
-              <form action={deleteMember} className="flex flex-wrap items-center gap-2">
-                <input type="hidden" name="id" value={member.id} />
-                <span className="text-tiny text-plate-red">
-                  Se borran también sus entradas.
-                </span>
-                <button className="btn-danger btn-sm">Confirmar</button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDelete(false)}
-                  className="btn-ghost btn-sm"
-                >
-                  Cancelar
-                </button>
-              </form>
-            ) : (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="btn-ghost btn-sm !text-plate-red"
-              >
-                Borrar socio
-              </button>
-            )}
           </div>
+        )}
+      </div>
+
+      <div className="border-t border-line px-5 py-4">
+        {confirmDelete ? (
+          <form action={deleteMember} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="id" value={member.id} />
+            <span className="text-tiny text-plate-red">
+              ¿Seguro? Se borran también sus entradas y el historial de pases.
+            </span>
+            <button className="btn-danger btn-sm">Confirmar borrado</button>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="btn-ghost btn-sm"
+            >
+              Cancelar
+            </button>
+          </form>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="btn-ghost btn-sm !text-plate-red"
+          >
+            Borrar socio
+          </button>
         )}
       </div>
     </section>

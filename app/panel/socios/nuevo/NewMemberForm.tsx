@@ -62,9 +62,11 @@ function clearDraft() {
 export function NewMemberForm({
   plans,
   cajaAbierta,
+  today,
 }: {
   plans: Plan[];
   cajaAbierta: boolean;
+  today: string;
 }) {
   const [state, action] = useActionState(createMember, null);
 
@@ -77,6 +79,7 @@ export function NewMemberForm({
   const [planId, setPlanId] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [amount, setAmount] = useState("");
+  const [startDate, setStartDate] = useState(today);
   const [hydrated, setHydrated] = useState(false);
 
   // Restaura lo que había quedado sin enviar (p. ej. si te fuiste a abrir
@@ -218,7 +221,7 @@ export function NewMemberForm({
             <div>
               <h2 className="h3">Activar pase ahora</h2>
               <p className="mt-1 text-tiny text-txt-faint">
-                Opcional. El período arranca hoy y dura los días del plan.
+                Opcional. El período arranca hoy (o la fecha que elijas) y dura los días del plan.
               </p>
             </div>
 
@@ -276,6 +279,20 @@ export function NewMemberForm({
 
             {cajaAbierta && planId && (
               <>
+                <Field
+                  label="Fecha de pago"
+                  hint="Si cobraste hace unos días y recién ahora lo cargás, poné la fecha real. El pase arranca ese día."
+                >
+                  <input
+                    name="start_date"
+                    type="date"
+                    max={today}
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="field font-mono bg-surface"
+                  />
+                </Field>
+
                 <div className="grid grid-cols-2 gap-2">
                   {(["cash", "transfer"] as const).map((m) => (
                     <label

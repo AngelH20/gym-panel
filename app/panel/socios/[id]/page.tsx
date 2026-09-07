@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview, Membership, Plan } from "@/lib/types";
-import { formatDate, formatDateTime } from "@/lib/labels";
+import { formatDate, formatDateTime, todayLocal } from "@/lib/labels";
 import { Avatar } from "@/components/Avatar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
@@ -125,7 +125,7 @@ export default async function SocioPage({
         )}
       </section>
 
-      <MemberActions member={m} plans={(plans ?? []) as Plan[]} />
+      <MemberActions member={m} plans={(plans ?? []) as Plan[]} today={todayLocal()} />
 
       <EditMemberForm member={m} />
 

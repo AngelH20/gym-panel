@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { todayLocal } from "@/lib/labels";
 
 type Result = { error?: string };
 
@@ -10,6 +11,16 @@ type Result = { error?: string };
 function parseAmountCents(raw: FormDataEntryValue | null): number {
   const n = Number(String(raw ?? "").trim());
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : 0;
+}
+
+/** Fecha de inicio del pase, para poder cargar un pago con fecha retroactiva
+ *  (ej: cobrado en efectivo sin sistema un día, cargado recién al día
+ *  siguiente). Si viene vacía, mal formada o futura, se ignora y
+ *  sell_membership arranca el período hoy (su default). */
+function parseStartDate(raw: FormDataEntryValue | null): string | undefined {
+  const value = String(raw ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  return value <= todayLocal() ? value : undefined;
 }
 
 /** DNI: exactamente 8 dígitos numéricos, sin puntos ni espacios. Es lo único
@@ -62,6 +73,7 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
       p_plan_id: plan_id,
       p_amount_cents: parseAmountCents(formData.get("amount")),
       p_method: method,
+      p_start: parseStartDate(formData.get("start_date")),
     });
     if (sellError) {
       revalidatePath("/panel/socios");
@@ -135,6 +147,7 @@ export async function sellMembership(_prev: unknown, formData: FormData): Promis
     p_plan_id: plan_id,
     p_amount_cents: amount_cents,
     p_method: method,
+    p_start: parseStartDate(formData.get("start_date")),
   });
 
   revalidatePath("/panel/socios");

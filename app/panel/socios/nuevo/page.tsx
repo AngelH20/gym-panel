@@ -30,7 +30,7 @@ export default async function NuevoSocioPage() {
 
       <h1 className="h1">Nuevo socio</h1>
 
-      <NewMemberForm plans={(plans ?? []) as Plan[]} cajaAbierta={cajaAbierta} />
+      <NewMemberForm plans={(plans ?? []) as Plan[]} cajaAbierta={cajaAbierta} today={today} />
     </div>
   );
 }

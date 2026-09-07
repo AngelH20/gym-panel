@@ -13,12 +13,17 @@ import {
   IconCash,
   IconSearch,
   IconQr,
+  IconFlag,
 } from "@/components/icons";
 import { formatTime, formatMoney, todayLocal, daysAgoLocal, weekdayShort } from "@/lib/labels";
 import { WeeklyAttendanceChart, type DayCount } from "./WeeklyAttendanceChart";
 import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
 
 const WEEK_LENGTH = 7;
+
+// Plazo máximo del mes para renovar: pedido del cliente. Es solo un aviso
+// visual en el panel — no cambia el vencimiento real de ningún pase.
+const RENEWAL_DEADLINE_DAY = 10;
 
 export default async function PanelHome() {
   const supabase = await createClient();
@@ -75,6 +80,8 @@ export default async function PanelHome() {
   const vencidos = all.filter(
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
+
+  const pasoElPlazo = Number(today.slice(8, 10)) > RENEWAL_DEADLINE_DAY;
 
   return (
     <div className="space-y-5">
@@ -171,6 +178,40 @@ export default async function PanelHome() {
                       />
                     </div>
                   )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {pasoElPlazo && vencidos.length > 0 && (
+        <section className="card p-5 border-plate-red/40 bg-plate-red/5">
+          <div className="flex items-center gap-2">
+            <span className="text-plate-red" aria-hidden="true">
+              <IconFlag />
+            </span>
+            <h2 className="h3">Ya pasó el día {RENEWAL_DEADLINE_DAY}</h2>
+          </div>
+          <p className="mt-1 mb-3 text-tiny text-txt-soft">
+            El plazo máximo del mes para renovar era el día {RENEWAL_DEADLINE_DAY}. Estos socios
+            todavía no pagaron.
+          </p>
+
+          <ul className="datalist">
+            {vencidos.map((m) => (
+              <li key={m.id}>
+                <Link
+                  href={`/panel/socios/${m.id}`}
+                  className="py-3 flex items-center gap-3 group"
+                >
+                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
+                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+                    {m.full_name}
+                  </span>
+                  <span className="text-tiny text-plate-red font-medium shrink-0">
+                    {m.effective_status === "exhausted" ? "Sin usos" : "Vencido"}
+                  </span>
                 </Link>
               </li>
             ))}
