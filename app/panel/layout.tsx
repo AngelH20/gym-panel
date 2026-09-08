@@ -27,6 +27,8 @@ export default async function PanelLayout({
     redirect("/login");
   }
 
+  const { data: role } = await supabase.rpc("current_admin_role");
+
   const { data: setting } = await supabase
     .from("settings")
     .select("value")
@@ -67,7 +69,7 @@ export default async function PanelLayout({
           {logo}
         </div>
 
-        <PanelNav variant="sidebar" />
+        <PanelNav variant="sidebar" role={role} />
 
         <div className="shrink-0 px-3 pt-3 border-t border-ink-raised/50">
           <Link
@@ -109,7 +111,7 @@ export default async function PanelLayout({
               {salir}
             </div>
           </div>
-          <PanelNav variant="mobile" />
+          <PanelNav variant="mobile" role={role} />
         </header>
 
         <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6">

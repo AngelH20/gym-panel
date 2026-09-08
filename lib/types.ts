@@ -1,5 +1,6 @@
 /** Tipos compartidos. Reflejan el esquema de 01_schema.sql. */
 
+export type AdminRole = "superadmin" | "admin" | "profesor";
 export type MemberStatus = "active" | "suspended";
 export type MembershipStatus = "active" | "expired" | "cancelled";
 export type PlanPeriod = "month" | "week" | "day";
@@ -151,4 +152,14 @@ export type CashClosing = {
   difference_cents: number | null;
   payments_count: number;
   notes: string | null;
+};
+
+/** Una cuenta con acceso al panel (tabla admins). */
+export type Staff = {
+  id: string;
+  user_id: string | null;
+  email: string;
+  full_name: string | null;
+  role: AdminRole;
+  created_at: string;
 };

@@ -3,9 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * Cliente con service_role: saltea RLS por completo.
  *
- * SOLO se usa para el check-in público, donde no hay usuario logueado y
- * necesitamos invocar perform_check_in(). Nunca importar esto desde un
- * componente de cliente.
+ * Se usa para el check-in público (donde no hay usuario logueado) y para la
+ * gestión de cuentas en /panel/usuarios (crear/borrar usuarios de Supabase
+ * Auth, algo que la API normal no permite). En ambos casos el chequeo de
+ * quién puede hacer qué se hace ANTES, con el cliente normal (RLS), nunca
+ * confiando en que el llamador ya esté autorizado. Nunca importar esto
+ * desde un componente de cliente.
  */
 export function createAdminClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

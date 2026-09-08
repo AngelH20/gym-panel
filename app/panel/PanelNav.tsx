@@ -3,77 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { AdminRole } from "@/lib/types";
 
-/** Lista plana: la usa el nav horizontal del celular, donde no hay lugar
- *  para desplegables — cada pantalla es su propio botón. */
-const links = [
-  {
-    href: "/panel",
-    label: "Panel",
-    icon: (
-      <>
-        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-        <rect x="3" y="16" width="7" height="5" rx="1.5" />
-      </>
-    ),
-  },
-  {
-    href: "/panel/socios",
-    label: "Socios",
-    icon: (
-      <>
-        <circle cx="9" cy="8" r="3.5" />
-        <path d="M2.5 20a6.5 6.5 0 0 1 13 0" strokeLinecap="round" />
-        <path d="M16 5.5a3.5 3.5 0 0 1 0 6.5M17.5 20a6.4 6.4 0 0 0-2-4.7" strokeLinecap="round" />
-      </>
-    ),
-  },
-  {
-    href: "/panel/metricas",
-    label: "Métricas",
-    icon: (
-      <>
-        <path d="M4 20V10M11 20V4M18 20v-7" strokeLinecap="round" strokeLinejoin="round" />
-      </>
-    ),
-  },
-  {
-    href: "/panel/planes",
-    label: "Planes",
-    icon: (
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2.5" />
-        <path d="M3 10h18M8 15h4" strokeLinecap="round" />
-      </>
-    ),
-  },
-  {
-    href: "/panel/caja",
-    label: "Caja",
-    icon: (
-      <>
-        <rect x="3" y="7" width="18" height="13" rx="2" />
-        <path d="M3 11h18M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeLinecap="round" />
-        <circle cx="12" cy="15" r="1.8" />
-      </>
-    ),
-  },
-  {
-    href: "/panel/acceso",
-    label: "QR",
-    icon: (
-      <>
-        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-        <path d="M14 14h3v3M20 17v4h-6" strokeLinecap="round" />
-      </>
-    ),
-  },
-];
+const usuariosIcon = (
+  <>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" strokeLinecap="round" />
+    <path d="M17 8v6M14 11h6" strokeLinecap="round" />
+  </>
+);
 
+const panelIcon = (
+  <>
+    <rect x="3" y="3" width="7" height="9" rx="1.5" />
+    <rect x="14" y="3" width="7" height="5" rx="1.5" />
+    <rect x="14" y="12" width="7" height="9" rx="1.5" />
+    <rect x="3" y="16" width="7" height="5" rx="1.5" />
+  </>
+);
 const sociosIcon = (
   <>
     <circle cx="9" cy="8" r="3.5" />
@@ -81,6 +28,49 @@ const sociosIcon = (
     <path d="M16 5.5a3.5 3.5 0 0 1 0 6.5M17.5 20a6.4 6.4 0 0 0-2-4.7" strokeLinecap="round" />
   </>
 );
+const metricasIcon = (
+  <path d="M4 20V10M11 20V4M18 20v-7" strokeLinecap="round" strokeLinejoin="round" />
+);
+const planesIcon = (
+  <>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="M3 10h18M8 15h4" strokeLinecap="round" />
+  </>
+);
+const cajaIcon = (
+  <>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M3 11h18M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeLinecap="round" />
+    <circle cx="12" cy="15" r="1.8" />
+  </>
+);
+const qrIcon = (
+  <>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <path d="M14 14h3v3M20 17v4h-6" strokeLinecap="round" />
+  </>
+);
+
+type NavLink = { href: string; label: string; icon: React.ReactNode };
+
+/** Planes (precios) queda afuera para profesor; Usuarios solo lo ve
+ *  superadmin. El resto es igual para los tres roles. */
+function visibleLinks(role: AdminRole | null | undefined): NavLink[] {
+  const links: NavLink[] = [
+    { href: "/panel", label: "Panel", icon: panelIcon },
+    { href: "/panel/socios", label: "Socios", icon: sociosIcon },
+    { href: "/panel/metricas", label: "Métricas", icon: metricasIcon },
+  ];
+  if (role !== "profesor") links.push({ href: "/panel/planes", label: "Planes", icon: planesIcon });
+  links.push({ href: "/panel/caja", label: "Caja", icon: cajaIcon });
+  links.push({ href: "/panel/acceso", label: "QR", icon: qrIcon });
+  if (role === "superadmin") {
+    links.push({ href: "/panel/usuarios", label: "Usuarios", icon: usuariosIcon });
+  }
+  return links;
+}
 
 /** Estructura con grupos: la usa el sidebar de escritorio, donde sí hay
  *  lugar para desplegar "Socios" en sus sub-pantallas. */
@@ -93,21 +83,29 @@ type SidebarItem =
       children: { href: string; label: string }[];
     };
 
-const sidebarItems: SidebarItem[] = [
-  { type: "link", href: "/panel", label: "Panel", icon: links[0].icon },
-  {
-    type: "group",
-    label: "Socios",
-    icon: sociosIcon,
-    children: [
-      { href: "/panel/socios", label: "Lista de socios" },
-      { href: "/panel/metricas", label: "Métricas" },
-    ],
-  },
-  { type: "link", href: "/panel/planes", label: "Planes", icon: links[3].icon },
-  { type: "link", href: "/panel/caja", label: "Caja", icon: links[4].icon },
-  { type: "link", href: "/panel/acceso", label: "QR", icon: links[5].icon },
-];
+function visibleSidebarItems(role: AdminRole | null | undefined): SidebarItem[] {
+  const items: SidebarItem[] = [
+    { type: "link", href: "/panel", label: "Panel", icon: panelIcon },
+    {
+      type: "group",
+      label: "Socios",
+      icon: sociosIcon,
+      children: [
+        { href: "/panel/socios", label: "Lista de socios" },
+        { href: "/panel/metricas", label: "Métricas" },
+      ],
+    },
+  ];
+  if (role !== "profesor") {
+    items.push({ type: "link", href: "/panel/planes", label: "Planes", icon: planesIcon });
+  }
+  items.push({ type: "link", href: "/panel/caja", label: "Caja", icon: cajaIcon });
+  items.push({ type: "link", href: "/panel/acceso", label: "QR", icon: qrIcon });
+  if (role === "superadmin") {
+    items.push({ type: "link", href: "/panel/usuarios", label: "Usuarios", icon: usuariosIcon });
+  }
+  return items;
+}
 
 function isActive(pathname: string, href: string) {
   return href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
@@ -121,14 +119,20 @@ function isActive(pathname: string, href: string) {
  * "mobile": franja horizontal arriba, debajo del header — cada pantalla es
  * su propio botón, sin desplegables (no hay lugar para eso ahí).
  */
-export function PanelNav({ variant }: { variant: "sidebar" | "mobile" }) {
+export function PanelNav({
+  variant,
+  role,
+}: {
+  variant: "sidebar" | "mobile";
+  role?: AdminRole | null;
+}) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
   if (variant === "sidebar") {
     return (
       <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
-        {sidebarItems.map((item) => {
+        {visibleSidebarItems(role).map((item) => {
           if (item.type === "link") {
             const active = isActive(pathname, item.href);
             return (
@@ -252,7 +256,7 @@ export function PanelNav({ variant }: { variant: "sidebar" | "mobile" }) {
   return (
     <nav className="md:hidden overflow-x-auto border-t border-ink-raised/60">
       <div className="flex gap-1 px-2.5 py-1.5 min-w-max">
-        {links.map((l) => {
+        {visibleLinks(role).map((l) => {
           const active = isActive(pathname, l.href);
           return (
             <Link

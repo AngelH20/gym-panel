@@ -26,20 +26,22 @@ export default async function SocioPage({
   if (!member) notFound();
   const m = member as MemberOverview;
 
-  const [{ data: plans }, { data: history }, { data: checkIns }] = await Promise.all([
-    supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
-    supabase
-      .from("memberships")
-      .select("*, plans(name)")
-      .eq("member_id", id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("check_ins")
-      .select("id, checked_in_at, local_date, charged")
-      .eq("member_id", id)
-      .order("checked_in_at", { ascending: false })
-      .limit(10),
-  ]);
+  const [{ data: plans }, { data: history }, { data: checkIns }, { data: role }] =
+    await Promise.all([
+      supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
+      supabase
+        .from("memberships")
+        .select("*, plans(name)")
+        .eq("member_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("check_ins")
+        .select("id, checked_in_at, local_date, charged")
+        .eq("member_id", id)
+        .order("checked_in_at", { ascending: false })
+        .limit(10),
+      supabase.rpc("current_admin_role"),
+    ]);
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -130,6 +132,7 @@ export default async function SocioPage({
         plans={(plans ?? []) as Plan[]}
         today={todayLocal()}
         latestMembership={(history?.[0] as Membership | undefined) ?? null}
+        role={role}
       />
 
       <EditMemberForm member={m} />

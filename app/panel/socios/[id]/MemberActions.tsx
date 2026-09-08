@@ -4,19 +4,22 @@ import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { sellMembership, setMemberStatus, deleteMember, updateMembershipEnd } from "../actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
-import type { MemberOverview, Membership, Plan, PaymentMethod } from "@/lib/types";
+import type { AdminRole, MemberOverview, Membership, Plan, PaymentMethod } from "@/lib/types";
 
 export function MemberActions({
   member,
   plans,
   today,
   latestMembership,
+  role,
 }: {
   member: MemberOverview;
   plans: Plan[];
   today: string;
   latestMembership: Membership | null;
+  role?: AdminRole | null;
 }) {
+  const isManager = role === "superadmin" || role === "admin";
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const needsRenewal = member.effective_status !== "active";
@@ -220,7 +223,7 @@ export function MemberActions({
             </form>
             <FormError message={statusState?.error} />
 
-            {latestMembership && (
+            {isManager && latestMembership && (
               <>
                 <form action={expirationAction} className="flex flex-wrap items-end gap-2 pt-2">
                   <input type="hidden" name="membership_id" value={latestMembership.id} />
@@ -249,34 +252,36 @@ export function MemberActions({
         )}
       </div>
 
-      <div className="border-t border-line px-5 py-4 space-y-2">
-        {confirmDelete ? (
-          <form action={deleteAction} className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="id" value={member.id} />
-            <span className="text-tiny text-plate-red">
-              ¿Seguro? Se borran también sus entradas y el historial de pases.
-            </span>
-            <SubmitButton className="btn-danger btn-sm" pendingLabel="Borrando…">
-              Confirmar borrado
-            </SubmitButton>
+      {isManager && (
+        <div className="border-t border-line px-5 py-4 space-y-2">
+          {confirmDelete ? (
+            <form action={deleteAction} className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="id" value={member.id} />
+              <span className="text-tiny text-plate-red">
+                ¿Seguro? Se borran también sus entradas y el historial de pases.
+              </span>
+              <SubmitButton className="btn-danger btn-sm" pendingLabel="Borrando…">
+                Confirmar borrado
+              </SubmitButton>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="btn-ghost btn-sm"
+              >
+                Cancelar
+              </button>
+            </form>
+          ) : (
             <button
-              type="button"
-              onClick={() => setConfirmDelete(false)}
-              className="btn-ghost btn-sm"
+              onClick={() => setConfirmDelete(true)}
+              className="btn-ghost btn-sm !text-plate-red"
             >
-              Cancelar
+              Borrar socio
             </button>
-          </form>
-        ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="btn-ghost btn-sm !text-plate-red"
-          >
-            Borrar socio
-          </button>
-        )}
-        <FormError message={deleteState?.error} />
-      </div>
+          )}
+          <FormError message={deleteState?.error} />
+        </div>
+      )}
     </section>
   );
 }

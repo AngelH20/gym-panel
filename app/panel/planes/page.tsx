@@ -1,9 +1,16 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Plan } from "@/lib/types";
 import { PlanList } from "./PlanList";
 
 export default async function PlanesPage() {
   const supabase = await createClient();
+
+  // Precios y planes son terreno de managers (admin/superadmin). Un profesor
+  // que entre por URL directa se va de vuelta al panel, no solo se le oculta
+  // el link del nav.
+  const { data: isManager } = await supabase.rpc("is_manager");
+  if (!isManager) redirect("/panel");
 
   const { data: plans } = await supabase
     .from("plans")
@@ -23,8 +30,8 @@ export default async function PlanesPage() {
       <div>
         <h1 className="h1">Planes</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Un plan define cuántas entradas incluye el pase y cuántos días dura.
-          El período arranca el día que el socio paga.
+          Un plan define cuántas entradas incluye el pase. El vencimiento ya
+          no depende de acá: todo pase vence el día 10 de un mes.
         </p>
       </div>
 
