@@ -2,14 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 
-async function fetchQr(): Promise<{ dataUrl: string; secondsLeft: number }> {
-  const res = await fetch("/panel/acceso/qr", { cache: "no-store" });
+// Segundos antes del vencimiento en que se pide, en segundo plano, el QR de
+// la próxima ventana. Con esto la imagen nueva ya está en memoria cuando el
+// contador llega a 0 y el cambio es instantáneo, sin el parón que se veía
+// mientras viajaba el pedido a Supabase.
+const PREFETCH_LEAD = 6;
+
+async function fetchQr(next = false): Promise<{ dataUrl: string; secondsLeft: number }> {
+  const res = await fetch(`/panel/acceso/qr${next ? "?next=1" : ""}`, { cache: "no-store" });
   return res.json();
 }
 
 /**
- * La cuenta regresiva corre en el cliente; solo se vuelve a pedir el QR
- * (nueva imagen, nuevo token adentro) cuando la ventana actual se vence.
+ * La cuenta regresiva corre en el cliente. El QR de la ventana siguiente se
+ * pide unos segundos antes (PREFETCH_LEAD) y se deja listo; al llegar a 0 se
+ * intercambia la imagen al instante. Solo se hace un pedido "en vivo"
+ * (fetchQr sin next) como red de seguridad si el prefetch no llegó a tiempo.
  *
  * Los navegadores frenan (o directamente pausan) los setInterval de una
  * pestaña en segundo plano — pantalla bloqueada, minimizada, otra app
@@ -28,27 +36,58 @@ export function RotatingQR({
 }) {
   const [dataUrl, setDataUrl] = useState(initialDataUrl);
   const [secondsLeft, setSecondsLeft] = useState(initialSecondsLeft);
+
+  // dataUrl del QR de la próxima ventana, ya descargado y esperando el cambio.
+  const nextDataUrl = useRef<string | null>(null);
+  const prefetching = useRef(false);
   const refreshing = useRef(false);
 
+  // Trae el QR de la ventana siguiente y lo guarda. De paso reencamina el
+  // contador local si se despegó del server (pestaña frenada, reloj flojo).
+  function prefetchNext() {
+    if (prefetching.current || nextDataUrl.current) return;
+    prefetching.current = true;
+    fetchQr(true)
+      .then(({ dataUrl, secondsLeft }) => {
+        nextDataUrl.current = dataUrl;
+        setSecondsLeft((s) => (Math.abs(s - secondsLeft) > 2 ? secondsLeft : s));
+      })
+      .catch(() => {})
+      .finally(() => {
+        prefetching.current = false;
+      });
+  }
+
+  // Pedido "en vivo": solo como respaldo si el prefetch falló o no llegó.
   function refresh() {
     if (refreshing.current) return;
     refreshing.current = true;
-    fetchQr().then(({ dataUrl, secondsLeft }) => {
-      setDataUrl(dataUrl);
-      setSecondsLeft(secondsLeft);
-      refreshing.current = false;
-    });
+    nextDataUrl.current = null;
+    fetchQr()
+      .then(({ dataUrl, secondsLeft }) => {
+        setDataUrl(dataUrl);
+        setSecondsLeft(secondsLeft);
+      })
+      .catch(() => {})
+      .finally(() => {
+        refreshing.current = false;
+      });
+  }
+
+  // Cambio de ventana: si ya tenemos el próximo QR, lo mostramos al instante.
+  function rollOver() {
+    if (nextDataUrl.current) {
+      setDataUrl(nextDataUrl.current);
+      nextDataUrl.current = null;
+      setSecondsLeft(periodSeconds);
+    } else {
+      refresh();
+    }
   }
 
   useEffect(() => {
     const id = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          refresh();
-          return 0;
-        }
-        return Math.max(0, s - 1);
-      });
+      setSecondsLeft((s) => Math.max(-1, s - 1));
     }, 1000);
 
     function onVisible() {
@@ -65,7 +104,17 @@ export function RotatingQR({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pct = Math.max(0, Math.min(100, (secondsLeft / periodSeconds) * 100));
+  // Efectos del contador, separados del tick para no disparar setState desde
+  // dentro de un updater: pedir el próximo QR al acercarse el vencimiento y
+  // cambiarlo al llegar a 0.
+  useEffect(() => {
+    if (secondsLeft <= PREFETCH_LEAD && secondsLeft > 0) prefetchNext();
+    if (secondsLeft <= 0) rollOver();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft]);
+
+  const shown = Math.max(0, secondsLeft);
+  const pct = Math.max(0, Math.min(100, (shown / periodSeconds) * 100));
   const low = pct <= 20;
 
   return (
@@ -103,7 +152,7 @@ export function RotatingQR({
               low ? "text-plate-red" : "text-txt-soft"
             }`}
           >
-            {secondsLeft}s
+            {shown}s
           </span>
         </div>
       </div>

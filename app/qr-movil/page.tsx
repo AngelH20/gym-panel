@@ -20,25 +20,32 @@ import { SubmitButton } from "@/components/Form";
 export default async function QrMovilPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Todo junto: la validación de sesión y los datos del QR son viajes
+  // independientes a Supabase, no hace falta encadenarlos.
+  const [
+    {
+      data: { user },
+    },
+    { data: isAdmin },
+    { data: token },
+    { data: secondsLeft },
+    { data: secondsRow },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.rpc("is_admin"),
+    supabase.rpc("current_qr_token"),
+    supabase.rpc("qr_token_seconds_left"),
+    supabase.from("settings").select("value").eq("key", "qr_rotate_seconds").maybeSingle(),
+  ]);
 
   if (!user) {
     redirect("/login?volver=/qr-movil");
   }
 
-  const { data: isAdmin } = await supabase.rpc("is_admin");
   if (!isAdmin) {
     await supabase.auth.signOut();
     redirect("/login?volver=/qr-movil");
   }
-
-  const [{ data: token }, { data: secondsLeft }, { data: secondsRow }] = await Promise.all([
-    supabase.rpc("current_qr_token"),
-    supabase.rpc("qr_token_seconds_left"),
-    supabase.from("settings").select("value").eq("key", "qr_rotate_seconds").maybeSingle(),
-  ]);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const url = `${siteUrl}/c?t=${token ?? ""}`;
