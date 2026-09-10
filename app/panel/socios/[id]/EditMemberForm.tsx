@@ -20,12 +20,12 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           </button>
         </div>
 
-        <dl className="datalist">
+        <dl className="datalist sm:grid sm:grid-cols-2 sm:gap-x-8 sm:divide-y-0">
           <Row label="DNI" value={member.dni} mono />
           <Row label="Teléfono" value={member.phone} mono />
           <Row label="Email" value={member.email} />
           <Row label="Socio desde" value={formatDate(member.joined_on)} mono />
-          <Row label="Bienvenida" value={member.welcome_message} />
+          <Row label="Bienvenida" value={member.welcome_message} wide />
         </dl>
       </section>
     );
@@ -97,13 +97,15 @@ function Row({
   label,
   value,
   mono,
+  wide,
 }: {
   label: string;
   value?: string | null;
   mono?: boolean;
+  wide?: boolean;
 }) {
   return (
-    <div className="py-2.5 flex items-baseline gap-3">
+    <div className={`py-2.5 flex items-baseline gap-3 ${wide ? "sm:col-span-2" : ""}`}>
       <dt className="text-tiny text-txt-faint w-24 shrink-0">{label}</dt>
       <dd className={`text-base truncate ${mono ? "font-mono" : ""}`}>
         {value || <span className="text-txt-faint">—</span>}

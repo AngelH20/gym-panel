@@ -44,7 +44,7 @@ export default async function SocioPage({
     ]);
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-[1700px] space-y-4">
       <Link
         href="/panel/socios"
         className="inline-flex items-center gap-1.5 text-tiny text-txt-soft hover:text-txt transition-colors"
@@ -64,15 +64,14 @@ export default async function SocioPage({
       </Link>
 
       {/*
-        A la izquierda, en una columna de ancho acotado (para que el
-        formulario no quede gigante), va lo que se viene a hacer: ver cuántas
-        entradas quedan y renovar el pase. A la derecha, ocupando TODO el
-        resto del ancho, las tarjetas de consulta (datos, últimas entradas,
-        historial) repartidas en varias columnas según entre la pantalla.
-        En celular es una sola columna apilada.
+        Dos columnas anchas y parejas en escritorio (una en celular), con un
+        tope de ancho para que no se estire infinito y los márgenes queden
+        iguales a los dos lados. La izquierda es lo que se viene a hacer
+        (ver entradas, renovar el pase); la derecha, de consulta (datos,
+        últimas entradas, historial). Las dos quedan de alto parecido.
       */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,27rem)_minmax(0,1fr)] lg:items-start">
-        <div className="space-y-4 min-w-0">
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-5 min-w-0">
           {/* Cabecera: quién es y si puede entrar */}
           <section className="card overflow-hidden">
             <div className="p-5 flex items-start gap-4">
@@ -146,12 +145,8 @@ export default async function SocioPage({
           />
         </div>
 
-        {/*
-          Consulta: ocupa todo el ancho que sobra y reparte las tarjetas en
-          1 / 2 / 3 columnas según el tamaño de pantalla, para no dejar la
-          mitad derecha vacía en un monitor ancho.
-        */}
-        <div className="grid gap-4 items-start content-start sm:grid-cols-2 2xl:grid-cols-3">
+        {/* Columna 2 (consulta): datos, últimas entradas e historial */}
+        <div className="space-y-5 min-w-0">
           <EditMemberForm member={m} />
 
           {/* Últimas entradas */}
@@ -163,7 +158,7 @@ export default async function SocioPage({
                 Todavía no registró ninguna entrada.
               </p>
             ) : (
-              <ul className="datalist">
+              <ul className="datalist sm:grid sm:grid-cols-2 sm:gap-x-6 sm:divide-y-0">
                 {(checkIns ?? []).map((c) => (
                   <li key={c.id} className="py-2.5 flex items-center gap-2.5">
                     <span
