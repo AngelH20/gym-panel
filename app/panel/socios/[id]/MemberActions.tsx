@@ -1,10 +1,22 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { sellMembership, setMemberStatus, deleteMember, updateMembershipEnd } from "../actions";
+import {
+  sellMembership,
+  setMemberStatus,
+  deleteMember,
+  updateMembershipEnd,
+  updateMembershipPlan,
+} from "../actions";
+import {
+  PaymentFields,
+  EMPTY_PAYMENT,
+  suggestAmounts,
+  type PaymentDraft,
+} from "../PaymentFields";
 import { Field, FormError, SubmitButton } from "@/components/Form";
-import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
-import type { AdminRole, MemberOverview, Membership, Plan, PaymentMethod } from "@/lib/types";
+import { formatDate, projectedRenewalEnd } from "@/lib/labels";
+import type { AdminRole, MemberOverview, Membership, Plan } from "@/lib/types";
 
 export function MemberActions({
   member,
@@ -28,25 +40,20 @@ export function MemberActions({
   const [statusState, statusAction] = useActionState(setMemberStatus, null);
   const [deleteState, deleteAction] = useActionState(deleteMember, null);
   const [expirationState, expirationAction] = useActionState(updateMembershipEnd, null);
+  const [planFixState, planFixAction] = useActionState(updateMembershipPlan, null);
   const [planId, setPlanId] = useState(member.plan_id ?? plans[0]?.id ?? "");
-  const [method, setMethod] = useState<PaymentMethod>("cash");
-  const [amount, setAmount] = useState("");
+  const [payment, setPayment] = useState<PaymentDraft>(EMPTY_PAYMENT);
   const [startDate, setStartDate] = useState(today);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
-  const suggested =
-    selectedPlan == null
-      ? null
-      : method === "cash"
-        ? selectedPlan.price_cash_cents
-        : selectedPlan.price_transfer_cents;
 
-  // Sugerir el precio de lista al elegir plan/medio; el admin lo puede pisar
-  // (descuentos, promos). No lo pisamos si ya lo tocó a mano.
+  // Sugerir el precio de lista al elegir el plan; el admin lo puede pisar
+  // (descuentos, promos). Al cambiar de medio de pago lo resugiere el propio
+  // PaymentFields.
   useEffect(() => {
-    setAmount(suggested != null ? String(suggested / 100) : "");
+    setPayment((current) => suggestAmounts(current, selectedPlan));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [planId, method]);
+  }, [planId]);
 
   // Si la pantalla queda abierta pasada la medianoche, "today" cambia (ver
   // DateRefresher). Si el admin no tocó la fecha de pago (seguía en el valor
@@ -119,53 +126,7 @@ export function MemberActions({
                 </p>
               )}
 
-              <div className="grid grid-cols-2 gap-2">
-                {(["cash", "transfer"] as const).map((m) => (
-                  <label
-                    key={m}
-                    className={`flex items-center justify-between gap-2 rounded-control border px-3.5 py-2.5 text-base cursor-pointer transition-colors ${
-                      method === m
-                        ? "border-plate-blue bg-plate-blue/6"
-                        : "border-line hover:border-line-strong"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="method"
-                        value={m}
-                        checked={method === m}
-                        onChange={() => setMethod(m)}
-                        className="accent-plate-blue"
-                      />
-                      {m === "cash" ? "Efectivo" : "Transferencia"}
-                    </span>
-                    {selectedPlan && (
-                      <span className="font-mono text-tiny text-txt-faint">
-                        {formatMoney(
-                          m === "cash"
-                            ? selectedPlan.price_cash_cents
-                            : selectedPlan.price_transfer_cents
-                        )}
-                      </span>
-                    )}
-                  </label>
-                ))}
-              </div>
-
-              <Field label="Monto cobrado">
-                <input
-                  name="amount"
-                  type="number"
-                  min={0}
-                  step="1"
-                  required
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="field font-mono"
-                  placeholder="80000"
-                />
-              </Field>
+              <PaymentFields plan={selectedPlan} value={payment} onChange={setPayment} />
 
               <FormError message={state?.error} />
 
@@ -225,6 +186,58 @@ export function MemberActions({
 
             {isManager && latestMembership && (
               <>
+                {/*
+                  Corregir el pase mal cargado. La alternativa vieja era
+                  volver a venderle el pase correcto, y eso dejaba un segundo
+                  cobro en la caja del día: el total quedaba inflado por un
+                  error de tipeo. Esto cambia el plan y nada más.
+                */}
+                {plans.length > 0 && (
+                  <form action={planFixAction} className="pt-2 space-y-2">
+                    <input type="hidden" name="membership_id" value={latestMembership.id} />
+                    <input type="hidden" name="member_id" value={member.id} />
+
+                    <Field
+                      label="Corregir el plan del pase"
+                      hint="Si le cargaste el plan equivocado. No toca la caja: no registra un cobro nuevo ni cambia el que ya está anotado."
+                    >
+                      <select
+                        name="plan_id"
+                        required
+                        defaultValue={latestMembership.plan_id}
+                        className="field"
+                      >
+                        {plans.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} — {p.uses_per_period} entradas
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+
+                    <div className="flex flex-wrap items-end gap-2">
+                      <Field
+                        label="Entradas (opcional)"
+                        hint="Vacío = las del plan elegido. Las ya usadas se respetan."
+                      >
+                        <input
+                          name="uses_total"
+                          type="number"
+                          min={1}
+                          step="1"
+                          inputMode="numeric"
+                          placeholder={String(latestMembership.uses_total)}
+                          className="field font-mono w-28"
+                        />
+                      </Field>
+                      <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
+                        Guardar plan
+                      </SubmitButton>
+                    </div>
+                  </form>
+                )}
+                <FormError message={planFixState?.error} />
+
                 <form action={expirationAction} className="flex flex-wrap items-end gap-2 pt-2">
                   <input type="hidden" name="membership_id" value={latestMembership.id} />
                   <input type="hidden" name="member_id" value={member.id} />

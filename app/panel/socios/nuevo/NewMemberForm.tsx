@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { createMember } from "../actions";
+import {
+  PaymentFields,
+  EMPTY_PAYMENT,
+  suggestAmounts,
+  type PaymentDraft,
+} from "../PaymentFields";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
-import type { Plan, PaymentMethod } from "@/lib/types";
+import type { Plan } from "@/lib/types";
 
 const DRAFT_KEY = "caref:nuevo-socio:draft";
 
@@ -17,8 +23,7 @@ type Draft = {
   photo_url: string;
   notes: string;
   plan_id: string;
-  method: PaymentMethod;
-  amount: string;
+  payment: PaymentDraft;
 };
 
 const EMPTY_DRAFT: Draft = {
@@ -29,15 +34,17 @@ const EMPTY_DRAFT: Draft = {
   photo_url: "",
   notes: "",
   plan_id: "",
-  method: "cash",
-  amount: "",
+  payment: EMPTY_PAYMENT,
 };
 
 function loadDraft(): Draft {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return EMPTY_DRAFT;
-    return { ...EMPTY_DRAFT, ...JSON.parse(raw) };
+    const saved = JSON.parse(raw);
+    // Un borrador guardado antes del pago mixto no trae "payment": los
+    // defaults lo cubren en vez de romper el formulario.
+    return { ...EMPTY_DRAFT, ...saved, payment: { ...EMPTY_PAYMENT, ...saved.payment } };
   } catch {
     return EMPTY_DRAFT;
   }
@@ -77,8 +84,7 @@ export function NewMemberForm({
   const [photoUrl, setPhotoUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [planId, setPlanId] = useState("");
-  const [method, setMethod] = useState<PaymentMethod>("cash");
-  const [amount, setAmount] = useState("");
+  const [payment, setPayment] = useState<PaymentDraft>(EMPTY_PAYMENT);
   const [startDate, setStartDate] = useState(today);
   const [hydrated, setHydrated] = useState(false);
 
@@ -95,8 +101,7 @@ export function NewMemberForm({
     setNotes(d.notes);
     if (cajaAbierta) {
       setPlanId(d.plan_id);
-      setMethod(d.method);
-      setAmount(d.amount);
+      setPayment(d.payment);
     }
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,10 +117,9 @@ export function NewMemberForm({
       photo_url: photoUrl,
       notes,
       plan_id: planId,
-      method,
-      amount,
+      payment,
     });
-  }, [hydrated, fullName, dni, phone, email, photoUrl, notes, planId, method, amount]);
+  }, [hydrated, fullName, dni, phone, email, photoUrl, notes, planId, payment]);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
 
@@ -136,20 +140,11 @@ export function NewMemberForm({
     if (!cajaAbierta) return;
     if (planId === plan.id) {
       setPlanId("");
-      setAmount("");
+      setPayment((current) => suggestAmounts(current, undefined));
       return;
     }
     setPlanId(plan.id);
-    const suggested = method === "cash" ? plan.price_cash_cents : plan.price_transfer_cents;
-    setAmount(suggested != null ? String(suggested / 100) : "");
-  }
-
-  function chooseMethod(m: PaymentMethod) {
-    setMethod(m);
-    if (selectedPlan) {
-      const suggested = m === "cash" ? selectedPlan.price_cash_cents : selectedPlan.price_transfer_cents;
-      setAmount(suggested != null ? String(suggested / 100) : "");
-    }
+    setPayment((current) => suggestAmounts(current, plan));
   }
 
   return (
@@ -315,52 +310,13 @@ export function NewMemberForm({
                   </p>
                 )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  {(["cash", "transfer"] as const).map((m) => (
-                    <label
-                      key={m}
-                      className={`flex items-center justify-between gap-2 rounded-control border px-3.5 py-2.5 text-base cursor-pointer transition-colors ${
-                        method === m
-                          ? "border-plate-blue bg-plate-blue/6"
-                          : "border-line bg-surface hover:border-line-strong"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="method"
-                          value={m}
-                          checked={method === m}
-                          onChange={() => chooseMethod(m)}
-                          className="accent-plate-blue"
-                        />
-                        {m === "cash" ? "Efectivo" : "Transferencia"}
-                      </span>
-                      {selectedPlan && (
-                        <span className="font-mono text-tiny text-txt-faint">
-                          {formatMoney(
-                            m === "cash"
-                              ? selectedPlan.price_cash_cents
-                              : selectedPlan.price_transfer_cents
-                          )}
-                        </span>
-                      )}
-                    </label>
-                  ))}
-                </div>
-
-                <Field label="Monto cobrado">
-                  <input
-                    name="amount"
-                    type="number"
-                    min={0}
-                    step="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="field font-mono bg-surface"
-                    placeholder="80000"
-                  />
-                </Field>
+                <PaymentFields
+                  plan={selectedPlan}
+                  value={payment}
+                  onChange={setPayment}
+                  inputClass="field font-mono bg-surface"
+                  noteClass="bg-surface"
+                />
               </>
             )}
           </div>

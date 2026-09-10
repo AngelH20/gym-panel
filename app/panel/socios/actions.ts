@@ -13,6 +13,29 @@ function parseAmountCents(raw: FormDataEntryValue | null): number {
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : 0;
 }
 
+/** Cómo se repartió el cobro entre los dos medios.
+ *
+ *  El form manda "mode": todo efectivo, todo transferencia, o mixto (un pase
+ *  de $100.000 pagado con $60.000 por transferencia y $40.000 en efectivo).
+ *  En mixto vienen los dos montos por separado; en los otros dos, uno solo.
+ *  Cada medio con monto mayor a cero termina siendo su propio movimiento en
+ *  la caja del día (ver sell_membership_split en 19_split_payment_and_plan_fix.sql). */
+function parsePaymentSplit(formData: FormData): { cash: number; transfer: number } {
+  // "method" es el nombre viejo del campo: se sigue aceptando por si quedó
+  // alguna pantalla sin actualizar.
+  const mode = String(formData.get("mode") ?? formData.get("method") ?? "cash");
+
+  if (mode === "split") {
+    return {
+      cash: parseAmountCents(formData.get("amount_cash")),
+      transfer: parseAmountCents(formData.get("amount_transfer")),
+    };
+  }
+
+  const amount = parseAmountCents(formData.get("amount"));
+  return mode === "transfer" ? { cash: 0, transfer: amount } : { cash: amount, transfer: 0 };
+}
+
 /** Fecha de inicio del pase, para poder cargar un pago con fecha retroactiva
  *  (ej: cobrado en efectivo sin sistema un día, cargado recién al día
  *  siguiente). Si viene vacía, mal formada o futura, se ignora y
@@ -67,12 +90,12 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
   // Si eligió un plan en el alta, le activamos el pase y registramos el cobro.
   const plan_id = String(formData.get("plan_id") ?? "");
   if (plan_id) {
-    const method = String(formData.get("method") ?? "cash") as "cash" | "transfer";
-    const { error: sellError } = await supabase.rpc("sell_membership", {
+    const split = parsePaymentSplit(formData);
+    const { error: sellError } = await supabase.rpc("sell_membership_split", {
       p_member_id: member.id,
       p_plan_id: plan_id,
-      p_amount_cents: parseAmountCents(formData.get("amount")),
-      p_method: method,
+      p_cash_cents: split.cash,
+      p_transfer_cents: split.transfer,
       p_start: parseStartDate(formData.get("start_date")),
     });
     if (sellError) {
@@ -150,15 +173,14 @@ export async function setMemberStatus(_prev: unknown, formData: FormData): Promi
 export async function sellMembership(_prev: unknown, formData: FormData): Promise<Result> {
   const member_id = String(formData.get("member_id"));
   const plan_id = String(formData.get("plan_id"));
-  const method = String(formData.get("method") ?? "cash") as "cash" | "transfer";
-  const amount_cents = parseAmountCents(formData.get("amount"));
+  const split = parsePaymentSplit(formData);
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("sell_membership", {
+  const { error } = await supabase.rpc("sell_membership_split", {
     p_member_id: member_id,
     p_plan_id: plan_id,
-    p_amount_cents: amount_cents,
-    p_method: method,
+    p_cash_cents: split.cash,
+    p_transfer_cents: split.transfer,
     p_start: parseStartDate(formData.get("start_date")),
   });
 
@@ -186,6 +208,40 @@ export async function updateMembershipEnd(_prev: unknown, formData: FormData): P
   const { error } = await supabase.rpc("set_membership_period_end", {
     p_membership_id: membership_id,
     p_period_end: period_end,
+  });
+
+  revalidatePath("/panel/socios");
+  revalidatePath(`/panel/socios/${member_id}`);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
+/** Corrige el plan de un pase ya vendido: para cuando se le cargó el plan
+ *  equivocado al socio. NO registra ningún cobro — el movimiento que ya está
+ *  en la caja queda como está, no se duplica ni se infla el total del día.
+ *  Si el pase tiene entradas ya usadas, se respetan. */
+export async function updateMembershipPlan(_prev: unknown, formData: FormData): Promise<Result> {
+  const membership_id = String(formData.get("membership_id"));
+  const member_id = String(formData.get("member_id"));
+  const plan_id = String(formData.get("plan_id") ?? "");
+
+  if (!plan_id) return { error: "Elegí un plan." };
+
+  // Entradas: vacío = las que traiga el plan elegido. Se puede pisar a mano
+  // para el caso en que el socio ya gastó más entradas de las que trae el
+  // plan nuevo, que si no quedaría bloqueado.
+  const rawUses = String(formData.get("uses_total") ?? "").trim();
+  const uses = Number(rawUses);
+  if (rawUses && (!Number.isInteger(uses) || uses < 1)) {
+    return { error: "Las entradas tienen que ser un número entero de 1 o más." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_membership_plan", {
+    p_membership_id: membership_id,
+    p_plan_id: plan_id,
+    p_uses_override: rawUses ? uses : null,
   });
 
   revalidatePath("/panel/socios");
