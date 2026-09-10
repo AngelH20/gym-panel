@@ -44,7 +44,7 @@ export default async function SocioPage({
     ]);
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="space-y-4">
       <Link
         href="/panel/socios"
         className="inline-flex items-center gap-1.5 text-tiny text-txt-soft hover:text-txt transition-colors"
@@ -64,12 +64,14 @@ export default async function SocioPage({
       </Link>
 
       {/*
-        Dos columnas en escritorio: a la izquierda lo que se viene a hacer
-        (ver cuántas entradas quedan, renovar el pase, el historial); a la
-        derecha, de consulta, los datos del socio y sus últimas entradas.
-        En celular es una sola columna y se apila en ese mismo orden.
+        A la izquierda, en una columna de ancho acotado (para que el
+        formulario no quede gigante), va lo que se viene a hacer: ver cuántas
+        entradas quedan y renovar el pase. A la derecha, ocupando TODO el
+        resto del ancho, las tarjetas de consulta (datos, últimas entradas,
+        historial) repartidas en varias columnas según entre la pantalla.
+        En celular es una sola columna apilada.
       */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,27rem)_minmax(0,1fr)] lg:items-start">
         <div className="space-y-4 min-w-0">
           {/* Cabecera: quién es y si puede entrar */}
           <section className="card overflow-hidden">
@@ -142,6 +144,47 @@ export default async function SocioPage({
             latestMembership={(history?.[0] as Membership | undefined) ?? null}
             role={role}
           />
+        </div>
+
+        {/*
+          Consulta: ocupa todo el ancho que sobra y reparte las tarjetas en
+          1 / 2 / 3 columnas según el tamaño de pantalla, para no dejar la
+          mitad derecha vacía en un monitor ancho.
+        */}
+        <div className="grid gap-4 items-start content-start sm:grid-cols-2 2xl:grid-cols-3">
+          <EditMemberForm member={m} />
+
+          {/* Últimas entradas */}
+          <section className="card p-5">
+            <h2 className="h3 mb-3">Últimas entradas</h2>
+
+            {(checkIns ?? []).length === 0 ? (
+              <p className="text-base text-txt-soft">
+                Todavía no registró ninguna entrada.
+              </p>
+            ) : (
+              <ul className="datalist">
+                {(checkIns ?? []).map((c) => (
+                  <li key={c.id} className="py-2.5 flex items-center gap-2.5">
+                    <span
+                      className={`size-1.5 rounded-full shrink-0 ${
+                        c.charged ? "bg-plate-green" : "bg-plate-blue"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span className="font-mono text-tiny text-txt-soft">
+                      {formatDateTime(c.checked_in_at)}
+                    </span>
+                    {!c.charged && (
+                      <span className="text-[10px] text-txt-faint">
+                        reingreso, no descontó pase
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           {/* Historial de pases */}
           <section className="card p-5">
@@ -176,43 +219,6 @@ export default async function SocioPage({
                 )
               )}
             </ul>
-          </section>
-        </div>
-
-        {/* Columna de consulta: datos del socio y sus últimas entradas */}
-        <div className="space-y-4 lg:sticky lg:top-6">
-          <EditMemberForm member={m} />
-
-          {/* Últimas entradas */}
-          <section className="card p-5">
-            <h2 className="h3 mb-3">Últimas entradas</h2>
-
-            {(checkIns ?? []).length === 0 ? (
-              <p className="text-base text-txt-soft">
-                Todavía no registró ninguna entrada.
-              </p>
-            ) : (
-              <ul className="datalist">
-                {(checkIns ?? []).map((c) => (
-                  <li key={c.id} className="py-2.5 flex items-center gap-2.5">
-                    <span
-                      className={`size-1.5 rounded-full shrink-0 ${
-                        c.charged ? "bg-plate-green" : "bg-plate-blue"
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span className="font-mono text-tiny text-txt-soft">
-                      {formatDateTime(c.checked_in_at)}
-                    </span>
-                    {!c.charged && (
-                      <span className="text-[10px] text-txt-faint">
-                        reingreso, no descontó pase
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
           </section>
         </div>
       </div>

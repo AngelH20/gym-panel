@@ -16,9 +16,9 @@ export function PlanList({
   const [editing, setEditing] = useState<string | "new" | null>(null);
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+    <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3 lg:items-start">
       {plans.length === 0 && editing !== "new" && (
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 2xl:col-span-3">
           <EmptyState
             title="Todavía no hay planes"
             description="Un plan define cuántas entradas incluye el pase. Creá el primero para poder darle un pase a un socio."
@@ -32,7 +32,7 @@ export function PlanList({
 
       {plans.map((plan) =>
         editing === plan.id ? (
-          <div key={plan.id} className="lg:col-span-2">
+          <div key={plan.id} className="lg:col-span-2 2xl:col-span-3">
             <PlanForm plan={plan} onDone={() => setEditing(null)} />
           </div>
         ) : (
@@ -46,14 +46,14 @@ export function PlanList({
       )}
 
       {editing === "new" ? (
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 2xl:col-span-3">
           <PlanForm onDone={() => setEditing(null)} />
         </div>
       ) : (
         plans.length > 0 && (
           <button
             onClick={() => setEditing("new")}
-            className="lg:col-span-2 w-full rounded-card border border-dashed border-line-strong
+            className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border border-dashed border-line-strong
                        py-4 text-tiny font-medium text-txt-soft
                        hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
                        transition-colors"

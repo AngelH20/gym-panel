@@ -164,7 +164,7 @@ export default async function SociosPage({
           )}
         </EmptyState>
       ) : (
-        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {members.map((m) => (
             <li key={m.id}>
               <Link href={`/panel/socios/${m.id}`} className="card-link h-full p-4">

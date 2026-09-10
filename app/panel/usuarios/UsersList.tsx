@@ -35,7 +35,7 @@ export function UsersList({
           description="Todavía no diste de alta ninguna otra cuenta."
         />
       ) : (
-        <ul className="grid gap-2.5 sm:grid-cols-2">
+        <ul className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
           {staff.map((s) => (
             <StaffRow key={s.id} staff={s} isSelf={s.user_id === currentUserId} />
           ))}

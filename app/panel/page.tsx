@@ -166,7 +166,7 @@ export default async function PanelHome() {
             Les quedan 2 entradas o menos, o el pase vence en 3 días.
           </p>
 
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {porVencer.map((m) => (
               <li key={m.id}>
                 <Link
@@ -206,7 +206,7 @@ export default async function PanelHome() {
             renovaron.
           </p>
 
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {vencidosPasadoElPlazo.map((m) => (
               <li key={m.id}>
                 <Link
@@ -235,7 +235,7 @@ export default async function PanelHome() {
             Todavía no entró nadie hoy.
           </p>
         ) : (
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {entraronHoy.map((m) => (
               <li key={m.id}>
                 <Link
