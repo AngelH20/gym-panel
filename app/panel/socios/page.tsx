@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/Form";
 import { StatCard } from "@/components/StatCard";
 import { IconPeople, IconCheck, IconAlert, IconPersonMinus } from "@/components/icons";
 import { SearchBox } from "./SearchBox";
+import { ViewToggle, type SociosView } from "./ViewToggle";
+import { formatDate } from "@/lib/labels";
 
 const FILTERS = [
   { key: "todos", label: "Todos" },
@@ -19,9 +21,10 @@ const FILTERS = [
 export default async function SociosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; f?: string }>;
+  searchParams: Promise<{ q?: string; f?: string; view?: string }>;
 }) {
-  const { q = "", f = "todos" } = await searchParams;
+  const { q = "", f = "todos", view: viewParam } = await searchParams;
+  const view: SociosView = viewParam === "list" ? "list" : "grid";
   const supabase = await createClient();
 
   let query = supabase.from("member_overview").select("*").order("full_name");
@@ -112,40 +115,51 @@ export default async function SociosPage({
 
       <SearchBox defaultValue={q} />
 
-      <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-4 px-4">
-        {FILTERS.map((filter) => {
-          const active = f === filter.key;
-          const count =
-            filter.key === "por-vencer" && porVencer.length > 0
-              ? porVencer.length
-              : null;
+      <div className="flex items-center gap-3">
+        <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-4 px-4 flex-1">
+          {FILTERS.map((filter) => {
+            const active = f === filter.key;
+            const count =
+              filter.key === "por-vencer" && porVencer.length > 0
+                ? porVencer.length
+                : null;
+            const qs = [
+              `f=${filter.key}`,
+              q ? `q=${encodeURIComponent(q)}` : "",
+              view === "list" ? "view=list" : "",
+            ]
+              .filter(Boolean)
+              .join("&");
 
-          return (
-            <Link
-              key={filter.key}
-              href={`/panel/socios?f=${filter.key}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
-              className={[
-                "shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-                "text-tiny font-medium transition-colors",
-                active
-                  ? "bg-ink text-txt-onDark border-ink"
-                  : "bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt",
-              ].join(" ")}
-            >
-              {filter.label}
-              {count && (
-                <span
-                  className={[
-                    "font-mono text-[10px] rounded-full px-1.5",
-                    active ? "bg-ink-raised" : "bg-plate-amber/25 text-plate-amberInk",
-                  ].join(" ")}
-                >
-                  {count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={filter.key}
+                href={`/panel/socios?${qs}`}
+                className={[
+                  "shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5",
+                  "text-tiny font-medium transition-colors",
+                  active
+                    ? "bg-ink text-txt-onDark border-ink"
+                    : "bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt",
+                ].join(" ")}
+              >
+                {filter.label}
+                {count && (
+                  <span
+                    className={[
+                      "font-mono text-[10px] rounded-full px-1.5",
+                      active ? "bg-ink-raised" : "bg-plate-amber/25 text-plate-amberInk",
+                    ].join(" ")}
+                  >
+                    {count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        <ViewToggle value={view} />
       </div>
 
       {members.length === 0 ? (
@@ -163,6 +177,48 @@ export default async function SociosPage({
             </Link>
           )}
         </EmptyState>
+      ) : view === "list" ? (
+        <ul className="card divide-y divide-line overflow-hidden">
+          {members.map((m) => (
+            <li key={m.id}>
+              <Link
+                href={`/panel/socios/${m.id}`}
+                className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition-colors"
+              >
+                <div className="relative shrink-0">
+                  <Avatar name={m.full_name} url={m.photo_url} size={32} />
+                  {m.checked_in_today && (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full
+                                 bg-plate-green ring-2 ring-surface"
+                      title="Entró hoy"
+                    />
+                  )}
+                </div>
+
+                <span className="min-w-0 flex-1 truncate font-medium">{m.full_name}</span>
+
+                <StatusBadge status={m.effective_status} />
+
+                <span className="hidden sm:block w-32 shrink-0 truncate text-tiny text-txt-faint">
+                  {m.plan_name ?? "Sin plan"}
+                </span>
+
+                {m.uses_total != null && m.uses_remaining != null ? (
+                  <span className="hidden md:block w-24 shrink-0 font-mono text-tiny text-txt-soft text-right">
+                    {m.uses_remaining}/{m.uses_total}
+                  </span>
+                ) : (
+                  <span className="hidden md:block w-24 shrink-0" />
+                )}
+
+                <span className="hidden lg:block w-24 shrink-0 text-right font-mono text-tiny text-txt-faint">
+                  {m.period_end ? formatDate(m.period_end) : "—"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       ) : (
         <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {members.map((m) => (

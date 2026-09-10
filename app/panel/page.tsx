@@ -95,12 +95,7 @@ export default async function PanelHome() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <h1 className="h1">Panel</h1>
-        <Link
-          href="/panel/acceso"
-          className="btn bg-plate-green bg-gradient-to-b from-white/15 to-white/0
-                     text-white shadow-card hover:brightness-95 active:translate-y-px active:brightness-90
-                     shrink-0"
-        >
+        <Link href="/panel/acceso" className="btn-success shrink-0">
           <IconQr />
           Código QR
         </Link>

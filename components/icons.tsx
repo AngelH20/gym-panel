@@ -151,6 +151,25 @@ export function IconWallet({ className = base }: IconProps) {
   );
 }
 
+export function IconGrid({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
+    </svg>
+  );
+}
+
+export function IconRows({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
 export function IconFlag({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

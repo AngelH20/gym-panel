@@ -186,38 +186,46 @@
     background-position: right 0.75rem center;
   }
 
+  /* --- Botones ---------------------------------------------------------------
+     Un solo sistema, plano y sobrio: mismo alto, mismo radio, borde de 1px
+     siempre (transparente en los llenos) para que alineen igual estén al
+     lado de uno con borde o no. Sin degradados, sin sombras, sin rebotes:
+     solo cambia el color al pasar el mouse. La diferencia entre uno y otro
+     es semántica, no decorativa — azul = acción principal, ghost = acción
+     secundaria, rojo = destructivo, verde = acceso/QR.                     */
+
   .btn {
     @apply inline-flex items-center justify-center gap-2
-           rounded-control px-4 py-2.5
-           font-sans text-tiny font-semibold
-           transition-all
+           rounded-control border border-transparent px-3.5 py-2
+           font-sans text-tiny font-medium
+           transition-colors
            disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply btn bg-plate-blue bg-gradient-to-b from-white/15 to-white/0
-           text-white shadow-card
-           hover:brightness-95 active:translate-y-px active:brightness-90;
+    @apply btn bg-plate-blue text-white hover:bg-plate-blue/90;
   }
 
   .btn-dark {
-    @apply btn bg-ink bg-gradient-to-b from-white/10 to-white/0
-           text-txt-onDark shadow-card
-           hover:bg-ink-raised active:translate-y-px;
+    @apply btn bg-ink text-txt-onDark hover:bg-ink-raised;
+  }
+
+  .btn-success {
+    @apply btn bg-plate-green text-white hover:bg-plate-green/90;
   }
 
   .btn-ghost {
-    @apply btn bg-surface border border-line text-txt-soft
-           hover:border-line-strong hover:text-txt hover:bg-surface-hover;
+    @apply btn border-line bg-surface text-txt-soft
+           hover:border-line-strong hover:bg-surface-hover hover:text-txt;
   }
 
   .btn-danger {
-    @apply btn bg-surface border border-plate-red/40 text-plate-red
-           hover:bg-plate-red hover:text-white hover:border-plate-red;
+    @apply btn border-plate-red/40 bg-surface text-plate-red
+           hover:border-plate-red/60 hover:bg-plate-red/10;
   }
 
   .btn-sm {
-    @apply px-3 py-1.5 text-micro tracking-normal normal-case;
+    @apply px-2.5 py-1 text-micro tracking-normal normal-case;
   }
 
   /* --- Insignias ---------------------------------------------------------- */
