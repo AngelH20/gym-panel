@@ -20,7 +20,7 @@ export default async function UsuariosPage() {
   ]);
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-4xl">
       <div>
         <h1 className="h1">Usuarios</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">

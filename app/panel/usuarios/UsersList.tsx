@@ -35,7 +35,7 @@ export function UsersList({
           description="Todavía no diste de alta ninguna otra cuenta."
         />
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid gap-2.5 sm:grid-cols-2">
           {staff.map((s) => (
             <StaffRow key={s.id} staff={s} isSelf={s.user_id === currentUserId} />
           ))}
@@ -65,7 +65,7 @@ function StaffRow({ staff, isSelf }: { staff: Staff; isSelf: boolean }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <li className="card p-4 space-y-2.5">
+    <li className="card h-full p-4 space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-base font-medium truncate">

@@ -48,7 +48,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="h1">Personalización</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">

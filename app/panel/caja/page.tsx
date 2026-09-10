@@ -188,6 +188,9 @@ export default async function CajaPage({
         <StatCard label="Balance" value={formatMoney(total)} accent="amber" icon={<IconWallet />} />
       </div>
 
+      {/* Los dos listados, lado a lado en escritorio para no dejar media
+          pantalla vacía */}
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
       <section className="card p-5">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="h3 flex items-center gap-2">
@@ -227,13 +230,13 @@ export default async function CajaPage({
         )}
       </section>
 
-      <section>
+      <section className="card p-5">
         <h2 className="h3 mb-3">Historial de cajas</h2>
 
         {history.length === 0 ? (
           <p className="text-base text-txt-soft">Todavía no se cerró ninguna caja.</p>
         ) : (
-          <ul className="datalist card px-5">
+          <ul className="datalist">
             {history.map((h) => (
               <li key={h.id} className="py-3 flex items-center justify-between gap-3">
                 <Link
@@ -276,6 +279,7 @@ export default async function CajaPage({
           </ul>
         )}
       </section>
+      </div>
     </div>
   );
 }

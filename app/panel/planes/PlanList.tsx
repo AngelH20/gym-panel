@@ -16,21 +16,25 @@ export function PlanList({
   const [editing, setEditing] = useState<string | "new" | null>(null);
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
       {plans.length === 0 && editing !== "new" && (
-        <EmptyState
-          title="Todavía no hay planes"
-          description="Un plan define cuántas entradas incluye el pase. Creá el primero para poder darle un pase a un socio."
-        >
-          <button onClick={() => setEditing("new")} className="btn-primary">
-            Crear plan
-          </button>
-        </EmptyState>
+        <div className="lg:col-span-2">
+          <EmptyState
+            title="Todavía no hay planes"
+            description="Un plan define cuántas entradas incluye el pase. Creá el primero para poder darle un pase a un socio."
+          >
+            <button onClick={() => setEditing("new")} className="btn-primary">
+              Crear plan
+            </button>
+          </EmptyState>
+        </div>
       )}
 
       {plans.map((plan) =>
         editing === plan.id ? (
-          <PlanForm key={plan.id} plan={plan} onDone={() => setEditing(null)} />
+          <div key={plan.id} className="lg:col-span-2">
+            <PlanForm plan={plan} onDone={() => setEditing(null)} />
+          </div>
         ) : (
           <PlanRow
             key={plan.id}
@@ -42,12 +46,14 @@ export function PlanList({
       )}
 
       {editing === "new" ? (
-        <PlanForm onDone={() => setEditing(null)} />
+        <div className="lg:col-span-2">
+          <PlanForm onDone={() => setEditing(null)} />
+        </div>
       ) : (
         plans.length > 0 && (
           <button
             onClick={() => setEditing("new")}
-            className="w-full rounded-card border border-dashed border-line-strong
+            className="lg:col-span-2 w-full rounded-card border border-dashed border-line-strong
                        py-4 text-tiny font-medium text-txt-soft
                        hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
                        transition-colors"
@@ -70,7 +76,7 @@ function PlanRow({
   onEdit: () => void;
 }) {
   return (
-    <div className={`card p-5 ${plan.is_active ? "" : "opacity-65"}`}>
+    <div className={`card h-full p-5 ${plan.is_active ? "" : "opacity-65"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

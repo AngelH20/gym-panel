@@ -164,10 +164,10 @@ export default async function SociosPage({
           )}
         </EmptyState>
       ) : (
-        <ul className="space-y-2">
+        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
           {members.map((m) => (
             <li key={m.id}>
-              <Link href={`/panel/socios/${m.id}`} className="card-link p-4">
+              <Link href={`/panel/socios/${m.id}`} className="card-link h-full p-4">
                 <div className="flex items-center gap-3.5">
                   <div className="relative shrink-0">
                     <Avatar name={m.full_name} url={m.photo_url} />
