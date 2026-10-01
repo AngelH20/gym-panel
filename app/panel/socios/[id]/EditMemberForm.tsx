@@ -75,7 +75,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
 
       <Field
         label="Fecha de nacimiento"
-        hint="Opcional. Si la cargás, el día que cumpla años se lo saludamos al entrar."
+        hint="Opcional: si la cargás, le decimos feliz cumpleaños el día que entra."
       >
         <input
           name="birth_date"
@@ -87,7 +87,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
 
       <Field
         label="Mensaje de bienvenida personalizado"
-        hint="Opcional. Reemplaza el saludo genérico en la pantalla de check-in cuando este socio escanea su primera entrada del día."
+        hint="Opcional: reemplaza el saludo genérico cuando este socio marca su primera entrada del día."
       >
         <textarea
           name="welcome_message"

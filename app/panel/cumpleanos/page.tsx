@@ -71,8 +71,7 @@ export default async function CumpleañosPage() {
       <section className="card p-5">
         <h2 className="h3 mb-1">Próximos cumpleaños</h2>
         <p className="mb-3 text-tiny text-txt-faint">
-          Ordenados por el más cercano. El socio recibe el saludo solo al escanear su entrada ese
-          día.
+          De más cercano a más lejano. El saludo sale solo, el día que escanean.
         </p>
 
         {proximos.length === 0 ? (
@@ -105,9 +104,9 @@ export default async function CumpleañosPage() {
       {!!sinFecha && sinFecha > 0 && (
         <p className="text-tiny text-txt-faint text-center">
           {sinFecha === 1
-            ? "Hay 1 socio sin fecha de nacimiento cargada."
-            : `Hay ${sinFecha} socios sin fecha de nacimiento cargada.`}{" "}
-          Cargala desde la ficha de cada uno para que aparezca acá.
+            ? "1 socio no tiene fecha de nacimiento."
+            : `${sinFecha} socios no tienen fecha de nacimiento.`}{" "}
+          Cargala en su ficha para que aparezcan acá.
         </p>
       )}
     </div>

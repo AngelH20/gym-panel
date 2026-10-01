@@ -52,8 +52,8 @@ export default function SettingsPage() {
       <div>
         <h1 className="h1">Personalización</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Ajustá los colores y el tamaño de letra de todo el panel. Los cambios se ven al
-          instante y quedan guardados en este navegador.
+          Colores y tamaño de letra del panel. Se ven al toque y quedan guardados en este
+          navegador.
         </p>
       </div>
 

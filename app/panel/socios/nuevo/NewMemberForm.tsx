@@ -219,7 +219,7 @@ export function NewMemberForm({
 
           <Field
             label="Fecha de nacimiento"
-            hint="Opcional. Si la cargás, el día que cumpla años se lo saludamos al entrar."
+            hint="Opcional: si la cargás, le decimos feliz cumpleaños el día que entra."
           >
             <input
               name="birth_date"
@@ -248,7 +248,7 @@ export function NewMemberForm({
             <div>
               <h2 className="h3">Activar pase ahora</h2>
               <p className="mt-1 text-tiny text-txt-faint">
-                Opcional. El período arranca hoy (o la fecha que elijas) y vence el día 10 de un mes.
+                Opcional. Arranca hoy (o la fecha que elijas) y vence el día 10.
               </p>
             </div>
 

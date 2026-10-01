@@ -45,7 +45,7 @@ export default async function AccesoPage() {
           Acceso
         </span>
         <p className="text-base text-txt-soft whitespace-nowrap">
-          Escaneá este código QR para poder registrar tu entrada al gimnasio.
+          Escaneá este código para registrar tu entrada al gimnasio.
         </p>
       </div>
 
@@ -87,8 +87,8 @@ export default async function AccesoPage() {
         <InvalidateAccessButton />
 
         <p className="text-tiny text-txt-faint">
-          Usalo si un QR quedó visible en una foto o pantalla compartida: corta al
-          instante todos los códigos ya generados, incluido el de esta pantalla.
+          Usalo si un QR quedó visible en una foto o pantalla compartida: invalida al toque
+          todos los códigos vigentes, incluido este.
         </p>
       </section>
     </div>

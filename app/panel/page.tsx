@@ -164,7 +164,7 @@ export default async function PanelHome() {
             </Link>
           </div>
           <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            Saludalos vos, y cuando escaneen su entrada el kiosco también se lo dice.
+            Saludalos vos — el kiosco también se lo va a decir cuando entren.
           </p>
 
           <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

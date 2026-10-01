@@ -21,7 +21,7 @@ export function PlanList({
         <div className="lg:col-span-2 2xl:col-span-3">
           <EmptyState
             title="Todavía no hay planes"
-            description="Un plan define cuántas entradas incluye el pase. Creá el primero para poder darle un pase a un socio."
+            description="Creá el primero para poder darle un pase a un socio."
           >
             <button onClick={() => setEditing("new")} className="btn-primary">
               Crear plan
@@ -110,7 +110,7 @@ function PlanRow({
         </div>
       </div>
       <p className="mt-1 text-[10px] text-txt-faint">
-        El vencimiento ya no depende de este número: todo pase vence el día 10 de un mes.
+        No depende de este número: el vencimiento siempre es el 10.
       </p>
 
       {(plan.price_cash_cents != null || plan.price_transfer_cents != null) && (
@@ -199,7 +199,7 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
 
         <Field
           label="Días de duración"
-          hint="Ya no afecta el vencimiento: todo pase vence el día 10 de un mes."
+          hint="No afecta el vencimiento: siempre es el día 10."
         >
           <input
             name="period_days"

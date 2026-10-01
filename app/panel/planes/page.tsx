@@ -30,8 +30,7 @@ export default async function PlanesPage() {
       <div>
         <h1 className="h1">Planes</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Un plan define cuántas entradas incluye el pase. El vencimiento ya
-          no depende de acá: todo pase vence el día 10 de un mes.
+          Cuántas entradas trae cada pase. El vencimiento no se toca acá: siempre es el 10.
         </p>
       </div>
 

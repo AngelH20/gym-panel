@@ -68,7 +68,7 @@ export default async function CajaPage({
       <div>
         <h1 className="h1">Caja</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Gestión de caja y movimientos del día.
+          Caja y movimientos del día.
         </p>
       </div>
 
