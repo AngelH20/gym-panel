@@ -150,6 +150,25 @@ export function formatMoney(cents: number | null | undefined): string {
   }).format(cents / 100);
 }
 
+/** "2026-08-12" -> "12/08", sin año. Para el listado de cumpleaños, donde el
+ *  año de next_birthday no aporta nada (siempre es este año o el que viene). */
+export function formatDayMonth(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const [, m, d] = iso.slice(0, 10).split("-");
+  return `${d}/${m}`;
+}
+
+/** Años que cumple en next_birthday, a partir de birth_date. */
+export function ageOnNextBirthday(
+  birthDate: string | null | undefined,
+  nextBirthday: string | null | undefined
+): number | null {
+  if (!birthDate || !nextBirthday) return null;
+  const birthYear = Number(birthDate.slice(0, 4));
+  const nextYear = Number(nextBirthday.slice(0, 4));
+  return nextYear - birthYear;
+}
+
 /** "Martina Gómez" -> "MG" */
 export function initials(name: string): string {
   return name

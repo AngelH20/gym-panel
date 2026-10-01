@@ -43,6 +43,7 @@ export type Member = {
   notes: string | null;
   qr_token: string;
   welcome_message: string | null;
+  birth_date: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -71,6 +72,10 @@ export type MemberOverview = {
   visits_today: number;
   last_check_in_at: string | null;
   welcome_message: string | null;
+  birth_date: string | null;
+  next_birthday: string | null;
+  days_to_birthday: number | null;
+  is_birthday_today: boolean;
 };
 
 export type Membership = {
@@ -108,6 +113,7 @@ export type CheckInResult = {
   period_end?: string;
   visits_today?: number;
   checked_in_at?: string;
+  is_birthday?: boolean;
 };
 
 export type AccessMode = "off" | "pin" | "rotating";

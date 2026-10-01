@@ -51,6 +51,13 @@ const qrIcon = (
     <path d="M14 14h3v3M20 17v4h-6" strokeLinecap="round" />
   </>
 );
+const cumpleañosIcon = (
+  <>
+    <path d="M12 2.5c-1 1.3-1 2.2 0 3.2M8.5 3.5c-.8 1-.8 1.8 0 2.6M15.5 3.5c-.8 1-.8 1.8 0 2.6" strokeLinecap="round" />
+    <path d="M5 11a2 2 0 0 1 2-2c.6 0 1 .3 1.5.8.5-.5.9-.8 1.5-.8s1 .3 1.5.8c.5-.5.9-.8 1.5-.8s1 .3 1.5.8c.5-.5.9-.8 1.5-.8a2 2 0 0 1 2 2v3H5v-3Z" />
+    <path d="M4 21v-5.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2V21M4 18h16" strokeLinecap="round" />
+  </>
+);
 
 type NavLink = { href: string; label: string; icon: React.ReactNode };
 
@@ -60,6 +67,7 @@ function visibleLinks(role: AdminRole | null | undefined): NavLink[] {
   const links: NavLink[] = [
     { href: "/panel", label: "Panel", icon: panelIcon },
     { href: "/panel/socios", label: "Socios", icon: sociosIcon },
+    { href: "/panel/cumpleanos", label: "Cumpleaños", icon: cumpleañosIcon },
     { href: "/panel/metricas", label: "Métricas", icon: metricasIcon },
   ];
   if (role !== "profesor") links.push({ href: "/panel/planes", label: "Planes", icon: planesIcon });

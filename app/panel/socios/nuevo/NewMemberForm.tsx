@@ -22,6 +22,7 @@ type Draft = {
   email: string;
   photo_url: string;
   notes: string;
+  birth_date: string;
   plan_id: string;
   payment: PaymentDraft;
 };
@@ -33,6 +34,7 @@ const EMPTY_DRAFT: Draft = {
   email: "",
   photo_url: "",
   notes: "",
+  birth_date: "",
   plan_id: "",
   payment: EMPTY_PAYMENT,
 };
@@ -83,6 +85,7 @@ export function NewMemberForm({
   const [email, setEmail] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [notes, setNotes] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [planId, setPlanId] = useState("");
   const [payment, setPayment] = useState<PaymentDraft>(EMPTY_PAYMENT);
   const [startDate, setStartDate] = useState(today);
@@ -99,6 +102,7 @@ export function NewMemberForm({
     setEmail(d.email);
     setPhotoUrl(d.photo_url);
     setNotes(d.notes);
+    setBirthDate(d.birth_date);
     if (cajaAbierta) {
       setPlanId(d.plan_id);
       setPayment(d.payment);
@@ -116,10 +120,11 @@ export function NewMemberForm({
       email,
       photo_url: photoUrl,
       notes,
+      birth_date: birthDate,
       plan_id: planId,
       payment,
     });
-  }, [hydrated, fullName, dni, phone, email, photoUrl, notes, planId, payment]);
+  }, [hydrated, fullName, dni, phone, email, photoUrl, notes, birthDate, planId, payment]);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
 
@@ -209,6 +214,20 @@ export function NewMemberForm({
               placeholder="https://…"
               value={photoUrl}
               onChange={(e) => setPhotoUrl(e.target.value)}
+            />
+          </Field>
+
+          <Field
+            label="Fecha de nacimiento"
+            hint="Opcional. Si la cargás, el día que cumpla años se lo saludamos al entrar."
+          >
+            <input
+              name="birth_date"
+              type="date"
+              max={today}
+              className="field font-mono"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
             />
           </Field>
 

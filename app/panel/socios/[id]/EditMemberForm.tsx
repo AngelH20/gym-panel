@@ -25,6 +25,11 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           <Row label="Teléfono" value={member.phone} mono />
           <Row label="Email" value={member.email} />
           <Row label="Socio desde" value={formatDate(member.joined_on)} mono />
+          <Row
+            label="Cumpleaños"
+            value={member.birth_date ? formatDate(member.birth_date) : null}
+            mono
+          />
           <Row label="Bienvenida" value={member.welcome_message} wide />
         </dl>
       </section>
@@ -66,6 +71,18 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
 
       <Field label="Foto (URL)">
         <input name="photo_url" defaultValue={member.photo_url ?? ""} className="field" />
+      </Field>
+
+      <Field
+        label="Fecha de nacimiento"
+        hint="Opcional. Si la cargás, el día que cumpla años se lo saludamos al entrar."
+      >
+        <input
+          name="birth_date"
+          type="date"
+          defaultValue={member.birth_date ?? ""}
+          className="field font-mono"
+        />
       </Field>
 
       <Field

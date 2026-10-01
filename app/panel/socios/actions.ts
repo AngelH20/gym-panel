@@ -54,6 +54,13 @@ function parseDni(raw: FormDataEntryValue | null): string | null {
   return /^\d{8}$/.test(digits) ? digits : null;
 }
 
+/** Fecha de nacimiento: opcional. Si viene vacía o mal formada, se guarda
+ *  null en vez de cortar el alta/edición por un campo que no es obligatorio. */
+function parseBirthDate(raw: FormDataEntryValue | null): string | null {
+  const value = String(raw ?? "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
 export async function createMember(_prev: unknown, formData: FormData): Promise<Result> {
   const full_name = String(formData.get("full_name") ?? "").trim();
   if (!full_name) return { error: "El socio necesita un nombre." };
@@ -72,6 +79,7 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
       email: String(formData.get("email") ?? "").trim() || null,
       photo_url: String(formData.get("photo_url") ?? "").trim() || null,
       notes: String(formData.get("notes") ?? "").trim() || null,
+      birth_date: parseBirthDate(formData.get("birth_date")),
     })
     .select("id")
     .single();
@@ -128,6 +136,7 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
       photo_url: String(formData.get("photo_url") ?? "").trim() || null,
       notes: String(formData.get("notes") ?? "").trim() || null,
       welcome_message: String(formData.get("welcome_message") ?? "").trim() || null,
+      birth_date: parseBirthDate(formData.get("birth_date")),
     })
     .eq("id", id);
 

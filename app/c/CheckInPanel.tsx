@@ -28,13 +28,28 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
     // Un QR vencido no se arregla reintentando el mismo intento: hay que
     // escanear de nuevo. No tiene sentido ofrecer "marcar otra entrada" acá.
     const needsRescan = result.code === "BAD_QR";
+    // Gesto lindo: si hoy es el cumpleaños del socio, lo festejamos distinto
+    // en vez de la tarjeta verde de siempre.
+    const isBirthday = success && result.is_birthday;
 
     return (
       <section
         className={`card p-6 text-center space-y-3 border-2 ${
-          success ? "border-plate-green/30" : "border-plate-red/30"
+          isBirthday
+            ? "border-plate-amber/40"
+            : success
+              ? "border-plate-green/30"
+              : "border-plate-red/30"
         }`}
       >
+        {isBirthday && (
+          <div className="flex justify-center">
+            <span className="badge border-plate-amber/35 bg-plate-amber/12 text-plate-amberInk">
+              🎂 ¡Feliz cumpleaños!
+            </span>
+          </div>
+        )}
+
         {result.member_name ? (
           <div className="flex justify-center">
             <Avatar name={result.member_name} url={result.photo_url} size={56} />

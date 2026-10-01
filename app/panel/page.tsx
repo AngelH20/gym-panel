@@ -80,6 +80,7 @@ export default async function PanelHome() {
   const vencidos = all.filter(
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
+  const cumpleañosHoy = all.filter((m) => m.is_birthday_today);
 
   // El plazo del mes es el 10. Un socio "recién vencido" (ej: venció el 25)
   // todavía no incumplió esa fecha: su plazo real es el 10 del mes que viene.
@@ -153,6 +154,36 @@ export default async function PanelHome() {
         <QuickAction href="/panel/caja" icon={<IconCash />} label="Ir a caja" />
         <QuickAction href="/panel/socios" icon={<IconSearch />} label="Buscar socio" />
       </section>
+
+      {cumpleañosHoy.length > 0 && (
+        <section className="card p-5 border-2 border-plate-amber/40 bg-plate-amber/5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="h3">🎂 Hoy cumplen años</h2>
+            <Link href="/panel/cumpleanos" className="text-tiny text-plate-blue hover:underline shrink-0">
+              Ver todos
+            </Link>
+          </div>
+          <p className="mt-1 mb-3 text-tiny text-txt-soft">
+            Saludalos vos, y cuando escaneen su entrada el kiosco también se lo dice.
+          </p>
+
+          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {cumpleañosHoy.map((m) => (
+              <li key={m.id}>
+                <Link
+                  href={`/panel/socios/${m.id}`}
+                  className="py-3 flex items-center gap-3 group"
+                >
+                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
+                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+                    {m.full_name}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {porVencer.length > 0 && (
         <section className="card p-5 border-plate-amber/40 bg-plate-amber/5">
