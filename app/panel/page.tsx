@@ -219,7 +219,7 @@ export default async function PanelHome() {
             {porVencer.length === 0 ? (
               <p className="text-base text-txt-soft">Nadie por ahora.</p>
             ) : (
-              <ul className={SCROLL_LIST}>
+              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]`}>
                 {porVencer.map((m) => (
                   <ListRow key={m.id} member={m}>
                     {m.uses_total != null && m.uses_remaining != null ? (
@@ -244,7 +244,7 @@ export default async function PanelHome() {
             {vencidosSinRenovar.length === 0 ? (
               <p className="text-base text-txt-soft">Nadie por ahora.</p>
             ) : (
-              <ul className={SCROLL_LIST}>
+              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]`}>
                 {vencidosSinRenovar.map((m) => (
                   <ListRow
                     key={m.id}
@@ -308,9 +308,10 @@ export default async function PanelHome() {
   );
 }
 
-// Las dos listas de cobro tienen el mismo alto máximo: si hay muchos, se
-// scrollea adentro de la tarjeta en vez de estirar el panel.
-const SCROLL_LIST = "max-h-[20rem] overflow-y-auto overflow-x-hidden pr-1 divide-y divide-line/60";
+// Las listas de cobro se llenan a lo ancho (tantas columnas como entren) y
+// recién cuando pasan el alto máximo se scrollea adentro de la tarjeta.
+const SCROLL_LIST =
+  "grid gap-x-6 content-start max-h-[20rem] overflow-y-auto overflow-x-hidden pr-1";
 
 function ListRow({
   member: m,
@@ -323,11 +324,11 @@ function ListRow({
 }) {
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
-    <li>
+    <li className="border-b border-line/60">
       <Link href={`/panel/socios/${m.id}`} className="py-1.5 flex items-center gap-2.5 group">
         <Avatar name={m.full_name} url={m.photo_url} size={28} />
         {/* Ancho fijo para el nombre: así las entradas quedan al lado y alineadas, no al fondo de la tarjeta. */}
-        <span className="w-44 sm:w-56 min-w-0 shrink">
+        <span className="w-44 min-w-0 shrink">
           <span className="block truncate text-base font-medium leading-tight group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
