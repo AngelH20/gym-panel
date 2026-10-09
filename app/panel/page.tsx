@@ -15,15 +15,31 @@ import {
   IconQr,
   IconFlag,
 } from "@/components/icons";
-import { formatTime, formatMoney, todayLocal, daysAgoLocal, weekdayShort } from "@/lib/labels";
+import {
+  formatTime,
+  formatMoney,
+  formatDayMonth,
+  todayLocal,
+  daysAgoLocal,
+  weekdayShort,
+} from "@/lib/labels";
 import { WeeklyAttendanceChart, type DayCount } from "./WeeklyAttendanceChart";
 import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
 
 const WEEK_LENGTH = 7;
 
-// Plazo máximo del mes para renovar: pedido del cliente. Es solo un aviso
-// visual en el panel — no cambia el vencimiento real de ningún pase.
-const RENEWAL_DEADLINE_DAY = 10;
+// Cuánto tiempo sigue en "Vencidos sin renovar" alguien que no volvió. Pasado
+// esto se asume que dejó el gimnasio y deja de ocupar el panel (sigue en
+// Socios, con su estado).
+const OVERDUE_WINDOW_DAYS = 30;
+
+/** "vence hoy" / "vence mañana" / "vence el 20/10", para la lista de cobro. */
+function dueLabel(daysLeft: number | null, periodEnd: string | null): string | null {
+  if (daysLeft == null || periodEnd == null) return null;
+  if (daysLeft === 0) return "vence hoy";
+  if (daysLeft === 1) return "vence mañana";
+  return `vence el ${formatDayMonth(periodEnd)}`;
+}
 
 export default async function PanelHome() {
   const supabase = await createClient();
@@ -82,15 +98,13 @@ export default async function PanelHome() {
   );
   const cumpleañosHoy = all.filter((m) => m.is_birthday_today);
 
-  // El plazo del mes es el 10. Un socio "recién vencido" (ej: venció el 25)
-  // todavía no incumplió esa fecha: su plazo real es el 10 del mes que viene.
-  // Solo entran acá los que ya estaban sin pase antes de que llegara el 10
-  // de este mes y siguen sin renovar.
-  const deadlineThisMonth = `${today.slice(0, 7)}-${String(RENEWAL_DEADLINE_DAY).padStart(2, "0")}`;
-  const pasoElPlazo = today > deadlineThisMonth;
-  const vencidosPasadoElPlazo = vencidos.filter(
-    (m) => m.period_end != null && m.period_end < deadlineThisMonth
-  );
+  // Cada socio vence en su propia fecha (ver sql/22_renewal_same_day.sql).
+  // Acá van los que ya vencieron hace poco y todavía no renovaron; los de
+  // hace más de un mes probablemente dejaron de venir.
+  const overdueSince = daysAgoLocal(OVERDUE_WINDOW_DAYS);
+  const vencidosSinRenovar = vencidos
+    .filter((m) => m.period_end != null && m.period_end >= overdueSince)
+    .sort((a, b) => (a.period_end ?? "").localeCompare(b.period_end ?? ""));
 
   return (
     <div className="space-y-5">
@@ -200,8 +214,19 @@ export default async function PanelHome() {
                   className="py-3 flex items-center gap-3 group"
                 >
                   <Avatar name={m.full_name} url={m.photo_url} size={34} />
-                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
-                    {m.full_name}
+                  <span className="flex-1 min-w-0">
+                    <span className="block truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+                      {m.full_name}
+                    </span>
+                    {(m.days_left ?? 99) <= 3 && (
+                      <span
+                        className={`block text-[11px] ${
+                          (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
+                        }`}
+                      >
+                        {dueLabel(m.days_left, m.period_end)}
+                      </span>
+                    )}
                   </span>
                   {m.uses_total != null && m.uses_remaining != null && (
                     <div className="w-24 shrink-0">
@@ -219,21 +244,20 @@ export default async function PanelHome() {
         </section>
       )}
 
-      {pasoElPlazo && vencidosPasadoElPlazo.length > 0 && (
+      {vencidosSinRenovar.length > 0 && (
         <section className="card p-5 border-plate-red/40 bg-plate-red/5">
           <div className="flex items-center gap-2">
             <span className="text-plate-red" aria-hidden="true">
               <IconFlag />
             </span>
-            <h2 className="h3">Ya pasó el día {RENEWAL_DEADLINE_DAY}</h2>
+            <h2 className="h3">Vencidos sin renovar</h2>
           </div>
           <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            Ya estaban sin pase antes del día {RENEWAL_DEADLINE_DAY} de este mes y todavía no
-            renovaron.
+            Se les venció el pase en el último mes y no pueden entrar hasta que paguen.
           </p>
 
           <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {vencidosPasadoElPlazo.map((m) => (
+            {vencidosSinRenovar.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
@@ -244,7 +268,9 @@ export default async function PanelHome() {
                     {m.full_name}
                   </span>
                   <span className="text-tiny text-plate-red font-medium shrink-0">
-                    {m.effective_status === "exhausted" ? "Sin usos" : "Vencido"}
+                    {m.effective_status === "exhausted"
+                      ? "Sin entradas"
+                      : `Venció el ${formatDayMonth(m.period_end)}`}
                   </span>
                 </Link>
               </li>

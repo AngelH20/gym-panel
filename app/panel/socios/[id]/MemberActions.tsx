@@ -131,8 +131,7 @@ export function MemberActions({
               {projectedEnd && (
                 <p className="rounded-control border border-line bg-surface-sunk px-3.5 py-3 text-tiny text-txt-soft">
                   Con esta fecha, el pase va a valer hasta el{" "}
-                  <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>{" "}
-                  (el vencimiento es siempre el día 10 de un mes).
+                  <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>.
                 </p>
               )}
 

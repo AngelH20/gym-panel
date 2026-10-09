@@ -304,7 +304,8 @@ export function NewMemberForm({
             <div>
               <h2 className="h3">Activar pase ahora</h2>
               <p className="mt-1 text-tiny text-txt-faint">
-                Opcional. Arranca hoy (o la fecha que elijas) y vence el día 10.
+                Opcional. Arranca hoy (o la fecha que elijas) y vence en un mes; si paga del 1
+                al 10, tiene hasta el 10.
               </p>
             </div>
 
@@ -380,8 +381,7 @@ export function NewMemberForm({
                 {projectedEnd && (
                   <p className="rounded-control border border-line bg-surface px-3.5 py-3 text-tiny text-txt-soft">
                     Con esta fecha, el pase va a valer hasta el{" "}
-                    <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>{" "}
-                    (el vencimiento es siempre el día 10 de un mes).
+                    <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>.
                   </p>
                 )}
 

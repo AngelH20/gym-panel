@@ -117,18 +117,17 @@ export function addDaysLocal(iso: string, days: number): string {
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
 
-/** Replica en el navegador la regla de negocio de renew_membership() (ver
- *  sql/16_renewal_deadline_day10.sql): todo pase vence el día 10 del mes
- *  siguiente al de pago; si eso da menos de 15 días de pase, se corre un mes
- *  más. Es solo para mostrar una vista previa en el formulario — la fecha
- *  real la calcula esa función SQL, no esto. */
+/** Replica en el navegador membership_end_for() (ver
+ *  sql/22_renewal_same_day.sql): si se pagó del 1 al 10, vence el 10 del mes
+ *  siguiente; del 11 en adelante, el mismo día del mes siguiente (o el último
+ *  día, si ese mes es más corto). Es solo para la vista previa del
+ *  formulario — la fecha real la calcula la función SQL, no esto. */
 export function projectedRenewalEnd(startIso: string): string {
   const [y, m, d] = startIso.split("-").map(Number);
-  const start = new Date(Date.UTC(y, m - 1, d));
-  const nextMonth10th = new Date(Date.UTC(y, m, 10)); // m ya es "mes siguiente" en índice 0
-  const diffDays = Math.round((nextMonth10th.getTime() - start.getTime()) / 86_400_000);
-  const end = diffDays < 15 ? new Date(Date.UTC(y, m + 1, 10)) : nextMonth10th;
-  return end.toISOString().slice(0, 10);
+  // m ya es "mes siguiente" en índice 0; el día 0 del mes m+1 es el último del mes m.
+  const lastDayNextMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const day = d <= 10 ? 10 : Math.min(d, lastDayNextMonth);
+  return new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
 }
 
 /** "2026-08-14" -> "vie". Mediodía UTC evita que el huso corra el día. */

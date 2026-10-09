@@ -110,7 +110,7 @@ function PlanRow({
         </div>
       </div>
       <p className="mt-1 text-[10px] text-txt-faint">
-        No depende de este número: el vencimiento siempre es el 10.
+        No depende de este número: vence el mismo día del mes siguiente (o el 10, si paga del 1 al 10).
       </p>
 
       {(plan.price_cash_cents != null || plan.price_transfer_cents != null) && (
@@ -199,7 +199,7 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
 
         <Field
           label="Días de duración"
-          hint="No afecta el vencimiento: siempre es el día 10."
+          hint="No afecta el vencimiento: depende del día en que paga."
         >
           <input
             name="period_days"

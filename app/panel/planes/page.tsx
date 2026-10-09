@@ -30,7 +30,8 @@ export default async function PlanesPage() {
       <div>
         <h1 className="h1">Planes</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Cuántas entradas trae cada pase. El vencimiento no se toca acá: siempre es el 10.
+          Cuántas entradas trae cada pase. El vencimiento no se toca acá: depende del día en
+          que paga cada socio.
         </p>
       </div>
 
