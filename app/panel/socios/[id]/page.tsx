@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
 import { MemberActions } from "./MemberActions";
 import { EditMemberForm } from "./EditMemberForm";
+import { FamilyCard, type FamilyCandidate, type FamilyMember } from "./FamilyCard";
 
 export default async function SocioPage({
   params,
@@ -26,8 +27,13 @@ export default async function SocioPage({
   if (!member) notFound();
   const m = member as MemberOverview;
 
-  const [{ data: plans }, { data: history }, { data: checkIns }, { data: role }] =
-    await Promise.all([
+  const [
+    { data: plans },
+    { data: history },
+    { data: checkIns },
+    { data: role },
+    { data: allMembers },
+  ] = await Promise.all([
       supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
       supabase
         .from("memberships")
@@ -41,7 +47,28 @@ export default async function SocioPage({
         .order("checked_in_at", { ascending: false })
         .limit(10),
       supabase.rpc("current_admin_role"),
+      // Para el pack familiar: quién es familia de quién, y a quién se lo
+      // puede vincular.
+      supabase.from("members").select("id, full_name, family_id").order("full_name"),
     ]);
+
+  const members = (allMembers ?? []) as FamilyCandidate[];
+  const familyId = members.find((x) => x.id === id)?.family_id ?? null;
+  const familyIds = familyId
+    ? members.filter((x) => x.family_id === familyId && x.id !== id).map((x) => x.id)
+    : [];
+  const { data: family } = familyIds.length
+    ? await supabase
+        .from("member_overview")
+        .select("id, full_name, plan_name, effective_status")
+        .in("id", familyIds)
+        .order("full_name")
+    : { data: [] };
+  // El socio cuenta: una familia de 2 más él son 3, y ahí ya va el pack.
+  const familySize = familyId ? familyIds.length + 1 : 1;
+  const sellablePlans = ((plans ?? []) as Plan[]).filter(
+    (p) => !p.is_family || familySize >= 3
+  );
 
   return (
     <div className="mx-auto w-full max-w-[1700px] space-y-4">
@@ -138,16 +165,25 @@ export default async function SocioPage({
 
           <MemberActions
             member={m}
-            plans={(plans ?? []) as Plan[]}
+            plans={sellablePlans}
             today={todayLocal()}
             latestMembership={(history?.[0] as Membership | undefined) ?? null}
             role={role}
+            familySize={familySize}
           />
         </div>
 
-        {/* Columna 2 (consulta): datos, últimas entradas e historial */}
+        {/* Columna 2 (consulta): datos, familia, últimas entradas e historial */}
         <div className="space-y-5 min-w-0">
           <EditMemberForm member={m} />
+
+          <FamilyCard
+            memberId={id}
+            family={(family ?? []) as FamilyMember[]}
+            candidates={members.filter(
+              (x) => x.id !== id && (!familyId || x.family_id !== familyId)
+            )}
+          />
 
           {/* Últimas entradas */}
           <section className="card p-5">

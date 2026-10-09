@@ -24,12 +24,15 @@ export function MemberActions({
   today,
   latestMembership,
   role,
+  familySize = 1,
 }: {
   member: MemberOverview;
   plans: Plan[];
   today: string;
   latestMembership: Membership | null;
   role?: AdminRole | null;
+  /** Integrantes de su familia, él incluido. Desde 3 va el pack familiar. */
+  familySize?: number;
 }) {
   const isManager = role === "superadmin" || role === "admin";
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -102,6 +105,13 @@ export function MemberActions({
                   </option>
                 ))}
               </select>
+
+              {familySize >= 3 && plans.some((p) => p.is_family) && (
+                <p className="rounded-control border border-plate-blue/30 bg-plate-blue/6 px-3.5 py-3 text-tiny text-txt-soft">
+                  Su familia tiene {familySize} integrantes: si es del tercero en adelante, le
+                  corresponde el pack familiar.
+                </p>
+              )}
 
               <Field
                 label="Fecha de pago"

@@ -26,6 +26,8 @@ export type Plan = {
   price_transfer_cents: number | null;
   currency: string;
   is_active: boolean;
+  /** Pack familiar: solo para el 3er integrante de una familia en adelante. */
+  is_family: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -44,6 +46,8 @@ export type Member = {
   qr_token: string;
   welcome_message: string | null;
   birth_date: string | null;
+  /** Socios con el mismo family_id son de la misma familia (pack familiar). */
+  family_id: string | null;
   created_at: string;
   updated_at: string;
 };

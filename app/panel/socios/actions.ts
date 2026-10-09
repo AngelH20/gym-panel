@@ -95,6 +95,17 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
     return { error: "No se pudo crear el socio. Probá de nuevo en un momento." };
   }
 
+  // Si es familiar de otro socio, lo vinculamos antes de vender: el pack
+  // familiar solo se puede vender si la familia ya tiene 3 integrantes.
+  const relative_id = String(formData.get("relative_id") ?? "");
+  if (relative_id) {
+    const { error: linkError } = await supabase.rpc("link_family_member", {
+      p_member_id: member.id,
+      p_relative_id: relative_id,
+    });
+    if (linkError) console.error("[socios] Error al vincular familiar:", linkError);
+  }
+
   // Si eligió un plan en el alta, le activamos el pase y registramos el cobro.
   const plan_id = String(formData.get("plan_id") ?? "");
   if (plan_id) {
@@ -256,6 +267,36 @@ export async function updateMembershipPlan(_prev: unknown, formData: FormData): 
   revalidatePath("/panel/socios");
   revalidatePath(`/panel/socios/${member_id}`);
 
+  if (error) return { error: error.message };
+  return {};
+}
+
+/** Suma al socio a la familia de otro (pack familiar). Si ninguno tenía
+ *  familia, se arma una nueva con los dos. */
+export async function linkFamily(_prev: unknown, formData: FormData): Promise<Result> {
+  const member_id = String(formData.get("member_id"));
+  const relative_id = String(formData.get("relative_id") ?? "");
+  if (!relative_id) return { error: "Elegí al familiar." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("link_family_member", {
+    p_member_id: member_id,
+    p_relative_id: relative_id,
+  });
+
+  revalidatePath("/panel/socios", "layout");
+  if (error) return { error: error.message };
+  return {};
+}
+
+/** Saca al socio de su familia. Los pases ya vendidos no se tocan. */
+export async function unlinkFamily(_prev: unknown, formData: FormData): Promise<Result> {
+  const member_id = String(formData.get("member_id"));
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("unlink_family_member", { p_member_id: member_id });
+
+  revalidatePath("/panel/socios", "layout");
   if (error) return { error: error.message };
   return {};
 }

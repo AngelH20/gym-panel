@@ -15,7 +15,11 @@ import type { Plan } from "@/lib/types";
 
 const DRAFT_KEY = "caref:nuevo-socio:draft";
 
+/** Un socio existente al que se puede vincular como familiar. */
+export type Relative = { id: string; full_name: string; family_id: string | null };
+
 type Draft = {
+  relative_id: string;
   full_name: string;
   dni: string;
   phone: string;
@@ -28,6 +32,7 @@ type Draft = {
 };
 
 const EMPTY_DRAFT: Draft = {
+  relative_id: "",
   full_name: "",
   dni: "",
   phone: "",
@@ -69,11 +74,13 @@ function clearDraft() {
 }
 
 export function NewMemberForm({
-  plans,
+  plans: allPlans,
+  members,
   cajaAbierta,
   today,
 }: {
   plans: Plan[];
+  members: Relative[];
   cajaAbierta: boolean;
   today: string;
 }) {
@@ -86,6 +93,7 @@ export function NewMemberForm({
   const [photoUrl, setPhotoUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [relativeId, setRelativeId] = useState("");
   const [planId, setPlanId] = useState("");
   const [payment, setPayment] = useState<PaymentDraft>(EMPTY_PAYMENT);
   const [startDate, setStartDate] = useState(today);
@@ -103,6 +111,7 @@ export function NewMemberForm({
     setPhotoUrl(d.photo_url);
     setNotes(d.notes);
     setBirthDate(d.birth_date);
+    if (members.some((x) => x.id === d.relative_id)) setRelativeId(d.relative_id);
     if (cajaAbierta) {
       setPlanId(d.plan_id);
       setPayment(d.payment);
@@ -114,6 +123,7 @@ export function NewMemberForm({
   useEffect(() => {
     if (!hydrated) return;
     saveDraft({
+      relative_id: relativeId,
       full_name: fullName,
       dni,
       phone,
@@ -124,7 +134,28 @@ export function NewMemberForm({
       plan_id: planId,
       payment,
     });
-  }, [hydrated, fullName, dni, phone, email, photoUrl, notes, birthDate, planId, payment]);
+  }, [hydrated, relativeId, fullName, dni, phone, email, photoUrl, notes, birthDate, planId, payment]);
+
+  // Pack familiar: con el nuevo socio, ¿cuántos quedan en la familia? Si el
+  // familiar elegido no tenía familia, son 2; si no, los que ya había más él.
+  const relative = members.find((x) => x.id === relativeId);
+  const familySize = !relative
+    ? 1
+    : relative.family_id
+      ? members.filter((x) => x.family_id === relative.family_id).length + 1
+      : 2;
+  const plans = useMemo(
+    () => allPlans.filter((p) => !p.is_family || familySize >= 3),
+    [allPlans, familySize]
+  );
+
+  // Si saca al familiar y el plan elegido era el familiar, se deselecciona.
+  useEffect(() => {
+    if (planId && !plans.some((p) => p.id === planId)) {
+      setPlanId("");
+      setPayment((current) => suggestAmounts(current, undefined));
+    }
+  }, [plans, planId]);
 
   const selectedPlan = useMemo(() => plans.find((p) => p.id === planId), [plans, planId]);
 
@@ -230,6 +261,31 @@ export function NewMemberForm({
               onChange={(e) => setBirthDate(e.target.value)}
             />
           </Field>
+
+          {members.length > 0 && (
+            <Field
+              label="Es familiar de"
+              hint={
+                familySize >= 3
+                  ? `Con este socio la familia queda en ${familySize}: le corresponde el pack familiar.`
+                  : "Opcional. Desde el tercer integrante de una familia va el pack familiar."
+              }
+            >
+              <select
+                name="relative_id"
+                className="field"
+                value={relativeId}
+                onChange={(e) => setRelativeId(e.target.value)}
+              >
+                <option value="">Nadie</option>
+                {members.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.full_name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <Field label="Notas">
             <textarea
