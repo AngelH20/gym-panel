@@ -55,7 +55,7 @@ app/
     planes/           planes configurables
     acceso/           pantalla del código del mostrador (etapa c)
 components/
-  UsesTally.tsx       las entradas dibujadas como tarjeta perforada
+  UsesTally.tsx       las entradas que quedan: barra + número
 lib/
   supabase/           clientes: server (RLS) y admin (service_role)
   labels.ts           traducciones y formateo de fechas en zona AR
