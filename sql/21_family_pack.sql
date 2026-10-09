@@ -174,10 +174,12 @@ where not exists (select 1 from plans where is_family);
 -- ---------------------------------------------------------------------------
 -- 7. Permisos
 -- ---------------------------------------------------------------------------
-revoke execute on function family_size(uuid)                     from anon;
-revoke execute on function link_family_member(uuid, uuid)        from anon;
-revoke execute on function unlink_family_member(uuid)            from anon;
-revoke execute on function check_family_plan()                   from anon, authenticated;
+-- "from public" además de anon: Postgres le da EXECUTE a PUBLIC por defecto,
+-- y con solo sacárselo a anon la función seguía llamable sin sesión.
+revoke execute on function family_size(uuid)                     from public, anon;
+revoke execute on function link_family_member(uuid, uuid)        from public, anon;
+revoke execute on function unlink_family_member(uuid)            from public, anon;
+revoke execute on function check_family_plan()                   from public, anon, authenticated;
 grant  execute on function family_size(uuid)                     to authenticated;
 grant  execute on function link_family_member(uuid, uuid)        to authenticated;
 grant  execute on function unlink_family_member(uuid)            to authenticated;
