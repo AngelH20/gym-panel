@@ -223,7 +223,7 @@ export default async function PanelHome() {
                 {porVencer.map((m) => (
                   <ListRow key={m.id} member={m}>
                     {m.uses_total != null && m.uses_remaining != null ? (
-                      <div className="w-24 shrink-0">
+                      <div className="w-36 shrink-0">
                         <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="sm" />
                       </div>
                     ) : null}
@@ -326,7 +326,8 @@ function ListRow({
     <li>
       <Link href={`/panel/socios/${m.id}`} className="py-1.5 flex items-center gap-2.5 group">
         <Avatar name={m.full_name} url={m.photo_url} size={28} />
-        <span className="flex-1 min-w-0">
+        {/* Ancho fijo para el nombre: así las entradas quedan al lado y alineadas, no al fondo de la tarjeta. */}
+        <span className="w-44 sm:w-56 min-w-0 shrink">
           <span className="block truncate text-base font-medium leading-tight group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
