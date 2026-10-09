@@ -86,13 +86,21 @@ export default async function PanelHome() {
     ...(revenueByDay.get(d.date) ?? { cash: 0, transfer: 0 }),
   }));
 
-  const entraronHoy = all.filter((m) => m.checked_in_today);
+  // En orden de llegada: el primero que entró arriba.
+  const entraronHoy = all
+    .filter((m) => m.checked_in_today)
+    .sort((a, b) => (a.last_check_in_at ?? "").localeCompare(b.last_check_in_at ?? ""));
   const movimientosHoy = all.reduce((sum, m) => sum + (m.visits_today ?? 0), 0);
   const totalCobradoHoy = pagos.reduce((sum, p) => sum + p.amount_cents, 0);
   const activos = all.filter((m) => m.effective_status === "active");
-  const porVencer = activos.filter(
-    (m) => (m.uses_remaining ?? 99) <= 2 || (m.days_left ?? 99) <= 3
-  );
+  // Los más urgentes primero: lo que antes se le termine (días o entradas).
+  const porVencer = activos
+    .filter((m) => (m.uses_remaining ?? 99) <= 2 || (m.days_left ?? 99) <= 3)
+    .sort(
+      (a, b) =>
+        Math.min(a.days_left ?? 99, a.uses_remaining ?? 99) -
+        Math.min(b.days_left ?? 99, b.uses_remaining ?? 99)
+    );
   const vencidos = all.filter(
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
@@ -199,84 +207,73 @@ export default async function PanelHome() {
         </section>
       )}
 
-      {porVencer.length > 0 && (
-        <section className="card p-5 border-plate-amber/40 bg-plate-amber/5">
-          <h2 className="h3">Hay que cobrarles</h2>
-          <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            Les quedan 2 entradas o menos, o el pase vence en 3 días.
-          </p>
+      {(porVencer.length > 0 || vencidosSinRenovar.length > 0) && (
+        <div className="grid gap-3 lg:grid-cols-3 items-start">
+          {porVencer.length > 0 && (
+            <section
+              className={`card p-4 border-plate-amber/40 bg-plate-amber/5 ${
+                vencidosSinRenovar.length > 0 ? "lg:col-span-2" : "lg:col-span-3"
+              }`}
+            >
+              <ListHeader
+                title="Hay que cobrarles"
+                count={porVencer.length}
+                hint="2 entradas o menos, o vence en 3 días"
+                tone="amber"
+              />
+              <ul
+                className={`grid gap-x-4 sm:grid-cols-2 ${
+                  vencidosSinRenovar.length > 0 ? "" : "xl:grid-cols-3"
+                }`}
+              >
+                {porVencer.map((m) => (
+                  <CompactRow key={m.id} member={m}>
+                    {m.uses_total != null && m.uses_remaining != null ? (
+                      <div className="w-20 shrink-0">
+                        <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="sm" />
+                      </div>
+                    ) : null}
+                  </CompactRow>
+                ))}
+              </ul>
+            </section>
+          )}
 
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {porVencer.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/panel/socios/${m.id}`}
-                  className="py-3 flex items-center gap-3 group"
-                >
-                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
-                  <span className="flex-1 min-w-0">
-                    <span className="block truncate text-base font-medium group-hover:text-plate-blue transition-colors">
-                      {m.full_name}
-                    </span>
-                    {(m.days_left ?? 99) <= 3 && (
-                      <span
-                        className={`block text-[11px] ${
-                          (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
-                        }`}
-                      >
-                        {dueLabel(m.days_left, m.period_end)}
+          {vencidosSinRenovar.length > 0 && (
+            <section
+              className={`card p-4 border-plate-red/40 bg-plate-red/5 ${
+                porVencer.length > 0 ? "" : "lg:col-span-3"
+              }`}
+            >
+              <ListHeader
+                title="Vencidos sin renovar"
+                count={vencidosSinRenovar.length}
+                hint="No pueden entrar hasta que paguen"
+                tone="red"
+                icon={<IconFlag />}
+              />
+              <ul
+                className={`grid gap-x-4 ${
+                  porVencer.length > 0 ? "" : "sm:grid-cols-2 xl:grid-cols-3"
+                }`}
+              >
+                {vencidosSinRenovar.map((m) => (
+                  <CompactRow
+                    key={m.id}
+                    member={m}
+                    subtitle={
+                      <span className="text-plate-red">
+                        {m.effective_status === "exhausted"
+                          ? "Sin entradas"
+                          : `Venció el ${formatDayMonth(m.period_end)}`}
                       </span>
-                    )}
-                  </span>
-                  {m.uses_total != null && m.uses_remaining != null && (
-                    <div className="w-24 shrink-0">
-                      <UsesTally
-                        total={m.uses_total}
-                        remaining={m.uses_remaining}
-                        size="sm"
-                      />
-                    </div>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {vencidosSinRenovar.length > 0 && (
-        <section className="card p-5 border-plate-red/40 bg-plate-red/5">
-          <div className="flex items-center gap-2">
-            <span className="text-plate-red" aria-hidden="true">
-              <IconFlag />
-            </span>
-            <h2 className="h3">Vencidos sin renovar</h2>
-          </div>
-          <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            Se les venció el pase en el último mes y no pueden entrar hasta que paguen.
-          </p>
-
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {vencidosSinRenovar.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/panel/socios/${m.id}`}
-                  className="py-3 flex items-center gap-3 group"
-                >
-                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
-                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
-                    {m.full_name}
-                  </span>
-                  <span className="text-tiny text-plate-red font-medium shrink-0">
-                    {m.effective_status === "exhausted"
-                      ? "Sin entradas"
-                      : `Venció el ${formatDayMonth(m.period_end)}`}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+                    }
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       )}
 
       <section className="card p-5">
@@ -319,6 +316,78 @@ export default async function PanelHome() {
           <WeeklyRevenueChart data={revenueData} />
         </section>
       </div>
+    </div>
+  );
+}
+
+/** Fila de una línea para las listas de cobro: nombre, vencimiento y extra a la derecha. */
+function CompactRow({
+  member: m,
+  subtitle,
+  children,
+}: {
+  member: MemberOverview;
+  subtitle?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
+  return (
+    <li className="border-b border-line/60 last:border-b-0">
+      <Link
+        href={`/panel/socios/${m.id}`}
+        className="-mx-2 px-2 py-1.5 flex items-center gap-2.5 rounded-control group
+                   hover:bg-surface/70 transition-colors"
+      >
+        <Avatar name={m.full_name} url={m.photo_url} size={26} />
+        <span className="flex-1 min-w-0 flex items-baseline gap-2">
+          <span className="truncate text-tiny font-medium text-txt group-hover:text-plate-blue transition-colors">
+            {m.full_name}
+          </span>
+          <span
+            className={`shrink-0 text-[11px] ${
+              (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
+            }`}
+          >
+            {subtitle ?? due}
+          </span>
+        </span>
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+function ListHeader({
+  title,
+  count,
+  hint,
+  tone,
+  icon,
+}: {
+  title: string;
+  count: number;
+  hint: string;
+  tone: "amber" | "red";
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-2 flex items-baseline gap-2 flex-wrap">
+      {icon && (
+        <span className="text-plate-red self-center" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <h2 className="h3">{title}</h2>
+      <span
+        className={`rounded-full px-2 text-[11px] font-semibold ${
+          tone === "amber"
+            ? "bg-plate-amber/20 text-plate-amberInk"
+            : "bg-plate-red/12 text-plate-red"
+        }`}
+      >
+        {count}
+      </span>
+      <span className="text-[11px] text-txt-faint">{hint}</span>
     </div>
   );
 }
