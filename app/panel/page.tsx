@@ -209,7 +209,7 @@ export default async function PanelHome() {
 
       {(porVencer.length > 0 || vencidosSinRenovar.length > 0) && (
         <div className="grid gap-3 lg:grid-cols-2">
-          <section className="card p-5 flex flex-col border-plate-amber/40 bg-plate-amber/5">
+          <section className="card p-4 flex flex-col border-plate-amber/40 bg-plate-amber/5">
             <ListHeader
               title="Hay que cobrarles"
               count={porVencer.length}
@@ -233,7 +233,7 @@ export default async function PanelHome() {
             )}
           </section>
 
-          <section className="card p-5 flex flex-col border-plate-red/40 bg-plate-red/5">
+          <section className="card p-4 flex flex-col border-plate-red/40 bg-plate-red/5">
             <ListHeader
               title="Vencidos sin renovar"
               count={vencidosSinRenovar.length}
@@ -310,7 +310,7 @@ export default async function PanelHome() {
 
 // Las dos listas de cobro tienen el mismo alto máximo: si hay muchos, se
 // scrollea adentro de la tarjeta en vez de estirar el panel.
-const SCROLL_LIST = "max-h-[24rem] overflow-y-auto -mr-2 pr-2 divide-y divide-line/60";
+const SCROLL_LIST = "max-h-[20rem] overflow-y-auto overflow-x-hidden pr-1 divide-y divide-line/60";
 
 function ListRow({
   member: m,
@@ -324,15 +324,15 @@ function ListRow({
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
     <li>
-      <Link href={`/panel/socios/${m.id}`} className="py-2.5 flex items-center gap-3 group">
-        <Avatar name={m.full_name} url={m.photo_url} size={34} />
+      <Link href={`/panel/socios/${m.id}`} className="py-1.5 flex items-center gap-2.5 group">
+        <Avatar name={m.full_name} url={m.photo_url} size={28} />
         <span className="flex-1 min-w-0">
-          <span className="block truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+          <span className="block truncate text-base font-medium leading-tight group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
           {(subtitle ?? due) && (
             <span
-              className={`block text-tiny ${
+              className={`block text-[11px] leading-tight ${
                 (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
               }`}
             >
@@ -378,7 +378,7 @@ function ListHeader({
           {count}
         </span>
       </div>
-      <p className="mt-1 text-tiny text-txt-soft">{hint}</p>
+      <p className="mt-0.5 text-tiny text-txt-soft">{hint}</p>
     </div>
   );
 }
