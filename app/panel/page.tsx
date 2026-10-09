@@ -208,57 +208,45 @@ export default async function PanelHome() {
       )}
 
       {(porVencer.length > 0 || vencidosSinRenovar.length > 0) && (
-        <div className="grid gap-3 lg:grid-cols-3 items-start">
-          {porVencer.length > 0 && (
-            <section
-              className={`card p-4 border-plate-amber/40 bg-plate-amber/5 ${
-                vencidosSinRenovar.length > 0 ? "lg:col-span-2" : "lg:col-span-3"
-              }`}
-            >
-              <ListHeader
-                title="Hay que cobrarles"
-                count={porVencer.length}
-                hint="2 entradas o menos, o vence en 3 días"
-                tone="amber"
-              />
-              <ul
-                className={`grid gap-x-4 sm:grid-cols-2 ${
-                  vencidosSinRenovar.length > 0 ? "" : "xl:grid-cols-3"
-                }`}
-              >
+        <div className="grid gap-3 lg:grid-cols-2">
+          <section className="card p-5 flex flex-col border-plate-amber/40 bg-plate-amber/5">
+            <ListHeader
+              title="Hay que cobrarles"
+              count={porVencer.length}
+              hint="Les quedan 2 entradas o menos, o el pase vence en 3 días."
+              tone="amber"
+            />
+            {porVencer.length === 0 ? (
+              <p className="text-base text-txt-soft">Nadie por ahora.</p>
+            ) : (
+              <ul className={SCROLL_LIST}>
                 {porVencer.map((m) => (
-                  <CompactRow key={m.id} member={m}>
+                  <ListRow key={m.id} member={m}>
                     {m.uses_total != null && m.uses_remaining != null ? (
-                      <div className="w-20 shrink-0">
+                      <div className="w-24 shrink-0">
                         <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="sm" />
                       </div>
                     ) : null}
-                  </CompactRow>
+                  </ListRow>
                 ))}
               </ul>
-            </section>
-          )}
+            )}
+          </section>
 
-          {vencidosSinRenovar.length > 0 && (
-            <section
-              className={`card p-4 border-plate-red/40 bg-plate-red/5 ${
-                porVencer.length > 0 ? "" : "lg:col-span-3"
-              }`}
-            >
-              <ListHeader
-                title="Vencidos sin renovar"
-                count={vencidosSinRenovar.length}
-                hint="No pueden entrar hasta que paguen"
-                tone="red"
-                icon={<IconFlag />}
-              />
-              <ul
-                className={`grid gap-x-4 ${
-                  porVencer.length > 0 ? "" : "sm:grid-cols-2 xl:grid-cols-3"
-                }`}
-              >
+          <section className="card p-5 flex flex-col border-plate-red/40 bg-plate-red/5">
+            <ListHeader
+              title="Vencidos sin renovar"
+              count={vencidosSinRenovar.length}
+              hint="Se les venció el pase en el último mes y no pueden entrar hasta que paguen."
+              tone="red"
+              icon={<IconFlag />}
+            />
+            {vencidosSinRenovar.length === 0 ? (
+              <p className="text-base text-txt-soft">Nadie por ahora.</p>
+            ) : (
+              <ul className={SCROLL_LIST}>
                 {vencidosSinRenovar.map((m) => (
-                  <CompactRow
+                  <ListRow
                     key={m.id}
                     member={m}
                     subtitle={
@@ -271,8 +259,8 @@ export default async function PanelHome() {
                   />
                 ))}
               </ul>
-            </section>
-          )}
+            )}
+          </section>
         </div>
       )}
 
@@ -320,8 +308,11 @@ export default async function PanelHome() {
   );
 }
 
-/** Fila de una línea para las listas de cobro: nombre, vencimiento y extra a la derecha. */
-function CompactRow({
+// Las dos listas de cobro tienen el mismo alto máximo: si hay muchos, se
+// scrollea adentro de la tarjeta en vez de estirar el panel.
+const SCROLL_LIST = "max-h-[24rem] overflow-y-auto -mr-2 pr-2 divide-y divide-line/60";
+
+function ListRow({
   member: m,
   subtitle,
   children,
@@ -332,24 +323,22 @@ function CompactRow({
 }) {
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
-    <li className="border-b border-line/60 last:border-b-0">
-      <Link
-        href={`/panel/socios/${m.id}`}
-        className="-mx-2 px-2 py-1.5 flex items-center gap-2.5 rounded-control group
-                   hover:bg-surface/70 transition-colors"
-      >
-        <Avatar name={m.full_name} url={m.photo_url} size={26} />
-        <span className="flex-1 min-w-0 flex items-baseline gap-2">
-          <span className="truncate text-tiny font-medium text-txt group-hover:text-plate-blue transition-colors">
+    <li>
+      <Link href={`/panel/socios/${m.id}`} className="py-2.5 flex items-center gap-3 group">
+        <Avatar name={m.full_name} url={m.photo_url} size={34} />
+        <span className="flex-1 min-w-0">
+          <span className="block truncate text-base font-medium group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
-          <span
-            className={`shrink-0 text-[11px] ${
-              (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
-            }`}
-          >
-            {subtitle ?? due}
-          </span>
+          {(subtitle ?? due) && (
+            <span
+              className={`block text-tiny ${
+                (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
+              }`}
+            >
+              {subtitle ?? due}
+            </span>
+          )}
         </span>
         {children}
       </Link>
@@ -371,23 +360,25 @@ function ListHeader({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="mb-2 flex items-baseline gap-2 flex-wrap">
-      {icon && (
-        <span className="text-plate-red self-center" aria-hidden="true">
-          {icon}
+    <div className="mb-2">
+      <div className="flex items-center gap-2">
+        {icon && (
+          <span className="text-plate-red" aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        <h2 className="h3">{title}</h2>
+        <span
+          className={`rounded-full px-2 py-0.5 text-tiny font-semibold ${
+            tone === "amber"
+              ? "bg-plate-amber/20 text-plate-amberInk"
+              : "bg-plate-red/12 text-plate-red"
+          }`}
+        >
+          {count}
         </span>
-      )}
-      <h2 className="h3">{title}</h2>
-      <span
-        className={`rounded-full px-2 text-[11px] font-semibold ${
-          tone === "amber"
-            ? "bg-plate-amber/20 text-plate-amberInk"
-            : "bg-plate-red/12 text-plate-red"
-        }`}
-      >
-        {count}
-      </span>
-      <span className="text-[11px] text-txt-faint">{hint}</span>
+      </div>
+      <p className="mt-1 text-tiny text-txt-soft">{hint}</p>
     </div>
   );
 }
