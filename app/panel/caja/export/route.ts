@@ -40,11 +40,12 @@ export async function GET(request: Request) {
   const closing = closingRaw as CashClosing | null;
   const opening = openingRaw as CashOpening | null;
 
+  const active = payments.filter((p) => !p.voided_at);
   const totals = closing
     ? { cash: closing.total_cash_cents, transfer: closing.total_transfer_cents }
     : {
-        cash: payments.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount_cents, 0),
-        transfer: payments
+        cash: active.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount_cents, 0),
+        transfer: active
           .filter((p) => p.method === "transfer")
           .reduce((s, p) => s + p.amount_cents, 0),
       };
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
   ]);
   csv += "\r\n";
 
-  csv += csvRow(["Hora", "Socio", "Plan", "Método", "Monto"]);
+  csv += csvRow(["Hora", "Socio", "Plan", "Método", "Monto", "Anulado"]);
   for (const p of payments) {
     csv += csvRow([
       formatDateTime(p.paid_at),
@@ -70,6 +71,11 @@ export async function GET(request: Request) {
       p.plan_name,
       paymentMethodLabel[p.method],
       p.amount_cents / 100,
+      p.voided_at
+        ? `Sí, por ${p.voided_by_name ?? "un admin"} el ${formatDateTime(p.voided_at)}${
+            p.void_reason ? ` (${p.void_reason})` : ""
+          }`
+        : "",
     ]);
   }
 

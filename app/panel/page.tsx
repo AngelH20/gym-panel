@@ -49,12 +49,17 @@ export default async function PanelHome() {
   const [{ data }, { data: paymentsToday }, { data: weekCheckIns }, { data: weekPayments }] =
     await Promise.all([
       supabase.from("member_overview").select("*"),
-      supabase.from("payments").select("amount_cents, method").eq("local_date", today),
+      supabase
+        .from("payments")
+        .select("amount_cents, method")
+        .eq("local_date", today)
+        .is("voided_at", null),
       supabase.from("check_ins").select("local_date").gte("local_date", weekStart),
       supabase
         .from("payments")
         .select("local_date, method, amount_cents")
-        .gte("local_date", weekStart),
+        .gte("local_date", weekStart)
+        .is("voided_at", null),
     ]);
   const all = (data ?? []) as MemberOverview[];
   const pagos = paymentsToday ?? [];

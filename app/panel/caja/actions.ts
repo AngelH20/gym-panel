@@ -29,6 +29,30 @@ export async function openCashRegister(_prev: unknown, formData: FormData): Prom
   return { ok: true };
 }
 
+/**
+ * Anula una venta (los dos movimientos si fue pago mixto). No borra nada:
+ * queda tachada en la caja con quién, cuándo y por qué. Si la caja de ese
+ * día ya estaba cerrada, la base recalcula sus totales.
+ */
+export async function voidSale(_prev: unknown, formData: FormData): Promise<Result> {
+  const paymentId = String(formData.get("payment_id") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) return { error: "Escribí el motivo de la anulación." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("void_sale", {
+    p_payment_id: paymentId,
+    p_reason: reason,
+    p_cancel_membership: formData.get("cancel_membership") === "on",
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel/caja");
+  revalidatePath("/panel");
+  return { ok: true };
+}
+
 export async function closeCashRegister(_prev: unknown, formData: FormData): Promise<Result> {
   const countedCashCents = parseAmountCents(formData.get("counted_cash"));
   if (countedCashCents == null) return { error: "Ingresá el efectivo contado en pesos." };

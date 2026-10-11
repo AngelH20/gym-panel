@@ -135,6 +135,11 @@ export type Payment = {
   local_date: string;
   paid_at: string;
   created_by: string | null;
+  /** Si no es null, el cobro fue anulado: se muestra tachado y no suma. */
+  voided_at: string | null;
+  voided_by: string | null;
+  voided_by_name: string | null;
+  void_reason: string | null;
 };
 
 /** Fondo inicial declarado al abrir la caja del día. Sin esto no se puede vender. */
