@@ -18,6 +18,16 @@ import { VoidSaleButton } from "./VoidSaleButton";
 
 type PaymentRow = Payment & { members: { full_name: string } | null };
 
+/** Las filas de una misma venta comparten pase. Si el pase se borró, la fila
+ *  queda sola. */
+function saleKey(p: Payment) {
+  return p.membership_id ?? p.id;
+}
+
+function memberName(p: PaymentRow) {
+  return p.members?.full_name ?? p.member_name ?? "Socio eliminado";
+}
+
 /** "YYYY-MM-DD" + N días, sin pasar por Date/huso horario. */
 function shiftDate(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
@@ -76,16 +86,16 @@ export default async function CajaPage({
   // Lo que suma cada venta (un pago mixto son dos filas con el mismo pase).
   const saleTotals = new Map<string, { cents: number; rows: number }>();
   for (const p of active) {
-    const s = saleTotals.get(p.membership_id) ?? { cents: 0, rows: 0 };
+    const s = saleTotals.get(saleKey(p)) ?? { cents: 0, rows: 0 };
     s.cents += p.amount_cents;
     s.rows += 1;
-    saleTotals.set(p.membership_id, s);
+    saleTotals.set(saleKey(p), s);
   }
 
   // Una anulación de un pago mixto son dos filas: se muestra una sola vez.
   const voidsBySale = new Map<string, PaymentRow>();
   for (const v of (voidsRaw ?? []) as PaymentRow[]) {
-    const key = `${v.membership_id}|${v.voided_at}`;
+    const key = `${saleKey(v)}|${v.voided_at}`;
     const prev = voidsBySale.get(key);
     if (prev) prev.amount_cents += v.amount_cents;
     else voidsBySale.set(key, { ...v });
@@ -254,12 +264,12 @@ export default async function CajaPage({
         ) : (
           <ul className="datalist">
             {payments.map((p) => {
-              const sale = saleTotals.get(p.membership_id);
+              const sale = saleTotals.get(saleKey(p));
               return (
                 <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3">
                   <div className={`flex-1 min-w-0 ${p.voided_at ? "opacity-60" : ""}`}>
                     <p className={`text-base font-medium truncate ${p.voided_at ? "line-through" : ""}`}>
-                      {p.members?.full_name ?? "Socio eliminado"}
+                      {memberName(p)}
                     </p>
                     <p className="mt-0.5 text-tiny text-txt-faint">
                       {p.plan_name} · {paymentMethodLabel[p.method]} · {formatTime(p.paid_at)}
@@ -355,7 +365,7 @@ export default async function CajaPage({
               <li key={v.id} className="py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-base font-medium truncate">
-                    {v.members?.full_name ?? "Socio eliminado"}
+                    {memberName(v)}
                     <span className="font-normal text-txt-faint"> · {v.plan_name}</span>
                   </p>
                   <p className="mt-0.5 text-tiny text-txt-faint">

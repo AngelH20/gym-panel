@@ -48,7 +48,7 @@ export default async function PanelHome() {
 
   const [{ data }, { data: paymentsToday }, { data: weekCheckIns }, { data: weekPayments }] =
     await Promise.all([
-      supabase.from("member_overview").select("*"),
+      supabase.from("member_overview").select("*").is("archived_at", null),
       supabase
         .from("payments")
         .select("amount_cents, method")

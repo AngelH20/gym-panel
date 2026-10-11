@@ -66,7 +66,7 @@ export default async function MetricasPage({
   if (start) checkInsQuery = checkInsQuery.gte("local_date", start);
 
   const [{ data: membersRaw }, { data: checkInsRaw }] = await Promise.all([
-    supabase.from("member_overview").select("*"),
+    supabase.from("member_overview").select("*").is("archived_at", null),
     checkInsQuery,
   ]);
 

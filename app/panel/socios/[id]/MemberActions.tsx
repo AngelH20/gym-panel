@@ -5,6 +5,7 @@ import {
   sellMembership,
   setMemberStatus,
   deleteMember,
+  archiveMember,
   updateMembershipEnd,
   updateMembershipPlan,
 } from "../actions";
@@ -35,7 +36,10 @@ export function MemberActions({
   familySize?: number;
 }) {
   const isManager = role === "superadmin" || role === "admin";
+  const isSuperadmin = role === "superadmin";
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  const [archiveState, archiveAction] = useActionState(archiveMember, null);
   const [showMore, setShowMore] = useState(false);
   const needsRenewal = member.effective_status !== "active";
 
@@ -276,11 +280,47 @@ export function MemberActions({
 
       {isManager && (
         <div className="border-t border-line px-5 py-4 space-y-2">
+          {confirmArchive ? (
+            <form action={archiveAction} className="space-y-2">
+              <input type="hidden" name="id" value={member.id} />
+              <p className="text-tiny text-txt-soft">
+                Se le cancela el pase vigente (no va a poder entrar), sale de su familia y deja
+                de aparecer en las listas. Sus pagos y entradas se conservan. Si vuelve, lo
+                reactivás desde Socios → Dados de baja.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <SubmitButton className="btn-danger btn-sm" pendingLabel="Guardando…">
+                  Confirmar baja
+                </SubmitButton>
+                <button
+                  type="button"
+                  onClick={() => setConfirmArchive(false)}
+                  className="btn-ghost btn-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setConfirmArchive(true)}
+              className="btn-ghost btn-sm !text-plate-red"
+            >
+              Dar de baja
+            </button>
+          )}
+          <FormError message={archiveState?.error} />
+        </div>
+      )}
+
+      {isSuperadmin && (
+        <div className="border-t border-line px-5 py-4 space-y-2">
           {confirmDelete ? (
             <form action={deleteAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="id" value={member.id} />
               <span className="text-tiny text-plate-red">
-                ¿Seguro? Se borran también sus entradas y el historial de pases.
+                ¿Seguro? Se borran sus datos, entradas e historial de pases. Los cobros quedan
+                en la caja con su nombre.
               </span>
               <SubmitButton className="btn-danger btn-sm" pendingLabel="Borrando…">
                 Confirmar borrado
@@ -296,9 +336,10 @@ export function MemberActions({
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="btn-ghost btn-sm !text-plate-red"
+              className="text-tiny text-txt-faint hover:text-plate-red transition-colors"
+              title="Solo para errores de carga, como un socio duplicado"
             >
-              Borrar socio
+              Borrar definitivamente (error de carga)
             </button>
           )}
           <FormError message={deleteState?.error} />

@@ -19,6 +19,7 @@ export default async function CumpleañosPage() {
       "id, full_name, photo_url, birth_date, next_birthday, days_to_birthday, is_birthday_today"
     )
     .not("birth_date", "is", null)
+    .is("archived_at", null)
     .order("days_to_birthday", { ascending: true });
 
   const all = (data ?? []) as Pick<
@@ -38,7 +39,8 @@ export default async function CumpleañosPage() {
   const { count: sinFecha } = await supabase
     .from("members")
     .select("id", { count: "exact", head: true })
-    .is("birth_date", null);
+    .is("birth_date", null)
+    .is("archived_at", null);
 
   return (
     <div className="mx-auto w-full max-w-[900px] space-y-5">

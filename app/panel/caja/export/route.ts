@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   for (const p of payments) {
     csv += csvRow([
       formatDateTime(p.paid_at),
-      p.members?.full_name ?? "Socio eliminado",
+      p.members?.full_name ?? p.member_name ?? "Socio eliminado",
       p.plan_name,
       paymentMethodLabel[p.method],
       p.amount_cents / 100,

@@ -14,7 +14,11 @@ export default async function NuevoSocioPage() {
       supabase.from("cash_openings").select("id").eq("opening_date", today).maybeSingle(),
       supabase.from("cash_closings").select("id").eq("closing_date", today).maybeSingle(),
       // Para "Es familiar de…" (pack familiar).
-      supabase.from("members").select("id, full_name, family_id").order("full_name"),
+      supabase
+        .from("members")
+        .select("id, full_name, family_id")
+        .is("archived_at", null)
+        .order("full_name"),
     ]);
 
   const cajaAbierta = Boolean(opening) && !closing;

@@ -7,6 +7,7 @@ import { Avatar } from "@/components/Avatar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
 import { MemberActions } from "./MemberActions";
+import { ArchivedBanner } from "./ArchivedBanner";
 import { EditMemberForm } from "./EditMemberForm";
 import { FamilyCard, type FamilyCandidate, type FamilyMember } from "./FamilyCard";
 
@@ -49,7 +50,11 @@ export default async function SocioPage({
       supabase.rpc("current_admin_role"),
       // Para el pack familiar: quién es familia de quién, y a quién se lo
       // puede vincular.
-      supabase.from("members").select("id, full_name, family_id").order("full_name"),
+      supabase
+        .from("members")
+        .select("id, full_name, family_id")
+        .is("archived_at", null)
+        .order("full_name"),
     ]);
 
   const members = (allMembers ?? []) as FamilyCandidate[];
@@ -163,27 +168,38 @@ export default async function SocioPage({
             )}
           </section>
 
-          <MemberActions
-            member={m}
-            plans={sellablePlans}
-            today={todayLocal()}
-            latestMembership={(history?.[0] as Membership | undefined) ?? null}
-            role={role}
-            familySize={familySize}
-          />
+          {m.archived_at ? (
+            <ArchivedBanner
+              memberId={m.id}
+              archivedAt={m.archived_at}
+              archivedByName={m.archived_by_name}
+              canReactivate={role === "superadmin" || role === "admin"}
+            />
+          ) : (
+            <MemberActions
+              member={m}
+              plans={sellablePlans}
+              today={todayLocal()}
+              latestMembership={(history?.[0] as Membership | undefined) ?? null}
+              role={role}
+              familySize={familySize}
+            />
+          )}
         </div>
 
         {/* Columna 2 (consulta): datos, familia, últimas entradas e historial */}
         <div className="space-y-5 min-w-0">
           <EditMemberForm member={m} />
 
-          <FamilyCard
-            memberId={id}
-            family={(family ?? []) as FamilyMember[]}
-            candidates={members.filter(
-              (x) => x.id !== id && (!familyId || x.family_id !== familyId)
-            )}
-          />
+          {!m.archived_at && (
+            <FamilyCard
+              memberId={id}
+              family={(family ?? []) as FamilyMember[]}
+              candidates={members.filter(
+                (x) => x.id !== id && (!familyId || x.family_id !== familyId)
+              )}
+            />
+          )}
 
           {/* Últimas entradas */}
           <section className="card p-5">

@@ -80,6 +80,9 @@ export type MemberOverview = {
   next_birthday: string | null;
   days_to_birthday: number | null;
   is_birthday_today: boolean;
+  /** Si no es null, el socio está dado de baja: fuera de las listas, sin pase. */
+  archived_at: string | null;
+  archived_by_name: string | null;
 };
 
 export type Membership = {
@@ -125,8 +128,11 @@ export type AccessMode = "off" | "pin" | "rotating";
 /** Una venta simulada: el cobro real pasa por MP, aparte. */
 export type Payment = {
   id: string;
-  member_id: string;
-  membership_id: string;
+  /** Null si el socio (o el pase) se borró: el cobro queda igual en la caja. */
+  member_id: string | null;
+  membership_id: string | null;
+  /** Nombre del socio al momento de la venta, por si después se borra. */
+  member_name: string | null;
   plan_id: string | null;
   plan_name: string;
   amount_cents: number;

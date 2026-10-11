@@ -16,6 +16,7 @@ const FILTERS = [
   { key: "al-dia", label: "Al día" },
   { key: "por-vencer", label: "Por vencer" },
   { key: "vencidos", label: "Vencidos" },
+  { key: "baja", label: "Dados de baja" },
 ] as const;
 
 export default async function SociosPage({
@@ -27,7 +28,13 @@ export default async function SociosPage({
   const view: SociosView = viewParam === "list" ? "list" : "grid";
   const supabase = await createClient();
 
+  // Los dados de baja no cuentan en nada (totales, vencidos, entraron hoy):
+  // solo aparecen en su propio filtro.
+  const showArchived = f === "baja";
   let query = supabase.from("member_overview").select("*").order("full_name");
+  query = showArchived
+    ? query.not("archived_at", "is", null)
+    : query.is("archived_at", null);
   if (q.trim()) {
     const term = q.trim();
     const dniTerm = term.replace(/\D/g, "");
@@ -36,7 +43,13 @@ export default async function SociosPage({
       : query.ilike("full_name", `%${term}%`);
   }
 
-  const { data } = await query;
+  const [{ data }, { count: archivedCount }] = await Promise.all([
+    query,
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .not("archived_at", "is", null),
+  ]);
   const all = (data ?? []) as MemberOverview[];
 
   const porVencer = all.filter(
@@ -96,6 +109,7 @@ export default async function SociosPage({
         </Link>
       </div>
 
+      {!showArchived && (
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Total" value={all.length} accent="blue" icon={<IconPeople />} />
         <StatCard label="Al día" value={activos.length} accent="green" icon={<IconCheck />} />
@@ -112,6 +126,7 @@ export default async function SociosPage({
           icon={<IconPersonMinus />}
         />
       </div>
+      )}
 
       <SearchBox defaultValue={q} />
 
@@ -122,7 +137,9 @@ export default async function SociosPage({
             const count =
               filter.key === "por-vencer" && porVencer.length > 0
                 ? porVencer.length
-                : null;
+                : filter.key === "baja" && archivedCount
+                  ? archivedCount
+                  : null;
             const qs = [
               `f=${filter.key}`,
               q ? `q=${encodeURIComponent(q)}` : "",
@@ -164,14 +181,22 @@ export default async function SociosPage({
 
       {members.length === 0 ? (
         <EmptyState
-          title={q ? "Ningún socio coincide" : "Todavía no hay socios"}
+          title={
+            q
+              ? "Ningún socio coincide"
+              : showArchived
+                ? "No hay socios dados de baja"
+                : "Todavía no hay socios"
+          }
           description={
             q
               ? "Probá con otro nombre o revisá la ortografía."
-              : "Cargá el primero y en el mismo paso le activás el pase."
+              : showArchived
+                ? "Cuando des de baja a alguien desde su ficha, aparece acá y lo podés reactivar."
+                : "Cargá el primero y en el mismo paso le activás el pase."
           }
         >
-          {!q && (
+          {!q && !showArchived && (
             <Link href="/panel/socios/nuevo" className="btn-primary">
               Cargar socio
             </Link>

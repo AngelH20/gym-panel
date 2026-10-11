@@ -86,7 +86,10 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
 
   if (error) {
     if (error.code === "23505" && error.message.includes("dni")) {
-      return { error: "Ya hay un socio con ese DNI." };
+      return {
+        error:
+          "Ya hay un socio con ese DNI. Si estaba dado de baja, buscalo en Socios → Dados de baja y reactivalo.",
+      };
     }
     if (error.code === "23505" || error.message.includes("duplicate")) {
       return { error: "Ya hay un socio con ese email." };
@@ -301,6 +304,33 @@ export async function unlinkFamily(_prev: unknown, formData: FormData): Promise<
   return {};
 }
 
+/** Dar de baja: no borra nada. Le cancela el pase vigente (así no puede
+ *  entrar), lo saca de su familia y lo oculta de las listas. */
+export async function archiveMember(_prev: unknown, formData: FormData): Promise<Result> {
+  const id = String(formData.get("id"));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("archive_member", { p_member_id: id });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel", "layout");
+  return {};
+}
+
+/** Vuelve a las listas. Para que pueda entrar, se le vende un pase. */
+export async function unarchiveMember(_prev: unknown, formData: FormData): Promise<Result> {
+  const id = String(formData.get("id"));
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("unarchive_member", { p_member_id: id });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel", "layout");
+  return {};
+}
+
+/** Borrado definitivo, solo superadmin: para errores de carga (duplicados).
+ *  Los cobros quedan en la caja con el nombre del socio. */
 export async function deleteMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
   const supabase = await createClient();
