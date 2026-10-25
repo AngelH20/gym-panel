@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 export function SearchBox({ defaultValue }: { defaultValue: string }) {
   const [value, setValue] = useState(defaultValue);
@@ -10,11 +10,19 @@ export function SearchBox({ defaultValue }: { defaultValue: string }) {
 
   // Debounce: no queremos una request por tecla.
   useEffect(() => {
+    // Al montar (y si la búsqueda ya coincide con la URL) no hay nada que
+    // pedir: antes cada vez que se abría Socios se volvía a renderizar la
+    // página entera en el server 300 ms después, sin que nadie tipeara.
+    if (value.trim() === (params.get("q") ?? "")) return;
+
     const t = setTimeout(() => {
       const next = new URLSearchParams(params.toString());
       if (value.trim()) next.set("q", value.trim());
       else next.delete("q");
-      router.replace(`/panel/socios?${next.toString()}`);
+      // En una transición: mientras llega el resultado se sigue viendo la
+      // lista actual, en vez del esqueleto de carga que reemplazaría a este
+      // mismo input y le sacaría el foco a mitad de palabra.
+      startTransition(() => router.replace(`/panel/socios?${next.toString()}`));
     }, 300);
 
     return () => clearTimeout(t);

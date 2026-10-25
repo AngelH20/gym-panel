@@ -19,22 +19,17 @@ export default async function SocioPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: member } = await supabase
-    .from("member_overview")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (!member) notFound();
-  const m = member as MemberOverview;
-
+  // Todo junto, el socio incluido: son viajes independientes a Supabase.
+  // Antes el socio iba primero y el resto esperaba a que volviera.
   const [
+    { data: member },
     { data: plans },
     { data: history },
     { data: checkIns },
     { data: role },
     { data: allMembers },
   ] = await Promise.all([
+      supabase.from("member_overview").select("*").eq("id", id).maybeSingle(),
       supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
       supabase
         .from("memberships")
@@ -56,6 +51,9 @@ export default async function SocioPage({
         .is("archived_at", null)
         .order("full_name"),
     ]);
+
+  if (!member) notFound();
+  const m = member as MemberOverview;
 
   const members = (allMembers ?? []) as FamilyCandidate[];
   const familyId = members.find((x) => x.id === id)?.family_id ?? null;

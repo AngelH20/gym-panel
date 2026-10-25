@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IconGrid, IconRows } from "@/components/icons";
 
@@ -17,7 +18,9 @@ export function ViewToggle({ value }: { value: SociosView }) {
     const q = new URLSearchParams(params.toString());
     if (next === "grid") q.delete("view");
     else q.set("view", next);
-    router.replace(`/panel/socios?${q.toString()}`);
+    // En una transición, igual que la búsqueda: se cambia de vista sin pasar
+    // por el esqueleto de carga.
+    startTransition(() => router.replace(`/panel/socios?${q.toString()}`));
   }
 
   const options: [SociosView, (p: { className?: string }) => React.ReactNode, string][] = [

@@ -57,13 +57,22 @@ function applySecurityHeaders(response: NextResponse, nonce: string): NextRespon
 
 /**
  * Refresca la sesión en cada request y protege /panel.
- * Las rutas públicas (/c/... del check-in) pasan sin tocar.
+ * Las rutas públicas (/c/... del check-in) pasan sin consultar la sesión.
  */
 export async function updateSession(request: NextRequest) {
   const nonce = generateNonce();
   // Se propaga como header de REQUEST para que app/layout.tsx lo lea vía
   // headers() y se lo pase al script inline del tema como prop nonce.
   request.headers.set("x-nonce", nonce);
+
+  const path = request.nextUrl.pathname;
+
+  // El check-in de los socios (/c) es público y no usa la sesión: no tiene
+  // sentido pagar el viaje a Supabase Auth en cada entrada que se registra
+  // desde el celular. Solo lleva las cabeceras de seguridad.
+  if (path === "/c" || path.startsWith("/c/")) {
+    return applySecurityHeaders(NextResponse.next({ request }), nonce);
+  }
 
   let response = NextResponse.next({ request });
 
@@ -91,8 +100,6 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
 
   if (!user && path.startsWith("/panel")) {
     const url = request.nextUrl.clone();

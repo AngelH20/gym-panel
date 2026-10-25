@@ -21,16 +21,16 @@ export default async function PanelLayout({
   // en el proyecto de Supabase, un usuario autenticado no-admin no llega a
   // ver ni la cáscara del panel (las tablas ya estaban protegidas por RLS,
   // esto además le corta el paso a la página).
-  // Los tres van juntos: son viajes independientes a Supabase y encadenarlos
-  // le sumaba ~2 idas y vueltas de red a CADA navegación del panel. Si el
-  // usuario no es admin igual se descartan los otros dos resultados.
-  const [{ data: isAdmin }, { data: role }, { data: setting }] = await Promise.all([
-    supabase.rpc("is_admin"),
+  // Los dos van juntos: son viajes independientes a Supabase y encadenarlos
+  // le sumaba una ida y vuelta de red a CADA navegación del panel. El rol ya
+  // dice si está en la allowlist (null = no es admin), así que no hace falta
+  // preguntar is_admin() aparte.
+  const [{ data: role }, { data: setting }] = await Promise.all([
     supabase.rpc("current_admin_role"),
     supabase.from("settings").select("value").eq("key", "gym_name").single(),
   ]);
 
-  if (!isAdmin) {
+  if (!role) {
     await supabase.auth.signOut();
     redirect("/login");
   }
