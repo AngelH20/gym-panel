@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { qrDataUrl } from "@/lib/qr";
 
 /**
  * GET simple para el polling de RotatingQR.tsx. Un setInterval no puede
@@ -28,15 +28,10 @@ export async function GET(request: Request) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const url = `${siteUrl}/c?t=${token ?? ""}`;
 
-  const dataUrl = await QRCode.toDataURL(url, {
-    width: 720,
-    margin: 1,
-    color: { dark: "#16191A", light: "#FBFBFA" },
-    errorCorrectionLevel: "M",
-  });
+  const dataUrl = await qrDataUrl(url);
 
   return NextResponse.json({
     dataUrl,
-    secondsLeft: (secondsLeft as number) ?? 30,
+    secondsLeft: (secondsLeft as number) ?? 60,
   });
 }
