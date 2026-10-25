@@ -1,0 +1,250 @@
+# Backup diario de la base de Supabase: schema + datos de public, y los
+# usuarios del panel (auth.users / auth.identities).
+#
+# El repo es público: cualquiera con cuenta de GitHub puede leer los logs y
+# bajar los artifacts. Por eso el backup se cifra con BACKUP_PASSPHRASE antes
+# de salir del runner, y los logs nunca muestran datos ni secretos.
+#
+# Configuración, descarga y restauración: BACKUPS.md.
+name: Backup de la base
+
+on:
+  schedule:
+    # 06:17 UTC = 03:17 en Argentina. No en punto: a la hora en punto GitHub
+    # está saturado y puede demorar o directamente saltear corridas.
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Misma versión mayor que el servidor. pg_dump se niega a volcar un
+      # servidor más nuevo que él: si algún día se actualiza Postgres en
+      # Supabase, hay que cambiar esto.
+      PG_IMAGE: postgres:17
+    steps:
+      - name: Revisar la configuración
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          fail=0
+
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Falta el secreto SUPABASE_DB_URL (ver BACKUPS.md)."
+            fail=1
+          fi
+          case "$SUPABASE_DB_URL" in
+            *:6543/*)
+              echo "::warning::SUPABASE_DB_URL usa el Transaction pooler (puerto 6543). pg_dump necesita el Session pooler (puerto 5432)." ;;
+            *@db.*.supabase.co*)
+              echo "::warning::SUPABASE_DB_URL es la conexión directa (db.<ref>.supabase.co), que es solo IPv6: los runners de GitHub no llegan. Usá el Session pooler." ;;
+          esac
+
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Falta el secreto BACKUP_PASSPHRASE (ver BACKUPS.md)."
+            fail=1
+          elif [ "${#BACKUP_PASSPHRASE}" -lt 20 ]; then
+            echo "::error::BACKUP_PASSPHRASE es demasiado corta: tiene que tener 20 caracteres o más."
+            fail=1
+          fi
+
+          exit "$fail"
+
+      - name: Volcar la base y verificar
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/backup"
+          cd "$RUNNER_TEMP/backup"
+          now=$(date -u +%s)
+          echo "BACKUP_NAME=gym-backup-$(date -u -d "@$now" +%Y%m%d-%H%M)" >> "$GITHUB_ENV"
+
+          # Corre un comando de Postgres 17 con esta carpeta montada en
+          # /backup. La URL entra por variable de entorno, nunca como argumento.
+          pg() {
+            docker run --rm -i \
+              -e SUPABASE_DB_URL -e PGSSLMODE=require -e PGCONNECT_TIMEOUT=30 \
+              -e PGAPPNAME=github-backup \
+              -v "$PWD:/backup" -w /backup \
+              "$PG_IMAGE" "$@"
+          }
+
+          docker pull --quiet "$PG_IMAGE" > /dev/null
+          pg pg_dump --version
+
+          # public completo: tablas, funciones, vistas, políticas RLS,
+          # permisos y datos.
+          pg sh -c 'pg_dump --dbname="$SUPABASE_DB_URL" --schema=public --format=custom --file=public.dump'
+
+          # De auth, solo los datos de usuarios e identidades: el schema lo
+          # crea Supabase en cualquier proyecto nuevo. Si esto falla seguimos,
+          # porque public es lo que no se puede perder.
+          if pg sh -c 'pg_dump --dbname="$SUPABASE_DB_URL" --data-only --table=auth.users --table=auth.identities --format=custom --file=auth.dump'; then
+            auth_ok=true
+          else
+            rm -f auth.dump
+            echo "::warning::No se pudieron volcar auth.users / auth.identities. El backup sigue, pero sin los usuarios del panel."
+            auth_ok=false
+          fi
+          echo "AUTH_OK=$auth_ok" >> "$GITHUB_ENV"
+
+          # Filas exactas por tabla, para comparar después de restaurar. Va
+          # adentro del archivo cifrado, no al log: el log es público.
+          pg sh -c 'psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f -' > conteos.txt <<'SQL'
+          select n.nspname || '.' || c.relname as tabla,
+                 (xpath('/row/filas/text()',
+                        query_to_xml(format('select count(*) as filas from %I.%I', n.nspname, c.relname), false, true, '')))[1]::text::bigint as filas
+          from pg_class c
+          join pg_namespace n on n.oid = c.relnamespace
+          where c.relkind = 'r'
+            and (n.nspname = 'public' or (n.nspname = 'auth' and c.relname in ('users', 'identities')))
+          order by 1;
+          SQL
+
+          # pg_restore --file=/dev/null lee y descomprime el archivo entero:
+          # si el dump salió roto, falla acá y no mañana cuando haga falta.
+          for f in public.dump auth.dump; do
+            [ -f "$f" ] || continue
+            pg pg_restore --file=/dev/null "$f"
+            tablas=$(pg pg_restore --list "$f" | grep -c ' TABLE DATA ' || true)
+            if [ "$tablas" -eq 0 ]; then
+              echo "::error::$f no tiene datos de ninguna tabla."
+              exit 1
+            fi
+            echo "$f: $tablas tablas con datos, $(du -h "$f" | cut -f1)"
+          done
+
+          {
+            echo "Backup de la base del gimnasio"
+            echo "Fecha (UTC): $(date -u -d "@$now" '+%Y-%m-%d %H:%M')"
+            echo "Corrida: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            pg pg_dump --version
+            echo "Incluye auth.users / auth.identities: $([ "$auth_ok" = true ] && echo sí || echo no)"
+            echo "Cómo restaurarlo: BACKUPS.md en el repo."
+          } > info.txt
+
+      - name: Empaquetar y cifrar
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/backup"
+          # Lo que se sube sale de otra carpeta, así ningún archivo sin cifrar
+          # puede colarse en el artifact.
+          mkdir -p "$RUNNER_TEMP/salida"
+          out="$RUNNER_TEMP/salida/$BACKUP_NAME.tar.gpg"
+
+          files=(public.dump conteos.txt info.txt)
+          if [ -f auth.dump ]; then files+=(auth.dump); fi
+          tar -cf "$BACKUP_NAME.tar" "${files[@]}"
+
+          # La passphrase entra por stdin (printf es un builtin): no aparece
+          # ni en el log ni en la lista de procesos.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --quiet \
+            --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 \
+            --s2k-digest-algo SHA512 --s2k-count 65011712 \
+            --compress-algo none \
+            --output "$out" "$BACKUP_NAME.tar"
+
+          # Antes de confiar en el archivo, comprobar que se descifra igual.
+          want=$(sha256sum < "$BACKUP_NAME.tar")
+          got=$(printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --quiet \
+            --pinentry-mode loopback --passphrase-fd 0 --decrypt "$out" | sha256sum)
+          if [ "$want" != "$got" ]; then
+            echo "::error::El archivo cifrado no se descifra igual al original."
+            exit 1
+          fi
+
+          rm -f "$BACKUP_NAME.tar" "${files[@]}"
+          echo "BACKUP_FILE=$out" >> "$GITHUB_ENV"
+
+          {
+            echo "### $BACKUP_NAME.tar.gpg"
+            echo "- Tamaño (cifrado): $(du -h "$out" | cut -f1)"
+            if [ "$AUTH_OK" = true ]; then
+              echo "- Usuarios del panel (auth): incluidos"
+            else
+              echo "- Usuarios del panel (auth): **no incluidos**, revisá el paso de volcado"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Subir como artifact (90 días)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ env.BACKUP_FILE }}
+          # Se sube el .tar.gpg tal cual, sin envolverlo en un zip.
+          archive: false
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Copiar a Cloudflare R2 (si está configurado)
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$R2_ACCESS_KEY_ID$R2_SECRET_ACCESS_KEY$R2_ENDPOINT" ]; then
+            echo "R2 no está configurado: el backup queda solo como artifact."
+            echo "- Copia en R2: no configurada" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [ -z "$R2_ACCESS_KEY_ID" ] || [ -z "$R2_SECRET_ACCESS_KEY" ] || [ -z "$R2_ENDPOINT" ]; then
+            echo "::error::R2 está configurado a medias: hacen falta R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY y R2_ENDPOINT."
+            exit 1
+          fi
+
+          # Cloudflare muestra la URL del bucket como https://<cuenta>.r2.cloudflarestorage.com/<bucket>.
+          # Aceptamos esa o la que no trae bucket; el bucket sale de R2_BUCKET,
+          # de la URL, o es gym-backups.
+          rest="${R2_ENDPOINT#https://}"
+          rest="${rest%/}"
+          host="${rest%%/*}"
+          path="${rest#"$host"}"
+          path="${path#/}"
+          bucket="${R2_BUCKET:-${path:-gym-backups}}"
+
+          AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
+          AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+          AWS_DEFAULT_REGION=auto \
+          AWS_REQUEST_CHECKSUM_CALCULATION=when_required \
+          AWS_RESPONSE_CHECKSUM_VALIDATION=when_required \
+            aws s3 cp "$BACKUP_FILE" "s3://$bucket/$BACKUP_NAME.tar.gpg" \
+              --endpoint-url "https://$host" --no-progress
+
+          echo "- Copia en R2: sí" >> "$GITHUB_STEP_SUMMARY"
+
+  mantener-activo:
+    # GitHub apaga los workflows programados de un repo público después de
+    # 60 días sin actividad en el repo, y entonces se cortarían los backups.
+    # Reactivarlo por API en cada corrida lo evita (es lo mismo que hace
+    # liskin/gh-workflow-keepalive). Corre aunque el backup haya fallado.
+    needs: backup
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Reactivar este workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/db-backup.yml/enable"

@@ -45,6 +45,12 @@ npm run dev
 
 Abrí http://localhost:3000 → te redirige a `/login`.
 
+## Backups
+
+Todas las noches un workflow de GitHub Actions vuelca la base, la cifra y la
+guarda 90 días (y opcionalmente en Cloudflare R2). Cómo configurarlo y cómo
+restaurar: [BACKUPS.md](BACKUPS.md).
+
 ## Estructura
 
 ```
