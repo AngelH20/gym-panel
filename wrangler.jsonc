@@ -1,0 +1,31 @@
+// Config del Worker de Cloudflare (ver CLOUDFLARE.md). Plantilla de
+// https://opennext.js.org/cloudflare/get-started
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gym-panel",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-15",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Tiene que coincidir con "name" de arriba.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "gym-panel"
+    }
+  ],
+  // Correr el Worker en São Paulo, al lado de la base de Supabase (sa-east-1):
+  // cada página hace varias consultas, y así cada una es un viaje corto.
+  // Se usa la región explícita y no "mode": "smart" porque Smart Placement
+  // solo mueve el Worker a lugares donde ya recibe tráfico, y casi todo el
+  // tráfico del gimnasio sale de Argentina.
+  "placement": {
+    "region": "aws:sa-east-1"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { qrDataUrl } from "@/lib/qr";
 import { signOut } from "@/app/login/actions";
 import { RotatingQR } from "@/app/panel/acceso/RotatingQR";
 import { IconQr } from "@/components/icons";
@@ -50,12 +50,7 @@ export default async function QrMovilPage() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const url = `${siteUrl}/c?t=${token ?? ""}`;
 
-  const dataUrl = await QRCode.toDataURL(url, {
-    width: 720,
-    margin: 1,
-    color: { dark: "#16191A", light: "#FBFBFA" },
-    errorCorrectionLevel: "M",
-  });
+  const dataUrl = await qrDataUrl(url);
 
   const periodSeconds = Math.max(5, Number(secondsRow?.value ?? 30));
 
