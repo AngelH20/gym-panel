@@ -12,9 +12,8 @@
 --
 -- renew_membership() no cambia: ya llama a membership_end_for().
 --
--- Los pases que ya están activos NO se recalculan. A quien pagó del 1 al 9
--- se le había dado hasta el 10, y con la regla nueva se le acortarían días
--- ya cobrados. La regla nueva corre desde el próximo cobro de cada uno.
+-- Los pases activos se recalcularon aparte el 04/11/2026 (27 pases, ver
+-- abajo). Antes se guardó una copia en backups.memberships_20261104.
 -- ============================================================================
 
 create or replace function membership_end_for(p_start date)
@@ -32,6 +31,27 @@ comment on function membership_end_for is
 
 revoke execute on function membership_end_for(date) from public, anon;
 grant  execute on function membership_end_for(date) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Recalcular los pases activos con la regla nueva (corrido el 04/11/2026).
+-- Primero, copia de seguridad en un esquema que la API no expone.
+-- Se excluye un pase cuya fecha se había corregido a mano.
+-- ---------------------------------------------------------------------------
+-- create schema if not exists backups;
+-- revoke all on schema backups from public, anon, authenticated;
+-- create table backups.memberships_20261104 as select * from public.memberships;
+-- revoke all on backups.memberships_20261104 from public, anon, authenticated;
+--
+-- update public.memberships m
+--    set period_end = membership_end_for(m.period_start)
+--  where m.status = 'active'
+--    and m.period_end <> membership_end_for(m.period_start)
+--    and m.id <> 'f9b98374-0500-4aa3-8e72-af30374121f7';
+--
+-- Para deshacer:
+-- update public.memberships m set period_end = b.period_end
+--   from backups.memberships_20261104 b
+--  where b.id = m.id and b.period_end <> m.period_end;
 
 -- ============================================================================
 -- Probalo:
