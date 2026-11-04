@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Payment, CashClosing, CashOpening } from "@/lib/types";
+import { isManagerRole } from "@/lib/roles";
 import {
   formatMoney,
   formatTime,
@@ -80,7 +81,7 @@ export default async function CajaPage({
   const closing = closingRaw as CashClosing | null;
   const opening = openingRaw as CashOpening | null;
   const history = (historyRaw ?? []) as CashClosing[];
-  const isManager = role === "superadmin" || role === "admin";
+  const isManager = isManagerRole(role);
   const active = payments.filter((p) => !p.voided_at);
 
   // Lo que suma cada venta (un pago mixto son dos filas con el mismo pase).
@@ -224,7 +225,8 @@ export default async function CajaPage({
 
       {isToday && (
         <div className="grid sm:grid-cols-2 gap-3">
-          <OpenRegisterForm />
+          {/* Reabrir una caja ya cerrada borra el cierre: solo dueño o programador. */}
+          {(!closing || isManager) && <OpenRegisterForm />}
           <CloseRegisterForm expectedCashCents={expectedCashCents} />
         </div>
       )}

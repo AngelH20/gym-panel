@@ -4,47 +4,50 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminRole } from "@/lib/types";
+import { ALL_ROLES, isManagerRole, isProgramadorRole } from "@/lib/roles";
 
 type Result = { error?: string };
 
-const ROLES: AdminRole[] = ["superadmin", "admin", "profesor"];
-
-/** Todas las mutaciones de esta pantalla son de superadmin exclusivamente.
- *  La RLS de admins ya lo exige (ver sql/18_roles.sql), pero lo chequeamos
- *  acá también para poder devolver un mensaje claro en vez de un error crudo
- *  de Postgres, y antes de tocar Supabase Auth (que no tiene RLS). */
-async function requireSuperadmin(): Promise<boolean> {
+/** Rol de quien hace el pedido. La RLS de admins es la barrera de verdad
+ *  (sql/28_roles_programador_dueno.sql), pero lo chequeamos acá también
+ *  para devolver un mensaje claro y, sobre todo, antes de tocar Supabase
+ *  Auth con la service_role, que no pasa por RLS. */
+async function currentRole(): Promise<AdminRole | null> {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("is_superadmin");
-  return Boolean(data);
+  const { data } = await supabase.rpc("current_admin_role");
+  return (data as AdminRole | null) ?? null;
+}
+
+/** El dueño solo maneja cuentas de profesor; el programador, todas. */
+function canManageRole(actor: AdminRole | null, target: AdminRole): boolean {
+  if (isProgramadorRole(actor)) return true;
+  return isManagerRole(actor) && target === "profesor";
 }
 
 /** ¿Sacar a esta cuenta (borrarla o bajarle el rol) dejaría el sistema sin
- *  ningún superadmin? Sin este chequeo, alguien se puede quedar afuera de
- *  su propio panel sin forma de volver a entrar. */
-async function wouldLeaveNoSuperadmin(excludeId: string): Promise<boolean> {
+ *  ningún programador? Sin este chequeo, nadie podría volver a cambiar roles. */
+async function wouldLeaveNoProgramador(excludeId: string): Promise<boolean> {
   const supabase = await createClient();
   const { count } = await supabase
     .from("admins")
     .select("id", { count: "exact", head: true })
-    .eq("role", "superadmin")
+    .eq("role", "programador")
     .neq("id", excludeId);
   return (count ?? 0) === 0;
 }
 
 export async function createStaffAccount(_prev: unknown, formData: FormData): Promise<Result> {
-  if (!(await requireSuperadmin())) {
-    return { error: "No tenés permiso para crear cuentas." };
-  }
-
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const full_name = String(formData.get("full_name") ?? "").trim() || null;
   const role = String(formData.get("role") ?? "profesor") as AdminRole;
 
+  if (!ALL_ROLES.includes(role)) return { error: "Rol inválido." };
+  if (!canManageRole(await currentRole(), role)) {
+    return { error: "No tenés permiso para crear una cuenta con ese rol." };
+  }
   if (!email) return { error: "Completá el email." };
   if (password.length < 8) return { error: "La contraseña tiene que tener al menos 8 caracteres." };
-  if (!ROLES.includes(role)) return { error: "Rol inválido." };
 
   // Crear el login de verdad (Supabase Auth) requiere la service_role key:
   // el alta pública está apagada a propósito, así que no hay otra forma de
@@ -86,16 +89,16 @@ export async function createStaffAccount(_prev: unknown, formData: FormData): Pr
 }
 
 export async function updateStaffRole(_prev: unknown, formData: FormData): Promise<Result> {
-  if (!(await requireSuperadmin())) {
-    return { error: "No tenés permiso para cambiar roles." };
+  if (!isProgramadorRole(await currentRole())) {
+    return { error: "Solo el programador puede cambiar roles." };
   }
 
   const id = String(formData.get("id"));
   const role = String(formData.get("role")) as AdminRole;
-  if (!ROLES.includes(role)) return { error: "Rol inválido." };
+  if (!ALL_ROLES.includes(role)) return { error: "Rol inválido." };
 
-  if (role !== "superadmin" && (await wouldLeaveNoSuperadmin(id))) {
-    return { error: "No podés sacarle superadmin al único que queda. Creá otro primero." };
+  if (role !== "programador" && (await wouldLeaveNoProgramador(id))) {
+    return { error: "No podés sacarle programador al único que queda. Creá otro primero." };
   }
 
   const supabase = await createClient();
@@ -111,36 +114,50 @@ export async function updateStaffRole(_prev: unknown, formData: FormData): Promi
 }
 
 export async function deleteStaffAccount(_prev: unknown, formData: FormData): Promise<Result> {
-  if (!(await requireSuperadmin())) {
+  const actor = await currentRole();
+  if (!isManagerRole(actor)) {
     return { error: "No tenés permiso para borrar cuentas." };
   }
 
   const id = String(formData.get("id"));
-  const user_id = String(formData.get("user_id") ?? "");
+  const supabase = await createClient();
 
-  if (await wouldLeaveNoSuperadmin(id)) {
-    return { error: "No podés borrar al único superadmin. Creá otro primero." };
+  const { data: target } = await supabase
+    .from("admins")
+    .select("role")
+    .eq("id", id)
+    .maybeSingle();
+  if (!target) return { error: "No se pudo borrar: la cuenta ya no existe." };
+  if (!canManageRole(actor, target.role as AdminRole)) {
+    return { error: "Solo podés borrar cuentas de profesor." };
   }
 
-  const supabase = await createClient();
-  const { error, count } = await supabase
+  if (await wouldLeaveNoProgramador(id)) {
+    return { error: "No podés borrar al único programador. Creá otro primero." };
+  }
+
+  // El user_id sale de la fila borrada, no del formulario: así nadie puede
+  // borrar el login de Auth de otra cuenta mandando un id cambiado.
+  const { data: deleted, error } = await supabase
     .from("admins")
-    .delete({ count: "exact" })
-    .eq("id", id);
+    .delete()
+    .eq("id", id)
+    .select("user_id");
 
   if (error) {
     console.error("[usuarios] Error al borrar la cuenta:", error);
     return { error: "No se pudo borrar la cuenta." };
   }
-  if (!count) {
-    return { error: "No se pudo borrar: la cuenta ya no existe." };
+  if (!deleted?.length) {
+    return { error: "No se pudo borrar la cuenta." };
   }
 
   // Además de sacarlo de la allowlist, borramos el login de Auth para que
   // ni siquiera pueda autenticarse (aunque ya no entraría al panel igual).
-  if (user_id) {
+  const userId = deleted[0].user_id as string | null;
+  if (userId) {
     const admin = createAdminClient();
-    await admin.auth.admin.deleteUser(user_id).catch((e) => {
+    await admin.auth.admin.deleteUser(userId).catch((e) => {
       console.error("[usuarios] Error al borrar el usuario de Auth:", e);
     });
   }

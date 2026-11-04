@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AdminRole } from "@/lib/types";
+import { isManagerRole } from "@/lib/roles";
 
 const usuariosIcon = (
   <>
@@ -61,8 +62,8 @@ const cumpleañosIcon = (
 
 type NavLink = { href: string; label: string; icon: React.ReactNode };
 
-/** Planes (precios) queda afuera para profesor; Usuarios solo lo ve
- *  superadmin. El resto es igual para los tres roles. */
+/** Planes (precios) y Usuarios quedan afuera para profesor. El resto es
+ *  igual para los tres roles. */
 function visibleLinks(role: AdminRole | null | undefined): NavLink[] {
   const links: NavLink[] = [
     { href: "/panel", label: "Panel", icon: panelIcon },
@@ -73,7 +74,7 @@ function visibleLinks(role: AdminRole | null | undefined): NavLink[] {
   if (role !== "profesor") links.push({ href: "/panel/planes", label: "Planes", icon: planesIcon });
   links.push({ href: "/panel/caja", label: "Caja", icon: cajaIcon });
   links.push({ href: "/panel/acceso", label: "QR", icon: qrIcon });
-  if (role === "superadmin") {
+  if (isManagerRole(role)) {
     links.push({ href: "/panel/usuarios", label: "Usuarios", icon: usuariosIcon });
   }
   return links;

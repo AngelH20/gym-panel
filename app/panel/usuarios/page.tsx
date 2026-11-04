@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Staff } from "@/lib/types";
+import type { AdminRole, Staff } from "@/lib/types";
+import { isManagerRole } from "@/lib/roles";
 import { UsersList } from "./UsersList";
 
 export default async function UsuariosPage() {
   const supabase = await createClient();
 
-  // Solo superadmin gestiona cuentas. Un admin o profesor que entre por URL
-  // directa se va de vuelta al panel: esta pantalla ni siquiera aparece en
-  // el nav para ellos (ver PanelNav.tsx), pero la RLS de admins también lo
-  // exige (sql/18_roles.sql), así que esto es un aviso temprano, no la única
-  // barrera.
-  const { data: isSuperadmin } = await supabase.rpc("is_superadmin");
-  if (!isSuperadmin) redirect("/panel");
+  // Dueño y programador. Un profesor que entre por URL directa se va de
+  // vuelta al panel: esta pantalla ni aparece en su nav (PanelNav.tsx), y la
+  // RLS de admins tampoco le deja ver otras cuentas
+  // (sql/28_roles_programador_dueno.sql).
+  const { data: role } = await supabase.rpc("current_admin_role");
+  const actorRole = (role as AdminRole | null) ?? null;
+  if (!isManagerRole(actorRole)) redirect("/panel");
 
   const [{ data: staff }, { data: userData }] = await Promise.all([
     supabase.from("admins").select("*").order("created_at"),
@@ -24,14 +25,16 @@ export default async function UsuariosPage() {
       <div>
         <h1 className="h1">Usuarios</h1>
         <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Quién puede entrar al panel y con qué rol. Esta pantalla solo la ves
-          vos.
+          {actorRole === "programador"
+            ? "Quién puede entrar al panel y con qué rol."
+            : "Quién puede entrar al panel. Podés dar de alta y borrar cuentas de profesor."}
         </p>
       </div>
 
       <UsersList
         staff={(staff ?? []) as Staff[]}
         currentUserId={userData?.user?.id ?? null}
+        actorRole={actorRole!}
       />
     </div>
   );

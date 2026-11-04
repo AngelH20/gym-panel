@@ -4,27 +4,20 @@ import { useActionState, useState } from "react";
 import { createStaffAccount, updateStaffRole, deleteStaffAccount } from "./actions";
 import { Field, FormError, SubmitButton, EmptyState } from "@/components/Form";
 import type { AdminRole, Staff } from "@/lib/types";
-
-const ROLE_LABEL: Record<AdminRole, string> = {
-  superadmin: "Superadmin",
-  admin: "Admin",
-  profesor: "Profesor",
-};
-
-const ROLE_HINT: Record<AdminRole, string> = {
-  superadmin: "Todo, incluida esta pantalla de cuentas.",
-  admin: "Todo el uso operativo: socios, pases, planes, caja.",
-  profesor:
-    "Socios, pases, caja y QR. No borra socios, no toca planes ni corrige vencimientos a mano, no ve esta pantalla.",
-};
+import { ALL_ROLES, ROLE_HINT, ROLE_LABEL } from "@/lib/roles";
 
 export function UsersList({
   staff,
   currentUserId,
+  actorRole,
 }: {
   staff: Staff[];
   currentUserId: string | null;
+  actorRole: AdminRole;
 }) {
+  const isProgramador = actorRole === "programador";
+  // El dueño solo crea cuentas de profesor.
+  const creatableRoles: AdminRole[] = isProgramador ? ALL_ROLES : ["profesor"];
   const [creating, setCreating] = useState(false);
 
   return (
@@ -37,13 +30,19 @@ export function UsersList({
       ) : (
         <ul className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
           {staff.map((s) => (
-            <StaffRow key={s.id} staff={s} isSelf={s.user_id === currentUserId} />
+            <StaffRow
+              key={s.id}
+              staff={s}
+              isSelf={s.user_id === currentUserId}
+              canChangeRole={isProgramador}
+              canDelete={isProgramador || s.role === "profesor"}
+            />
           ))}
         </ul>
       )}
 
       {creating ? (
-        <CreateForm onDone={() => setCreating(false)} />
+        <CreateForm roles={creatableRoles} onDone={() => setCreating(false)} />
       ) : (
         <button
           onClick={() => setCreating(true)}
@@ -59,7 +58,17 @@ export function UsersList({
   );
 }
 
-function StaffRow({ staff, isSelf }: { staff: Staff; isSelf: boolean }) {
+function StaffRow({
+  staff,
+  isSelf,
+  canChangeRole,
+  canDelete,
+}: {
+  staff: Staff;
+  isSelf: boolean;
+  canChangeRole: boolean;
+  canDelete: boolean;
+}) {
   const [roleState, roleAction] = useActionState(updateStaffRole, null);
   const [deleteState, deleteAction] = useActionState(deleteStaffAccount, null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -83,31 +92,34 @@ function StaffRow({ staff, isSelf }: { staff: Staff; isSelf: boolean }) {
         <p className="text-tiny text-txt-faint">
           No podés cambiarte el rol ni borrarte a vos mismo desde acá.
         </p>
+      ) : !canChangeRole && !canDelete ? (
+        <p className="text-tiny text-txt-faint">Esta cuenta solo la maneja el programador.</p>
       ) : (
         <>
-          <form action={roleAction} className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="id" value={staff.id} />
-            <select
-              name="role"
-              defaultValue={staff.role}
-              className="field font-mono text-tiny py-1.5 w-auto"
-            >
-              {(Object.keys(ROLE_LABEL) as AdminRole[]).map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </option>
-              ))}
-            </select>
-            <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
-              Cambiar rol
-            </SubmitButton>
-          </form>
+          {canChangeRole && (
+            <form action={roleAction} className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="id" value={staff.id} />
+              <select
+                name="role"
+                defaultValue={staff.role}
+                className="field font-mono text-tiny py-1.5 w-auto"
+              >
+                {ALL_ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABEL[r]}
+                  </option>
+                ))}
+              </select>
+              <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
+                Cambiar rol
+              </SubmitButton>
+            </form>
+          )}
           <FormError message={roleState?.error} />
 
-          {confirmDelete ? (
+          {!canDelete ? null : confirmDelete ? (
             <form action={deleteAction} className="flex flex-wrap items-center gap-2">
               <input type="hidden" name="id" value={staff.id} />
-              <input type="hidden" name="user_id" value={staff.user_id ?? ""} />
               <span className="text-tiny text-plate-red">
                 ¿Borrar esta cuenta? Pierde el acceso al panel.
               </span>
@@ -137,7 +149,7 @@ function StaffRow({ staff, isSelf }: { staff: Staff; isSelf: boolean }) {
   );
 }
 
-function CreateForm({ onDone }: { onDone: () => void }) {
+function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void }) {
   const [state, action] = useActionState(
     async (prev: unknown, formData: FormData) => {
       const res = await createStaffAccount(prev, formData);
@@ -171,7 +183,7 @@ function CreateForm({ onDone }: { onDone: () => void }) {
           onChange={(e) => setRole(e.target.value as AdminRole)}
           className="field"
         >
-          {(Object.keys(ROLE_LABEL) as AdminRole[]).map((r) => (
+          {roles.map((r) => (
             <option key={r} value={r}>
               {ROLE_LABEL[r]}
             </option>

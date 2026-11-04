@@ -6,7 +6,7 @@ import { PlanList } from "./PlanList";
 export default async function PlanesPage() {
   const supabase = await createClient();
 
-  // Precios y planes son terreno de managers (admin/superadmin). Un profesor
+  // Precios y planes son terreno de dueño y programador. Un profesor
   // que entre por URL directa se va de vuelta al panel, no solo se le oculta
   // el link del nav.
   const { data: isManager } = await supabase.rpc("is_manager");

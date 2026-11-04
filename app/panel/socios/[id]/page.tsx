@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview, Membership, Plan } from "@/lib/types";
+import { isManagerRole } from "@/lib/roles";
 import { formatDate, formatDateTime, todayLocal } from "@/lib/labels";
 import { Avatar } from "@/components/Avatar";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -171,7 +172,7 @@ export default async function SocioPage({
               memberId={m.id}
               archivedAt={m.archived_at}
               archivedByName={m.archived_by_name}
-              canReactivate={role === "superadmin" || role === "admin"}
+              canReactivate={isManagerRole(role)}
             />
           ) : (
             <MemberActions

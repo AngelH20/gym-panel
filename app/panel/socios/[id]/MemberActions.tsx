@@ -18,6 +18,7 @@ import {
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatDate, projectedRenewalEnd } from "@/lib/labels";
 import type { AdminRole, MemberOverview, Membership, Plan } from "@/lib/types";
+import { isManagerRole, isProgramadorRole } from "@/lib/roles";
 
 export function MemberActions({
   member,
@@ -35,8 +36,8 @@ export function MemberActions({
   /** Integrantes de su familia, él incluido. Desde 3 va el pack familiar. */
   familySize?: number;
 }) {
-  const isManager = role === "superadmin" || role === "admin";
-  const isSuperadmin = role === "superadmin";
+  const isManager = isManagerRole(role);
+  const isProgramador = isProgramadorRole(role);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [archiveState, archiveAction] = useActionState(archiveMember, null);
@@ -313,7 +314,7 @@ export function MemberActions({
         </div>
       )}
 
-      {isSuperadmin && (
+      {isProgramador && (
         <div className="border-t border-line px-5 py-4 space-y-2">
           {confirmDelete ? (
             <form action={deleteAction} className="flex flex-wrap items-center gap-2">
