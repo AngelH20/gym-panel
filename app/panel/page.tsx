@@ -111,7 +111,7 @@ export default async function PanelHome() {
   );
   const cumpleañosHoy = all.filter((m) => m.is_birthday_today);
 
-  // Cada socio vence en su propia fecha (ver sql/22_renewal_same_day.sql).
+  // Cada socio vence en su propia fecha (ver sql/27_renewal_always_same_day.sql).
   // Acá van los que ya vencieron hace poco y todavía no renovaron; los de
   // hace más de un mes probablemente dejaron de venir.
   const overdueSince = daysAgoLocal(OVERDUE_WINDOW_DAYS);

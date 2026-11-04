@@ -110,7 +110,7 @@ function PlanRow({
         </div>
       </div>
       <p className="mt-1 text-[10px] text-txt-faint">
-        No depende de este número: vence el mismo día del mes siguiente (o el 10, si paga del 1 al 10).
+        No depende de este número: vence el mismo día del mes siguiente al que paga.
       </p>
 
       {(plan.price_cash_cents != null || plan.price_transfer_cents != null) && (

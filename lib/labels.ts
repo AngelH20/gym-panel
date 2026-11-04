@@ -118,15 +118,14 @@ export function addDaysLocal(iso: string, days: number): string {
 }
 
 /** Replica en el navegador membership_end_for() (ver
- *  sql/22_renewal_same_day.sql): si se pagó del 1 al 10, vence el 10 del mes
- *  siguiente; del 11 en adelante, el mismo día del mes siguiente (o el último
- *  día, si ese mes es más corto). Es solo para la vista previa del
- *  formulario — la fecha real la calcula la función SQL, no esto. */
+ *  sql/27_renewal_always_same_day.sql): vence el mismo día del mes siguiente
+ *  (o el último día, si ese mes es más corto). Es solo para la vista previa
+ *  del formulario — la fecha real la calcula la función SQL, no esto. */
 export function projectedRenewalEnd(startIso: string): string {
   const [y, m, d] = startIso.split("-").map(Number);
   // m ya es "mes siguiente" en índice 0; el día 0 del mes m+1 es el último del mes m.
   const lastDayNextMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
-  const day = d <= 10 ? 10 : Math.min(d, lastDayNextMonth);
+  const day = Math.min(d, lastDayNextMonth);
   return new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
 }
 

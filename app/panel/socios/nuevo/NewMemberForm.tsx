@@ -304,8 +304,8 @@ export function NewMemberForm({
             <div>
               <h2 className="h3">Activar pase ahora</h2>
               <p className="mt-1 text-tiny text-txt-faint">
-                Opcional. Arranca hoy (o la fecha que elijas) y vence en un mes; si paga del 1
-                al 10, tiene hasta el 10.
+                Opcional. Arranca hoy (o la fecha que elijas) y vence el mismo día del mes
+                siguiente.
               </p>
             </div>
 
