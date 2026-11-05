@@ -2,9 +2,14 @@ import type { NextConfig } from "next";
 import { HSTS_HEADER, STATIC_SECURITY_HEADERS } from "./lib/securityHeaders";
 
 const nextConfig: NextConfig = {
+  // Sin dominios remotos para el optimizador de imágenes (/_next/image): la
+  // app no usa next/image (las fotos van con <img> común) y con
+  // "*.supabase.co" cualquiera podía usar el sitio como proxy de imágenes de
+  // CUALQUIER proyecto de Supabase, gastando la cuota de Vercel y sirviendo
+  // contenido ajeno desde este dominio. Si algún día se usa next/image con
+  // fotos de Storage, habilitar SOLO el host de este proyecto.
   images: {
-    // Permitimos servir las fotos de socios desde Supabase Storage.
-    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
+    remotePatterns: [],
   },
   // No hace falta anunciar el framework al mundo en cada respuesta.
   poweredByHeader: false,

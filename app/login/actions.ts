@@ -4,32 +4,27 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+/** Mismo texto para todo lo que sea "no podés entrar con esto": la pantalla
+ *  de login es pública y no tiene que contarle a nadie si un email existe,
+ *  si la contraseña era correcta o si la cuenta está en la allowlist. */
+const BAD_CREDENTIALS = "Email o contraseña incorrectos.";
+
 /**
- * Traduce el error de Supabase a algo que diga qué pasó de verdad.
- * La versión anterior devolvía el mismo mensaje para todo, lo que hacía
- * imposible distinguir una contraseña mal tipeada de un email sin confirmar.
+ * Traduce el error de Supabase a un mensaje para la pantalla. Es pública:
+ * nada de mensajes crudos ni pistas de configuración (nombres de variables,
+ * .env.local, pasos del dashboard). El detalle completo queda en el log del
+ * servidor (console.error en signIn), que es donde se depura.
  */
 function describeAuthError(message: string, status?: number): string {
   const m = message.toLowerCase();
 
-  if (m.includes("email not confirmed")) {
-    return "El usuario existe pero el email no está confirmado. En Supabase: Authentication → Users → los tres puntos del usuario → Confirm email.";
-  }
-  if (m.includes("invalid login credentials")) {
-    return "Credenciales rechazadas por Supabase. Si la contraseña es correcta, revisá que el usuario esté confirmado.";
-  }
-  if (m.includes("invalid api key") || m.includes("no api key")) {
-    return "La clave de API es inválida. Revisá NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local y reiniciá el servidor.";
-  }
-  if (m.includes("failed to fetch") || m.includes("fetch failed")) {
-    return "No se pudo contactar a Supabase. Revisá NEXT_PUBLIC_SUPABASE_URL en .env.local.";
-  }
   if (m.includes("too many requests") || status === 429) {
     return "Demasiados intentos seguidos. Esperá un minuto y probá de nuevo.";
   }
-
-  // Cualquier otra cosa: mostramos el mensaje crudo, es más útil que esconderlo.
-  return `Supabase respondió: ${message}`;
+  if (m.includes("invalid login credentials") || m.includes("email not confirmed")) {
+    return BAD_CREDENTIALS;
+  }
+  return "No se pudo iniciar sesión. Probá de nuevo en un momento.";
 }
 
 /** Adónde volver después de entrar. Viene de la URL (?volver=), así que se
@@ -75,11 +70,12 @@ export async function signIn(_prev: unknown, formData: FormData) {
   }
 
   if (!isAdmin) {
+    // Usuario de Supabase Auth que no es del staff (por ejemplo, si el alta
+    // pública del proyecto quedó habilitada): mismo mensaje que una
+    // contraseña mal puesta, para no confirmarle que sus credenciales sirven.
+    console.error("[login] Usuario autenticado que no está en admins:", email);
     await supabase.auth.signOut();
-    return {
-      error:
-        "Tu usuario existe y la contraseña es correcta, pero no está en la tabla admins. Corré el INSERT de la allowlist en Supabase.",
-    };
+    return { error: BAD_CREDENTIALS };
   }
 
   revalidatePath("/", "layout");

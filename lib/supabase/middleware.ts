@@ -17,6 +17,21 @@ function generateNonce(): string {
  * el propio Next para el RSC payload, que lo toman solo si Content-Security-
  * Policy trae 'nonce-...' en script-src) sin recurrir a 'unsafe-inline'.
  */
+/** Origen del proyecto de Supabase (fotos de Storage), para el img-src del
+ *  CSP. Solo ESTE proyecto: con "https://*.supabase.co" una foto de socio
+ *  podía apuntar a un bucket de cualquier otro proyecto (de un tercero) y
+ *  servir de píxel de rastreo con la IP de cada navegador del staff. */
+function supabaseImgOrigin(): string {
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+    return url.protocol === "https:" ? url.origin : "";
+  } catch {
+    return "";
+  }
+}
+
+const SUPABASE_IMG_ORIGIN = supabaseImgOrigin();
+
 function applySecurityHeaders(response: NextResponse, nonce: string): NextResponse {
   const csp = [
     "default-src 'self'",
@@ -25,7 +40,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string): NextRespon
     // pueden noncear fácilmente con las props style={} de React; es el
     // trade-off estándar que documenta el propio Next.js para este caso.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://*.supabase.co",
+    `img-src 'self' data: blob:${SUPABASE_IMG_ORIGIN ? ` ${SUPABASE_IMG_ORIGIN}` : ""}`,
     "font-src 'self' data:",
     "connect-src 'self'",
     "object-src 'none'",
