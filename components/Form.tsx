@@ -13,7 +13,7 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="block mb-1.5 text-tiny font-medium text-txt-soft">
+      <span className="block mb-1.5 text-tiny font-semibold text-txt">
         {label}
       </span>
       {children}
@@ -54,8 +54,8 @@ export function FormError({ message }: { message?: string | null }) {
   return (
     <p
       role="alert"
-      className="flex gap-2.5 rounded-control border border-plate-red/30
-                 bg-plate-red/8 px-3.5 py-3 text-tiny text-plate-red"
+      className="flex gap-2.5 rounded-control border border-plate-red/40
+                 bg-plate-red/10 px-3.5 py-3 text-tiny font-medium text-plate-red"
     >
       <svg
         viewBox="0 0 24 24"
@@ -84,12 +84,12 @@ export function EmptyState({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="card px-6 py-12 text-center">
-      <h3 className="h3">{title}</h3>
-      <p className="mt-1.5 text-base text-txt-soft max-w-sm mx-auto">
+    <div className="rounded-card border-2 border-dashed border-line-strong px-6 py-12 text-center">
+      <h3 className="h2">{title}</h3>
+      <p className="mt-2 text-base text-txt-soft max-w-sm mx-auto">
         {description}
       </p>
-      {children && <div className="mt-5 flex justify-center gap-2">{children}</div>}
+      {children && <div className="mt-6 flex justify-center gap-2">{children}</div>}
     </div>
   );
 }

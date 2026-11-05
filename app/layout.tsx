@@ -1,31 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Archivo } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
 /**
- * Tres roles tipográficos:
- *   display -> Space Grotesk. Geométrica con carácter, para títulos.
- *   body    -> IBM Plex Sans. Neutral y muy legible en tamaños chicos.
- *   mono    -> IBM Plex Mono. TODO número va acá: usos, horarios, fechas.
- *              Un contador se lee mejor con anchos fijos.
+ * Una sola familia, Archivo variable, con el eje de ancho cargado:
+ *   cuerpo  -> ancho normal. Grotesca robusta, muy legible en chico.
+ *   títulos -> condensada y pesada (font-display), como el marcador de un
+ *              reloj de sala: entra grande en la pantalla del celular.
+ *   números -> cifras tabulares, apenas angostas (font-mono).
+ * Ver tailwind.config.ts y globals.css.
  */
-const display = Space_Grotesk({
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
-});
-
-const body = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body",
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -46,8 +36,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBFBFA" },
-    { media: "(prefers-color-scheme: dark)", color: "#101316" },
+    { media: "(prefers-color-scheme: light)", color: "#13264A" },
+    { media: "(prefers-color-scheme: dark)", color: "#13264A" },
   ],
 };
 
@@ -91,7 +81,7 @@ export default async function RootLayout({
    * attributes...". Es el patrón estándar para theme scripts inline. */
   return (
     <html lang="es-AR" suppressHydrationWarning>
-      <body className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body className={archivo.variable}>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
       </body>

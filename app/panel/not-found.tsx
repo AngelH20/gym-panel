@@ -5,8 +5,7 @@ export default function PanelNotFound() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-4">
       <span
-        className="flex size-12 items-center justify-center rounded-full
-                   bg-surface-sunk border border-line text-txt-faint font-display text-lg font-semibold"
+        className="block scoreboard text-[5rem] text-txt-faint"
         aria-hidden="true"
       >
         404

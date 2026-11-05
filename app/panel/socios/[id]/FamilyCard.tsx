@@ -55,7 +55,7 @@ export function FamilyCard({
               <div className="min-w-0">
                 <Link
                   href={`/panel/socios/${f.id}`}
-                  className="text-base font-medium hover:text-plate-blue truncate block"
+                  className="text-base font-semibold hover:text-plate-blue truncate block"
                 >
                   {f.full_name}
                 </Link>

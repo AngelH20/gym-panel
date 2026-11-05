@@ -4,13 +4,14 @@ export const STAT_ACCENT = {
   green: "bg-plate-green/12 text-plate-green",
   blue: "bg-plate-blue/12 text-plate-blue",
   red: "bg-plate-red/12 text-plate-red",
-  amber: "bg-plate-amber/20 text-plate-amberInk",
+  amber: "bg-plate-amber/25 text-plate-amberInk",
 } as const;
 
 export type StatAccent = keyof typeof STAT_ACCENT;
 
-/** Tarjeta de métrica: número grande + ícono de color a la derecha. Mismo
- *  patrón en Panel, Socios y Métricas — un solo componente para las tres. */
+/** Tarjeta de métrica, tipo marcador: rótulo chico con el ícono en el color
+ *  del disco que le corresponde, y abajo el número grande y condensado.
+ *  Mismo patrón en Panel, Socios, Caja y Métricas — un solo componente. */
 export function StatCard({
   label,
   value,
@@ -28,24 +29,29 @@ export function StatCard({
 }) {
   const content = (
     <>
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className={`flex size-7 shrink-0 items-center justify-center rounded-full [&>svg]:size-4 ${STAT_ACCENT[accent]}`}
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+        <p className="text-tiny font-semibold text-txt-soft truncate">{label}</p>
+      </div>
       <div className="min-w-0">
-        <p className="text-tiny text-txt-soft truncate">{label}</p>
-        <p className="mt-1 font-mono text-huge font-semibold leading-none">{value}</p>
+        <p className="scoreboard text-display sm:text-huge [overflow-wrap:anywhere]">{value}</p>
         {caption && <p className="mt-1.5 text-tiny text-txt-faint truncate">{caption}</p>}
       </div>
-      <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${STAT_ACCENT[accent]}`}
-        aria-hidden="true"
-      >
-        {icon}
-      </span>
     </>
   );
 
-  const className = "card p-4 flex items-start justify-between gap-2";
+  const className = "card p-4 flex flex-col gap-3 min-w-0";
 
   return href ? (
-    <Link href={href} className={`${className} hover:border-line-strong transition-colors`}>
+    <Link
+      href={href}
+      className={`${className} hover:border-line-strong hover:shadow-lift transition-[border-color,box-shadow]`}
+    >
       {content}
     </Link>
   ) : (

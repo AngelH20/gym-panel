@@ -7,23 +7,23 @@ import type { EffectiveStatus } from "@/lib/types";
  */
 const styles: Record<EffectiveStatus, { chip: string; dot: string }> = {
   active: {
-    chip: "border-plate-green/30 bg-plate-green/10 text-plate-green",
+    chip: "border-plate-green/35 bg-plate-green/12 text-plate-green",
     dot: "bg-plate-green",
   },
   expired: {
-    chip: "border-plate-red/30 bg-plate-red/10 text-plate-red",
+    chip: "border-plate-red/35 bg-plate-red/10 text-plate-red",
     dot: "bg-plate-red",
   },
   exhausted: {
-    chip: "border-plate-red/30 bg-plate-red/10 text-plate-red",
+    chip: "border-plate-red/35 bg-plate-red/10 text-plate-red",
     dot: "bg-plate-red",
   },
   suspended: {
-    chip: "border-line-strong bg-surface-sunk text-txt-soft",
+    chip: "border-line bg-surface-sunk text-txt-soft",
     dot: "bg-txt-faint",
   },
   no_membership: {
-    chip: "border-line-strong bg-surface-sunk text-txt-soft",
+    chip: "border-line bg-surface-sunk text-txt-soft",
     dot: "bg-txt-faint",
   },
 };
@@ -32,7 +32,7 @@ export function StatusBadge({ status }: { status: EffectiveStatus }) {
   const s = styles[status];
   return (
     <span className={`badge ${s.chip}`}>
-      <span className={`size-1.5 rounded-full ${s.dot}`} aria-hidden="true" />
+      <span className={`size-2 rounded-full ${s.dot}`} aria-hidden="true" />
       {effectiveStatusLabel[status]}
     </span>
   );

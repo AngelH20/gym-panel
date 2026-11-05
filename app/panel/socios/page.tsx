@@ -97,15 +97,15 @@ export default async function SociosPage({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex items-end justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="h1">Socios</h1>
-          <p className="mt-1 text-tiny text-txt-soft">
+          <p className="mt-2 text-tiny sm:text-base text-txt-soft">
             Gestioná los socios de tu gimnasio
             {entraronHoy > 0 && (
               <>
                 {" · "}
-                <span className="font-mono font-medium text-plate-green">
+                <span className="font-mono font-bold text-plate-green">
                   {entraronHoy}
                 </span>{" "}
                 {entraronHoy === 1 ? "entró" : "entraron"} hoy
@@ -152,7 +152,7 @@ export default async function SociosPage({
       <SearchBox defaultValue={q} />
 
       <div className="flex items-center gap-3">
-        <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-4 px-4 flex-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar -ml-4 pl-4 sm:ml-0 sm:pl-0 flex-1">
           {FILTERS.map((filter) => {
             const active = f === filter.key;
             const count =
@@ -173,20 +173,15 @@ export default async function SociosPage({
               <Link
                 key={filter.key}
                 href={`/panel/socios?${qs}`}
-                className={[
-                  "shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5",
-                  "text-tiny font-medium transition-colors",
-                  active
-                    ? "bg-ink text-txt-onDark border-ink"
-                    : "bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt",
-                ].join(" ")}
+                aria-current={active ? "page" : undefined}
+                className={active ? "chip chip-on" : "chip"}
               >
                 {filter.label}
                 {count && (
                   <span
                     className={[
-                      "font-mono text-[10px] rounded-full px-1.5",
-                      active ? "bg-ink-raised" : "bg-plate-amber/25 text-plate-amberInk",
+                      "font-mono text-micro font-bold rounded-full px-1.5 min-w-5 text-center",
+                      active ? "bg-ink-raised" : "bg-plate-amber/30 text-plate-amberInk",
                     ].join(" ")}
                   >
                     {count}
@@ -229,7 +224,7 @@ export default async function SociosPage({
             <li key={m.id}>
               <Link
                 href={`/panel/socios/${m.id}`}
-                className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 min-h-14 hover:bg-surface-hover transition-colors"
               >
                 <div className="relative shrink-0">
                   <Avatar name={m.full_name} url={m.photo_url} size={32} />
@@ -242,7 +237,7 @@ export default async function SociosPage({
                   )}
                 </div>
 
-                <span className="min-w-0 flex-1 truncate font-medium">{m.full_name}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">{m.full_name}</span>
 
                 <StatusBadge status={m.effective_status} />
 
@@ -266,7 +261,7 @@ export default async function SociosPage({
           ))}
         </ul>
       ) : (
-        <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {members.map((m) => (
             <li key={m.id}>
               <Link href={`/panel/socios/${m.id}`} className="card-link h-full p-4">
@@ -283,7 +278,7 @@ export default async function SociosPage({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{m.full_name}</p>
+                    <p className="text-lg leading-tight font-semibold truncate">{m.full_name}</p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <StatusBadge status={m.effective_status} />
                       <span className="text-tiny text-txt-faint truncate">

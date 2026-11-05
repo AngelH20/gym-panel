@@ -55,13 +55,13 @@ export default async function QrMovilPage() {
   const periodSeconds = Math.max(5, Number(secondsRow?.value ?? 60));
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center gap-8 p-6 bg-surface">
+    <main className="min-h-dvh flex flex-col items-center justify-center gap-6 px-4 py-8 bg-surface-sunk">
       <div className="text-center space-y-2">
-        <span className="eyebrow inline-flex items-center gap-1.5 justify-center text-plate-blue">
-          <IconQr className="size-3.5" />
+        <span className="h1 inline-flex items-center gap-2 justify-center">
+          <IconQr className="size-7 text-plate-green" />
           Acceso
         </span>
-        <p className="text-base text-txt-soft">
+        <p className="text-base sm:text-lg text-txt-soft text-balance">
           Escaneá este código para registrar tu entrada al gimnasio.
         </p>
       </div>

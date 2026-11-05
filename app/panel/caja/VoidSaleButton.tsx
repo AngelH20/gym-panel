@@ -27,7 +27,7 @@ export function VoidSaleButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="shrink-0 text-tiny text-txt-faint hover:text-plate-red transition-colors"
+        className="shrink-0 min-h-9 px-2 rounded-control text-tiny font-semibold text-txt-faint hover:text-plate-red hover:bg-plate-red/10 transition-colors"
       >
         Anular
       </button>
@@ -37,7 +37,7 @@ export function VoidSaleButton({
   return (
     <form
       action={action}
-      className="order-last basis-full mt-2 rounded-control border border-plate-red/30 bg-plate-red/8 p-3 space-y-2"
+      className="order-last basis-full mt-2 rounded-control border border-plate-red/40 bg-plate-red/8 p-3 space-y-2.5"
     >
       <input type="hidden" name="payment_id" value={paymentId} />
       <p className="text-tiny text-plate-red">
@@ -52,8 +52,8 @@ export function VoidSaleButton({
         className="field text-tiny"
         placeholder="Motivo (ej: se cargó por adelantado y no pagó)"
       />
-      <label className="flex items-center gap-2 text-tiny text-txt-soft">
-        <input type="checkbox" name="cancel_membership" defaultChecked />
+      <label className="flex items-center gap-2.5 min-h-9 text-tiny text-txt-soft cursor-pointer">
+        <input type="checkbox" name="cancel_membership" defaultChecked className="size-4" />
         Dar de baja también el pase
       </label>
       <FormError message={state?.error} />

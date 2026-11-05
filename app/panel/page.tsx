@@ -143,8 +143,8 @@ export default async function PanelHome() {
     .sort((a, b) => (a.period_end ?? "").localeCompare(b.period_end ?? ""));
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-3">
         <h1 className="h1">Panel</h1>
         <Link href="/panel/acceso" className="btn-success shrink-0">
           <IconQr />
@@ -159,11 +159,11 @@ export default async function PanelHome() {
       */}
       <Link
         href="/qr-movil"
-        className="md:hidden card p-4 flex items-center gap-3 text-base font-medium
+        className="md:hidden card p-4 flex items-center gap-3.5 text-base font-semibold
                    text-txt hover:bg-surface-hover transition-colors"
       >
-        <span className="flex size-9 items-center justify-center rounded-control bg-plate-green/12 text-plate-green shrink-0">
-          <IconQr className="size-4.5" />
+        <span className="flex size-11 items-center justify-center rounded-control bg-plate-green text-txt-onAccent shrink-0">
+          <IconQr className="size-5" />
         </span>
         <span className="flex-1 min-w-0">
           QR vista móvil
@@ -199,17 +199,17 @@ export default async function PanelHome() {
         />
       </div>
 
-      <section className="card p-2 grid grid-cols-3 divide-x divide-line">
+      <section className="card p-1.5 grid grid-cols-3 gap-1.5">
         <QuickAction href="/panel/socios/nuevo" icon={<IconPersonPlus />} label="Nuevo socio" />
         <QuickAction href="/panel/caja" icon={<IconCash />} label="Ir a caja" />
         <QuickAction href="/panel/socios" icon={<IconSearch />} label="Buscar socio" />
       </section>
 
       {cumpleañosHoy.length > 0 && (
-        <section className="card p-5 border-2 border-plate-amber/40 bg-plate-amber/5">
+        <section className="card p-5 border-plate-amber/60 bg-plate-amber/10">
           <div className="flex items-center justify-between gap-3">
             <h2 className="h3">🎂 Hoy cumplen años</h2>
-            <Link href="/panel/cumpleanos" className="text-tiny text-plate-blue hover:underline shrink-0">
+            <Link href="/panel/cumpleanos" className="text-tiny font-semibold text-plate-blue hover:underline underline-offset-4 shrink-0">
               Ver todos
             </Link>
           </div>
@@ -217,7 +217,7 @@ export default async function PanelHome() {
             Saludalos vos — el kiosco también se lo va a decir cuando entren.
           </p>
 
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {cumpleañosHoy.map((m) => (
               <li key={m.id}>
                 <Link
@@ -236,8 +236,8 @@ export default async function PanelHome() {
       )}
 
       {(porVencer.length > 0 || vencidosSinRenovar.length > 0) && (
-        <div className="grid gap-3 lg:grid-cols-2">
-          <section className="card p-4 flex flex-col border-plate-amber/40 bg-plate-amber/5">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <section className="card p-4 sm:p-5 flex flex-col border-t-4 border-t-plate-amber">
             <ListHeader
               title="Hay que cobrarles"
               count={porVencer.length}
@@ -247,11 +247,11 @@ export default async function PanelHome() {
             {porVencer.length === 0 ? (
               <p className="text-base text-txt-soft">Nadie por ahora.</p>
             ) : (
-              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(22rem,1fr))]`}>
+              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(22rem,100%),1fr))]`}>
                 {porVencer.map((m) => (
                   <ListRow key={m.id} member={m}>
                     {m.uses_total != null && m.uses_remaining != null ? (
-                      <div className="w-36 shrink-0">
+                      <div className="w-28 sm:w-36 shrink-0">
                         <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="sm" />
                       </div>
                     ) : null}
@@ -261,7 +261,7 @@ export default async function PanelHome() {
             )}
           </section>
 
-          <section className="card p-4 flex flex-col border-plate-red/40 bg-plate-red/5">
+          <section className="card p-4 sm:p-5 flex flex-col border-t-4 border-t-plate-red">
             <ListHeader
               title="Vencidos sin renovar"
               count={vencidosSinRenovar.length}
@@ -272,7 +272,7 @@ export default async function PanelHome() {
             {vencidosSinRenovar.length === 0 ? (
               <p className="text-base text-txt-soft">Nadie por ahora.</p>
             ) : (
-              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]`}>
+              <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(14rem,100%),1fr))]`}>
                 {vencidosSinRenovar.map((m) => (
                   <ListRow
                     key={m.id}
@@ -292,15 +292,15 @@ export default async function PanelHome() {
         </div>
       )}
 
-      <section className="card p-5">
-        <h2 className="h3 mb-3">Entradas de hoy</h2>
+      <section className="card p-4 sm:p-5">
+        <h2 className="h3 mb-2">Entradas de hoy</h2>
 
         {entraronHoy.length === 0 ? (
           <p className="text-base text-txt-soft">
             Todavía no entró nadie hoy.
           </p>
         ) : (
-          <ul className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {entraronHoy.map((m) => (
               <li key={m.id}>
                 <Link
@@ -321,14 +321,14 @@ export default async function PanelHome() {
         )}
       </section>
 
-      <div className="grid sm:grid-cols-2 gap-3">
-        <section className="card p-5">
-          <h2 className="h3 mb-3">Entradas de la semana</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <section className="card p-4 sm:p-5">
+          <h2 className="h3 mb-4">Entradas de la semana</h2>
           <WeeklyAttendanceChart data={attendanceData} />
         </section>
 
-        <section className="card p-5">
-          <h2 className="h3 mb-3">Facturación de la semana</h2>
+        <section className="card p-4 sm:p-5">
+          <h2 className="h3 mb-4">Facturación de la semana</h2>
           <WeeklyRevenueChart data={revenueData} />
         </section>
       </div>
@@ -352,17 +352,17 @@ function ListRow({
 }) {
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
-    <li className="border-b border-line/60">
-      <Link href={`/panel/socios/${m.id}`} className="py-1.5 flex items-center gap-2.5 group">
+    <li className="border-b border-line">
+      <Link href={`/panel/socios/${m.id}`} className="py-2 min-h-12 flex items-center gap-2.5 group">
         <Avatar name={m.full_name} url={m.photo_url} size={28} />
         {/* Ancho fijo para el nombre: así las entradas quedan al lado y alineadas, no al fondo de la tarjeta. */}
-        <span className="w-44 min-w-0 shrink">
+        <span className="flex-1 sm:flex-none sm:w-44 min-w-0">
           <span className="block truncate text-base font-medium leading-tight group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
           {(subtitle ?? due) && (
             <span
-              className={`block text-[11px] leading-tight ${
+              className={`block mt-0.5 text-micro leading-tight ${
                 (m.days_left ?? 99) <= 1 ? "text-plate-red" : "text-txt-faint"
               }`}
             >
@@ -390,7 +390,7 @@ function ListHeader({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="mb-2">
+    <div className="mb-3">
       <div className="flex items-center gap-2">
         {icon && (
           <span className="text-plate-red" aria-hidden="true">
@@ -399,10 +399,8 @@ function ListHeader({
         )}
         <h2 className="h3">{title}</h2>
         <span
-          className={`rounded-full px-2 py-0.5 text-tiny font-semibold ${
-            tone === "amber"
-              ? "bg-plate-amber/20 text-plate-amberInk"
-              : "bg-plate-red/12 text-plate-red"
+          className={`ml-auto scoreboard text-title ${
+            tone === "amber" ? "text-plate-amberInk" : "text-plate-red"
           }`}
         >
           {count}
@@ -425,10 +423,11 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex items-center justify-center gap-2 rounded-control px-3 py-3
-                 text-tiny font-medium text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
+      className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-control
+                 min-h-16 sm:min-h-12 px-2 py-2.5 text-tiny font-semibold text-txt text-center
+                 bg-surface-sunk/70 hover:bg-plate-blue/10 transition-colors"
     >
-      <span className="text-plate-blue" aria-hidden="true">
+      <span className="text-plate-blue [&>svg]:size-5" aria-hidden="true">
         {icon}
       </span>
       {label}

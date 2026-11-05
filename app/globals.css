@@ -5,96 +5,96 @@
 @layer base {
   /*
    * Tokens de color, en "R G B" (sin rgb()) para que Tailwind pueda aplicar
-   * opacidad con /NN sobre cualquiera de ellos. El claro es el default; el
-   * oscuro pisa los mismos nombres, así que ninguna clase de componente
-   * necesita saber en qué tema está.
+   * opacidad con /NN. El claro es el default; el oscuro pisa los mismos
+   * nombres, así que ninguna clase de componente sabe en qué tema está.
    *
-   * "ink" (cromo: barra superior, botones oscuros) es el azul marino del
-   * escudo de CAREF y NO cambia entre temas — es la marca, no el fondo.
+   * Claro: tarjetas blancas sobre un gris pizarra frío, como tiza sobre el
+   * piso de goma de la sala. "ink" es el azul marino del escudo y NO cambia
+   * entre temas.
    */
   :root {
-    --color-ink: 21 32 54;
-    --color-ink-raised: 30 45 74;
-    --color-ink-line: 48 64 97;
+    --color-ink: 19 38 74; /* #13264A */
+    --color-ink-raised: 30 54 99; /* #1E3663 */
+    --color-ink-line: 46 72 120; /* #2E4878 */
 
-    --color-txt: 23 27 31;
-    --color-txt-soft: 86 92 92;
-    --color-txt-faint: 138 144 144;
-    --color-txt-onDark: 237 239 236;
-    --color-txt-onDarkSoft: 172 180 191;
+    --color-txt: 13 24 43; /* #0D182B */
+    --color-txt-soft: 66 79 100; /* #424F64 */
+    --color-txt-faint: 98 111 132; /* #626F84 — 4.9:1 sobre blanco */
+    --color-txt-onDark: 238 242 248;
+    --color-txt-onDarkSoft: 166 180 204;
+    --color-txt-onAccent: 255 255 255;
 
-    --color-surface: 251 251 250;
-    --color-surface-sunk: 241 242 240;
-    --color-surface-hover: 245 246 244;
+    --color-surface: 255 255 255;
+    --color-surface-sunk: 233 237 242; /* #E9EDF2 */
+    --color-surface-hover: 243 245 248;
 
-    --color-line: 223 225 221;
-    --color-line-strong: 200 204 199;
+    --color-line: 218 224 231;
+    --color-line-strong: 168 179 194;
 
-    --color-plate-red: 162 46 51; /* #A22E33 — rojo de los discos del escudo */
-    --color-plate-blue: 42 109 177; /* #2A6DB1 — azul del escudo */
-    --color-plate-amber: 224 176 36;
-    --color-plate-amber-ink: 138 106 15;
-    --color-plate-green: 46 125 79;
+    --color-plate-red: 180 35 45; /* #B4232D — disco de 25 kg */
+    --color-plate-blue: 31 95 175; /* #1F5FAF — disco de 20 kg */
+    --color-plate-amber: 232 170 20; /* #E8AA14 — disco de 15 kg (solo relleno) */
+    --color-plate-amber-ink: 122 88 0; /* #7A5800 — texto sobre fondos ámbar */
+    --color-plate-green: 22 122 72; /* #167A48 — disco de 10 kg */
 
     /* Par categórico para los gráficos de caja (efectivo/transferencia).
-       No son los mismos tokens que plate-blue/plate-green: esos dos se usan
-       sueltos en toda la app (acción primaria, "al día") y no necesitan
-       pasar el chequeo de par adyacente para CVD. Este par sí, porque
-       conviven en la misma barra apilada — validado con
-       scripts/validate_palette.js de la skill de dataviz (los dos modos). */
+       Conviven en la misma barra apilada, así que tienen que pasar el
+       chequeo de par adyacente para CVD — validado con
+       scripts/validate_palette.js de la skill de dataviz (los dos modos).
+       No se tocaron en el rediseño para no perder esa validación. */
     --color-chart-cash: 42 109 177; /* #2A6DB1 */
     --color-chart-transfer: 46 125 79; /* #2E7D4F */
   }
 
   /* Sigue al sistema operativo salvo que el usuario haya tocado el switch
-     (ThemeToggle, que graba data-theme y gana siempre). */
+     (ThemeToggle, que graba data-theme y gana siempre). Oscuro: azul
+     noche, no gris neutro — sigue siendo CAREF de noche. */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --color-txt: 230 232 229;
-      --color-txt-soft: 163 169 167;
-      --color-txt-faint: 118 125 123;
+      --color-txt: 232 237 245;
+      --color-txt-soft: 165 177 196;
+      --color-txt-faint: 122 136 158;
+      --color-txt-onAccent: 8 14 26;
 
-      --color-surface: 27 32 37;
-      --color-surface-sunk: 16 19 22;
-      --color-surface-hover: 34 40 45;
+      --color-surface: 18 27 46; /* #121B2E */
+      --color-surface-sunk: 10 16 29; /* #0A101D */
+      --color-surface-hover: 26 37 60;
 
-      --color-line: 47 54 59;
-      --color-line-strong: 68 76 82;
+      --color-line: 36 49 74;
+      --color-line-strong: 62 79 110;
 
-      --color-plate-red: 224 100 100;
-      --color-plate-blue: 99 156 224;
-      --color-plate-amber: 232 188 64;
-      --color-plate-amber-ink: 245 224 168;
-      --color-plate-green: 79 176 120;
+      --color-plate-red: 240 110 110;
+      --color-plate-blue: 110 165 240;
+      --color-plate-amber: 240 192 64;
+      --color-plate-amber-ink: 245 217 140;
+      --color-plate-green: 80 194 135;
 
-      /* Reestepeadas para el chequeo de banda de luminancia en oscuro
-         (L 0.48–0.67): plate-blue/plate-green quedan un toque más claras
-         de lo que ese par adyacente tolera. */
       --color-chart-cash: 74 133 201; /* #4A85C9 */
       --color-chart-transfer: 61 151 100; /* #3D9764 */
     }
   }
 
   :root[data-theme="dark"] {
-    --color-txt: 230 232 229;
-    --color-txt-soft: 163 169 167;
-    --color-txt-faint: 118 125 123;
+    --color-txt: 232 237 245;
+    --color-txt-soft: 165 177 196;
+    --color-txt-faint: 122 136 158;
+    --color-txt-onAccent: 8 14 26;
 
-    --color-surface: 27 32 37;
-    --color-surface-sunk: 16 19 22;
-    --color-surface-hover: 34 40 45;
+    --color-surface: 18 27 46;
+    --color-surface-sunk: 10 16 29;
+    --color-surface-hover: 26 37 60;
 
-    --color-line: 47 54 59;
-    --color-line-strong: 68 76 82;
+    --color-line: 36 49 74;
+    --color-line-strong: 62 79 110;
 
-    --color-plate-red: 224 100 100;
-    --color-plate-blue: 99 156 224;
-    --color-plate-amber: 232 188 64;
-    --color-plate-amber-ink: 245 224 168;
-    --color-plate-green: 79 176 120;
+    --color-plate-red: 240 110 110;
+    --color-plate-blue: 110 165 240;
+    --color-plate-amber: 240 192 64;
+    --color-plate-amber-ink: 245 217 140;
+    --color-plate-green: 80 194 135;
 
-    --color-chart-cash: 74 133 201; /* #4A85C9 */
-    --color-chart-transfer: 61 151 100; /* #3D9764 */
+    --color-chart-cash: 74 133 201;
+    --color-chart-transfer: 61 151 100;
   }
 
   html {
@@ -103,6 +103,7 @@
     color-scheme: light;
     /* Escala global de fuente: la toca el panel de Personalización. */
     font-size: var(--app-font-scale, 100%);
+    -webkit-tap-highlight-color: transparent;
   }
 
   html[data-theme="dark"] {
@@ -122,41 +123,64 @@
 
   /* Números tabulares en todo: las columnas no deben bailar al cambiar. */
   .font-mono,
+  .font-display,
   [data-num] {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Foco visible siempre. El panel se opera rápido, a veces con teclado. */
+  /* Foco visible siempre. El panel se opera rápido, a veces con teclado.
+     Doble anillo (color de superficie + azul) para que se vea sobre
+     cualquier fondo, también sobre un botón azul. */
   :focus-visible {
     outline: 2px solid rgb(var(--color-plate-blue));
     outline-offset: 2px;
-    border-radius: 4px;
+  }
+
+  /* Sobre el cromo marino el azul se pierde: ahí el foco va en ámbar. */
+  .chrome :focus-visible {
+    outline-color: rgb(var(--color-plate-amber));
   }
 
   ::selection {
     background: rgb(var(--color-plate-amber));
-    color: rgb(var(--color-ink));
+    color: rgb(19 38 74);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    accent-color: rgb(var(--color-plate-blue));
   }
 }
 
 @layer components {
-  /* --- Tipografía de apoyo ------------------------------------------------ */
+  /* --- Tipografía ----------------------------------------------------------
+     Títulos condensados y pesados (ancho 70 del eje de Archivo): se leen de
+     lejos, en el celular, con la mano ocupada. Sin mayúsculas forzadas.   */
 
-  /* Etiqueta de sección. Las mayúsculas quedan SOLO acá, donde funcionan. */
+  /* Etiqueta chica arriba de un dato ("Vence", "Efectivo"). En minúscula y
+     sin tracking: es un rótulo, no un grito. */
   .eyebrow {
-    @apply font-mono text-micro uppercase text-txt-faint;
+    @apply font-sans text-tiny font-semibold text-txt-soft;
   }
 
   .h1 {
-    @apply font-display text-display font-bold text-txt;
+    @apply font-display text-display font-extrabold text-txt;
   }
 
   .h2 {
-    @apply font-display text-title font-semibold text-txt;
+    @apply font-display text-title font-bold text-txt;
   }
 
   .h3 {
-    @apply font-display text-lg font-semibold text-txt;
+    @apply font-display text-[1.1875rem] leading-6 font-bold text-txt;
+    font-variation-settings: "wdth" 82;
+  }
+
+  /* Número de marcador: los conteos y montos que se vienen a mirar. */
+  .scoreboard {
+    @apply font-display font-extrabold leading-none text-txt;
+    font-variation-settings: "wdth" 66;
   }
 
   /* --- Superficies -------------------------------------------------------- */
@@ -166,44 +190,51 @@
   }
 
   .card-link {
-    @apply card block transition-shadow hover:shadow-lift hover:border-line-strong;
+    @apply card block transition-[border-color,box-shadow]
+           hover:border-line-strong hover:shadow-lift;
+  }
+
+  /* Bloque de aviso dentro de una tarjeta (nota, advertencia). */
+  .note {
+    @apply rounded-control border border-line bg-surface-sunk px-3.5 py-3 text-tiny text-txt-soft;
   }
 
   /* --- Controles ---------------------------------------------------------- */
 
   .field {
-    @apply w-full bg-surface-sunk border border-line rounded-control
+    @apply w-full min-h-11 bg-surface border border-line-strong rounded-control
            px-3.5 py-2.5 text-base text-txt
            placeholder:text-txt-faint
-           transition-colors
-           focus:bg-surface focus:border-plate-blue focus:outline-none
-           focus:ring-2 focus:ring-plate-blue/20;
+           transition-[border-color,box-shadow]
+           hover:border-txt-faint
+           focus:border-plate-blue focus:outline-none
+           focus:ring-[3px] focus:ring-plate-blue/25;
   }
 
   select.field {
     @apply pr-9 appearance-none bg-no-repeat;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238A9090' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23626F84' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-position: right 0.75rem center;
   }
 
   /* --- Botones ---------------------------------------------------------------
-     Un solo sistema, plano y sobrio: mismo alto, mismo radio, borde de 1px
-     siempre (transparente en los llenos) para que alineen igual estén al
-     lado de uno con borde o no. Sin degradados, sin sombras, sin rebotes:
-     solo cambia el color al pasar el mouse. La diferencia entre uno y otro
-     es semántica, no decorativa — azul = acción principal, ghost = acción
-     secundaria, rojo = destructivo, verde = acceso/QR.                     */
+     Un solo sistema: mismo alto mínimo (44px, tocable con el pulgar), mismo
+     radio, borde de 1px siempre (transparente en los llenos) para que
+     alineen igual. La diferencia es semántica: azul = acción principal,
+     marino = confirmar algo serio, verde = acceso/QR, ghost = secundaria,
+     rojo = destructivo. Al apretar, baja un pixel: confirma el toque.     */
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2
-           rounded-control border border-transparent px-3.5 py-2
-           font-sans text-tiny font-medium
-           transition-colors
+    @apply inline-flex items-center justify-center gap-2 min-h-11
+           rounded-control border border-transparent px-4 py-2
+           font-sans text-[0.875rem] leading-5 font-semibold
+           transition-[background-color,border-color,color,transform]
+           active:translate-y-px
            disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-primary {
-    @apply btn bg-plate-blue text-white hover:bg-plate-blue/90;
+    @apply btn bg-plate-blue text-txt-onAccent hover:bg-plate-blue/90;
   }
 
   .btn-dark {
@@ -211,34 +242,57 @@
   }
 
   .btn-success {
-    @apply btn bg-plate-green text-white hover:bg-plate-green/90;
+    @apply btn bg-plate-green text-txt-onAccent hover:bg-plate-green/90;
   }
 
   .btn-ghost {
-    @apply btn border-line bg-surface text-txt-soft
-           hover:border-line-strong hover:bg-surface-hover hover:text-txt;
+    @apply btn border-line-strong bg-surface text-txt
+           hover:border-txt-faint hover:bg-surface-hover;
   }
 
   .btn-danger {
-    @apply btn border-plate-red/40 bg-surface text-plate-red
-           hover:border-plate-red/60 hover:bg-plate-red/10;
+    @apply btn border-plate-red/50 bg-surface text-plate-red
+           hover:border-plate-red hover:bg-plate-red/10;
   }
 
   .btn-sm {
-    @apply px-2.5 py-1 text-micro tracking-normal normal-case;
+    @apply min-h-9 px-3 py-1.5 text-tiny tracking-normal normal-case;
+  }
+
+  /* --- Filtros (chips) ----------------------------------------------------- */
+
+  .chip {
+    @apply shrink-0 inline-flex items-center gap-1.5 min-h-9 rounded-full border px-3.5
+           text-tiny font-semibold transition-colors
+           bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt;
+  }
+
+  .chip-on {
+    @apply bg-ink border-ink text-txt-onDark hover:border-ink hover:text-txt-onDark;
   }
 
   /* --- Insignias ---------------------------------------------------------- */
 
   .badge {
     @apply inline-flex items-center gap-1.5 rounded-full
-           border px-2.5 py-0.5 text-micro font-medium tracking-normal;
+           border px-2.5 py-0.5 text-micro font-semibold whitespace-nowrap;
   }
 
   /* --- Listas de datos ---------------------------------------------------- */
 
   .datalist {
     @apply divide-y divide-line;
+  }
+}
+
+@layer utilities {
+  /* Tiras que se deslizan de costado (filtros, barra de abajo): se
+     deslizan con el dedo, la barra de scroll solo ensucia. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 

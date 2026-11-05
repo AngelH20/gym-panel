@@ -34,17 +34,17 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
 
     return (
       <section
-        className={`card p-6 text-center space-y-3 border-2 ${
+        className={`card p-6 text-center space-y-4 border-2 shadow-lift ${
           isBirthday
-            ? "border-plate-amber/40"
+            ? "border-plate-amber"
             : success
-              ? "border-plate-green/30"
-              : "border-plate-red/30"
+              ? "border-plate-green"
+              : "border-plate-red"
         }`}
       >
         {isBirthday && (
           <div className="flex justify-center">
-            <span className="badge border-plate-amber/35 bg-plate-amber/12 text-plate-amberInk">
+            <span className="badge text-tiny px-3 py-1 border-plate-amber/60 bg-plate-amber/20 text-plate-amberInk">
               🎂 ¡Feliz cumpleaños!
             </span>
           </div>
@@ -52,23 +52,23 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
 
         {result.member_name ? (
           <div className="flex justify-center">
-            <Avatar name={result.member_name} url={result.photo_url} size={56} />
+            <Avatar name={result.member_name} url={result.photo_url} size={72} />
           </div>
         ) : (
           <span
-            className={`mx-auto flex size-12 items-center justify-center rounded-full ${
+            className={`mx-auto flex size-16 items-center justify-center rounded-full ${
               success
-                ? "bg-plate-green/12 text-plate-green"
-                : "bg-plate-red/12 text-plate-red"
+                ? "bg-plate-green text-txt-onAccent"
+                : "bg-plate-red text-txt-onAccent"
             }`}
             aria-hidden="true"
           >
             {success ? (
-              <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" className="size-8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <svg viewBox="0 0 24 24" className="size-8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v5M12 16h.01" />
               </svg>
@@ -76,7 +76,7 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
           </span>
         )}
 
-        <p className="text-base font-medium">{result.message}</p>
+        <p className="font-display text-title font-extrabold text-balance">{result.message}</p>
 
         {result.code === "CHECKED_IN" &&
           result.uses_total != null &&
@@ -97,7 +97,7 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
             <button
               type="button"
               onClick={() => setDismissed(true)}
-              className="btn-ghost w-full"
+              className="btn-ghost w-full min-h-12 text-base"
             >
               Marcar otra entrada
             </button>
@@ -108,8 +108,8 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
   }
 
   return (
-    <section className="card p-5">
-      <form action={action} className="space-y-4">
+    <section className="card p-5 shadow-lift">
+      <form action={action} className="space-y-5">
         <input type="hidden" name="qr_token" value={qrToken} />
 
         <Field label="Tu DNI" hint="8 dígitos, sin puntos ni espacios.">
@@ -122,13 +122,13 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
             minLength={8}
             maxLength={8}
             title="8 dígitos numéricos"
-            className="field text-center font-mono text-lg tracking-[0.15em]"
+            className="field min-h-16 text-center font-mono text-[1.75rem] font-semibold tracking-[0.15em]"
             placeholder="30111222"
             autoFocus
           />
         </Field>
 
-        <SubmitButton pendingLabel="Registrando…" className="btn-primary w-full">
+        <SubmitButton pendingLabel="Registrando…" className="btn-primary w-full min-h-14 text-lg">
           Marcar entrada
         </SubmitButton>
       </form>

@@ -43,7 +43,7 @@ export function CloseRegisterForm({ expectedCashCents }: { expectedCashCents: nu
       <form action={action} className="space-y-3">
         <p className="text-tiny text-txt-soft">
           Esperado (fondo inicial + ventas en efectivo):{" "}
-          <span className="font-mono font-medium">{formatMoney(expectedCashCents)}</span>
+          <span className="font-mono font-bold text-txt">{formatMoney(expectedCashCents)}</span>
         </p>
 
         <Field label="Efectivo contado">
@@ -62,7 +62,7 @@ export function CloseRegisterForm({ expectedCashCents }: { expectedCashCents: nu
         </Field>
 
         {diff != null && diff !== 0 && (
-          <p className={`text-tiny ${diff > 0 ? "text-plate-blue" : "text-plate-red"}`}>
+          <p className={`text-tiny font-semibold ${diff > 0 ? "text-plate-blue" : "text-plate-red"}`}>
             {diff > 0
               ? `Sobran ${formatMoney(diff)} respecto de lo esperado.`
               : `Faltan ${formatMoney(-diff)} respecto de lo esperado.`}

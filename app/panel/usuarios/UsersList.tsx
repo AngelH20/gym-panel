@@ -28,7 +28,7 @@ export function UsersList({
           description="Todavía no diste de alta ninguna otra cuenta."
         />
       ) : (
-        <ul className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
           {staff.map((s) => (
             <StaffRow
               key={s.id}
@@ -46,8 +46,8 @@ export function UsersList({
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="w-full rounded-card border border-dashed border-line-strong
-                     py-4 text-tiny font-medium text-txt-soft
+          className="w-full rounded-card border-2 border-dashed border-line-strong
+                     min-h-14 py-4 text-base font-semibold text-txt-soft
                      hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
                      transition-colors"
         >
@@ -77,13 +77,13 @@ function StaffRow({
     <li className="card h-full p-4 space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-medium truncate">
+          <p className="text-base font-semibold truncate">
             {staff.full_name || staff.email}
             {isSelf && <span className="ml-1.5 text-tiny text-txt-faint">(vos)</span>}
           </p>
           <p className="text-tiny text-txt-faint truncate">{staff.email}</p>
         </div>
-        <span className="badge border-line-strong bg-surface-sunk text-txt-soft shrink-0">
+        <span className="badge border-ink bg-ink text-txt-onDark shrink-0">
           {ROLE_LABEL[staff.role]}
         </span>
       </div>
@@ -102,7 +102,7 @@ function StaffRow({
               <select
                 name="role"
                 defaultValue={staff.role}
-                className="field font-mono text-tiny py-1.5 w-auto"
+                className="field text-tiny min-h-9 py-1.5 w-auto"
               >
                 {ALL_ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -137,7 +137,7 @@ function StaffRow({
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="btn-ghost btn-sm !text-plate-red"
+              className="btn-danger btn-sm"
             >
               Borrar cuenta
             </button>
@@ -161,7 +161,7 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
   const [role, setRole] = useState<AdminRole>("profesor");
 
   return (
-    <form action={action} className="card p-5 space-y-3 ring-2 ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-3 border-plate-blue ring-[3px] ring-plate-blue/20">
       <h2 className="h3">Nueva cuenta</h2>
 
       <Field label="Nombre">

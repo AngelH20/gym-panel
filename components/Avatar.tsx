@@ -7,9 +7,9 @@ import { initials } from "@/lib/labels";
 const palettes = [
   "bg-plate-blue/12 text-plate-blue",
   "bg-plate-green/12 text-plate-green",
-  "bg-plate-amber/20 text-plate-amberInk",
+  "bg-plate-amber/25 text-plate-amberInk",
   "bg-plate-red/12 text-plate-red",
-  "bg-ink/8 text-txt-soft",
+  "bg-ink/10 text-txt-soft",
 ];
 
 function paletteFor(name: string) {
@@ -47,8 +47,8 @@ export function Avatar({
 
   return (
     <div
-      className={`rounded-full shrink-0 flex items-center justify-center font-display font-semibold ${paletteFor(name)}`}
-      style={{ width: size, height: size, fontSize: size * 0.36 }}
+      className={`rounded-full shrink-0 flex items-center justify-center font-display font-extrabold ${paletteFor(name)}`}
+      style={{ width: size, height: size, fontSize: size * 0.42 }}
       aria-hidden="true"
     >
       {initials(name)}

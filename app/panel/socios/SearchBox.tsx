@@ -33,7 +33,7 @@ export function SearchBox({ defaultValue }: { defaultValue: string }) {
     <div className="relative">
       <svg
         viewBox="0 0 24 24"
-        className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-txt-faint pointer-events-none"
+        className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-txt-faint pointer-events-none"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -47,7 +47,7 @@ export function SearchBox({ defaultValue }: { defaultValue: string }) {
       <input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="field pl-10"
+        className="field pl-12 min-h-12 text-lg"
         placeholder="Buscar por nombre o DNI…"
         type="search"
         aria-label="Buscar socio por nombre o DNI"

@@ -35,7 +35,7 @@ export function LoginForm({ volver }: { volver: string }) {
 
       <FormError message={state?.error} />
 
-      <SubmitButton pendingLabel="Entrando…" className="btn-primary w-full">
+      <SubmitButton pendingLabel="Entrando…" className="btn-primary w-full min-h-12 text-base">
         Entrar
       </SubmitButton>
     </form>

@@ -93,7 +93,7 @@ export default async function SocioPage({
     <div className="mx-auto w-full max-w-[1700px] space-y-4">
       <Link
         href="/panel/socios"
-        className="inline-flex items-center gap-1.5 text-tiny text-txt-soft hover:text-txt transition-colors"
+        className="-ml-1 inline-flex min-h-10 items-center gap-1.5 rounded-control px-1 text-tiny font-semibold text-txt-soft hover:text-txt transition-colors"
       >
         <svg
           viewBox="0 0 24 24"
@@ -116,15 +116,15 @@ export default async function SocioPage({
         (ver entradas, renovar el pase); la derecha, de consulta (datos,
         últimas entradas, historial). Las dos quedan de alto parecido.
       */}
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
         <div className="space-y-5 min-w-0">
           {/* Cabecera: quién es y si puede entrar */}
           <section className="card overflow-hidden">
-            <div className="p-5 flex items-start gap-4">
-              <Avatar name={m.full_name} url={m.photo_url} size={60} />
+            <div className="p-5 flex items-center gap-4">
+              <Avatar name={m.full_name} url={m.photo_url} size={64} />
 
               <div className="min-w-0 flex-1">
-                <h1 className="font-display text-title font-semibold leading-tight truncate">
+                <h1 className="font-display text-[1.875rem] leading-[1.05] font-extrabold break-words">
                   {m.full_name}
                 </h1>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -142,9 +142,9 @@ export default async function SocioPage({
               <>
                 {/* El contador, con el mayor peso visual de la pantalla */}
                 <div className="px-5 py-5 bg-surface-sunk border-y border-line">
-                  <div className="flex items-baseline justify-between gap-3 mb-3">
+                  <div className="flex items-baseline justify-between gap-3 mb-2">
                     <span className="eyebrow">Entradas restantes</span>
-                    <span className="text-tiny text-txt-soft">{m.plan_name}</span>
+                    <span className="text-tiny font-medium text-txt-soft truncate">{m.plan_name}</span>
                   </div>
                   <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="lg" />
                 </div>
@@ -152,7 +152,7 @@ export default async function SocioPage({
                 <dl className="grid grid-cols-2 divide-x divide-line">
                   <div className="p-4">
                     <dt className="eyebrow">Vence</dt>
-                    <dd className="mt-1 font-mono text-base">
+                    <dd className="mt-1 font-mono text-lg font-semibold">
                       {formatDate(m.period_end)}
                       {m.days_left != null && m.days_left >= 0 && (
                         <span
@@ -167,7 +167,7 @@ export default async function SocioPage({
                   </div>
                   <div className="p-4">
                     <dt className="eyebrow">Última entrada</dt>
-                    <dd className="mt-1 font-mono text-base">
+                    <dd className="mt-1 font-mono text-lg font-semibold">
                       {formatDateTime(m.last_check_in_at)}
                     </dd>
                   </div>
@@ -175,7 +175,7 @@ export default async function SocioPage({
               </>
             ) : (
               <div className="px-5 pb-5">
-                <p className="rounded-control bg-surface-sunk border border-line px-4 py-3 text-tiny text-txt-soft">
+                <p className="note">
                   Este socio no tiene un pase activo. Activale uno abajo para que pueda entrar.
                 </p>
               </div>
@@ -237,7 +237,7 @@ export default async function SocioPage({
                       {formatDateTime(c.checked_in_at)}
                     </span>
                     {!c.charged && (
-                      <span className="text-[10px] text-txt-faint">
+                      <span className="text-micro text-txt-faint">
                         reingreso, no descontó pase
                       </span>
                     )}
@@ -262,19 +262,19 @@ export default async function SocioPage({
                       <p className="text-base font-medium truncate">
                         {h.plans?.name ?? "Plan eliminado"}
                       </p>
-                      <p className="font-mono text-[11px] text-txt-faint mt-0.5">
+                      <p className="font-mono text-micro text-txt-faint mt-0.5">
                         {formatDate(h.period_start)} → {formatDate(h.period_end)}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <span className="font-mono text-base font-medium">
+                      <span className="font-display text-title leading-none font-extrabold">
                         {h.uses_total - h.uses_remaining}
                       </span>
                       <span className="font-mono text-tiny text-txt-faint">
                         /{h.uses_total}
                       </span>
-                      <p className="text-[10px] text-txt-faint">usadas</p>
+                      <p className="text-micro text-txt-faint">usadas</p>
                     </div>
                   </li>
                 )
