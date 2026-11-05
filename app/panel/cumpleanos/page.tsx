@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { formatDayMonth, ageOnNextBirthday } from "@/lib/labels";
+import { PageHeader } from "@/components/PageHeader";
 
 /**
  * Listado de cumpleaños ordenado por el más cercano. La idea es que
@@ -45,24 +46,27 @@ export default async function CumpleañosPage() {
   const proximos = all.filter((m) => !m.is_birthday_today);
 
   return (
-    <div className="mx-auto w-full max-w-[900px] space-y-5">
-      <h1 className="h1">Cumpleaños</h1>
+    <div className="w-full max-w-3xl space-y-8">
+      <PageHeader
+        title="Cumpleaños"
+        description="De más cercano a más lejano. El saludo sale solo, el día que escanean."
+      />
 
       {hoy.length > 0 && (
-        <section className="card p-5 border-plate-amber/60 bg-plate-amber/10">
-          <h2 className="h3 mb-3">🎂 Hoy cumplen años</h2>
-          <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+        <section>
+          <h2 className="h3 pb-3 border-b border-line">Hoy cumplen años 🎂</h2>
+          <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
             {hoy.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2 min-h-14 flex items-center gap-3 group"
+                  className="py-2.5 flex items-center gap-3 border-b border-line group"
                 >
-                  <Avatar name={m.full_name} url={m.photo_url} size={40} />
+                  <Avatar name={m.full_name} url={m.photo_url} size={36} />
                   <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
-                  <span className="text-tiny text-plate-amberInk font-bold shrink-0">
+                  <span className="text-tiny text-txt-soft shrink-0">
                     Cumple {ageOnNextBirthday(m.birth_date, m.next_birthday)}
                   </span>
                 </Link>
@@ -72,27 +76,24 @@ export default async function CumpleañosPage() {
         </section>
       )}
 
-      <section className="card p-5">
-        <h2 className="h3 mb-1">Próximos cumpleaños</h2>
-        <p className="mb-3 text-tiny text-txt-faint">
-          De más cercano a más lejano. El saludo sale solo, el día que escanean.
-        </p>
+      <section>
+        <h2 className="h3 pb-3 border-b border-line">Próximos cumpleaños</h2>
 
         {proximos.length === 0 ? (
-          <p className="text-base text-txt-soft">No hay más cumpleaños cargados.</p>
+          <p className="py-4 text-tiny text-txt-faint">No hay más cumpleaños cargados.</p>
         ) : (
           <ul className="datalist">
             {proximos.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2 min-h-14 flex items-center gap-3 group"
+                  className="py-2.5 flex items-center gap-3 group"
                 >
-                  <Avatar name={m.full_name} url={m.photo_url} size={36} />
-                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+                  <Avatar name={m.full_name} url={m.photo_url} size={32} />
+                  <span className="flex-1 min-w-0 truncate text-base group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
-                  <span className="font-mono text-base font-semibold text-txt shrink-0">
+                  <span className="num text-tiny font-medium text-txt shrink-0">
                     {formatDayMonth(m.next_birthday)}
                   </span>
                   <span className="text-tiny text-txt-faint shrink-0 w-16 text-right">
@@ -106,7 +107,7 @@ export default async function CumpleañosPage() {
       </section>
 
       {!!sinFecha && sinFecha > 0 && (
-        <p className="text-tiny text-txt-faint text-center">
+        <p className="text-tiny text-txt-faint">
           {sinFecha === 1
             ? "1 socio no tiene fecha de nacimiento."
             : `${sinFecha} socios no tienen fecha de nacimiento.`}{" "}

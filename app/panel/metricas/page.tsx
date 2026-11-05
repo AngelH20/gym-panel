@@ -5,6 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { IconPeople, IconCheck, IconAlert, IconPersonPlus, IconActivity, IconClock, IconCalendar } from "@/components/icons";
 import { todayLocal, daysAgoLocal, hourLocal, weekdayIndex, WEEKDAY_LABELS } from "@/lib/labels";
 import { PeakBarChart, type Bin } from "./PeakBarChart";
+import { PageHeader } from "@/components/PageHeader";
 
 const PERIODS = [
   { key: "hoy", label: "Hoy" },
@@ -102,12 +103,9 @@ export default async function MetricasPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="h1">Métricas</h1>
-        <p className="mt-2 text-base text-txt-soft">Estadísticas de socios y asistencia.</p>
-      </div>
+      <PageHeader title="Métricas" description="Estadísticas de socios y asistencia." />
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {PERIODS.map((x) => (
           <Link
             key={x.key}
@@ -120,6 +118,7 @@ export default async function MetricasPage({
         ))}
       </div>
 
+      <h2 className="sr-only">Socios</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard label="Total socios" value={members.length} accent="blue" icon={<IconPeople />} />
         <StatCard label="Al día" value={activos} accent="green" icon={<IconCheck />} />
@@ -148,7 +147,7 @@ export default async function MetricasPage({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <section className="card p-4 sm:p-5">
           <h2 className="h3 mb-1 flex items-center gap-2">
-            <IconClock className="size-[18px] text-plate-blue" />
+            <IconClock className="size-4 text-txt-faint" />
             Asistencia por hora
           </h2>
           <PeakBarChart data={hourBins} labelEvery={3} />
@@ -156,7 +155,7 @@ export default async function MetricasPage({
 
         <section className="card p-4 sm:p-5">
           <h2 className="h3 mb-1 flex items-center gap-2">
-            <IconCalendar className="size-[18px] text-plate-blue" />
+            <IconCalendar className="size-4 text-txt-faint" />
             Asistencia por día
           </h2>
           <PeakBarChart data={weekdayBins} />

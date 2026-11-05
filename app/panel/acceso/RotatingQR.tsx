@@ -118,8 +118,8 @@ export function RotatingQR({
   const low = pct <= 20;
 
   return (
-    <div className="card p-4 sm:p-8 flex flex-col items-center gap-5 w-full max-w-2xl">
-      <div className="w-full bg-white p-3 sm:p-5 rounded-control ring-1 ring-line">
+    <div className="card p-4 sm:p-6 flex flex-col items-center gap-5 w-full max-w-xl">
+      <div className="w-full bg-white p-3 sm:p-4 rounded-control">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={dataUrl}
@@ -129,30 +129,30 @@ export function RotatingQR({
       </div>
 
       <div className="w-full space-y-3">
-        <div className="w-full h-2.5 rounded-full bg-line overflow-hidden">
+        <div className="w-full h-1 rounded-full bg-line overflow-hidden">
           <div
             className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
-              low ? "bg-plate-red" : "bg-plate-blue"
+              low ? "bg-plate-red" : "bg-txt"
             }`}
             style={{ width: `${pct}%` }}
           />
         </div>
 
-        <div className="flex items-end justify-between gap-3">
-          <span className="flex items-center gap-2 text-tiny font-semibold text-txt-soft">
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-2 text-tiny text-txt-soft">
             <span
-              className={`size-2 rounded-full motion-safe:animate-pulse ${
-                low ? "bg-plate-red" : "bg-plate-blue"
+              className={`size-1.5 rounded-full motion-safe:animate-pulse ${
+                low ? "bg-plate-red" : "bg-plate-green"
               }`}
             />
             Se renueva solo
           </span>
           <span
-            className={`scoreboard text-display ${low ? "text-plate-red" : "text-txt"}`}
+            className={`num text-title font-semibold ${low ? "text-plate-red" : "text-txt"}`}
             aria-live="off"
           >
             {shown}
-            <span className="text-title text-txt-faint">s</span>
+            <span className="text-tiny font-normal text-txt-faint">s</span>
           </span>
         </div>
       </div>

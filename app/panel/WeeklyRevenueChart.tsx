@@ -43,7 +43,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
           const x = i * step + (step - barW) / 2;
           const isHover = hover === i;
           const isToday = i === data.length - 1;
-          const op = isHover || isToday ? 1 : 0.6;
+          const op = isHover || isToday ? 1 : 0.55;
 
           return (
             <g
@@ -96,7 +96,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
                 x={x + barW / 2}
                 y={PLOT_H + 18}
                 textAnchor="middle"
-                className={`text-[12px] font-sans ${isToday ? "fill-txt font-bold" : "fill-txt-faint font-medium"}`}
+                className={`text-[12px] ${isToday ? "fill-txt font-semibold" : "fill-txt-faint"}`}
               >
                 {d.label}
               </text>
@@ -108,13 +108,13 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
       {hover != null && (
         <div
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-full
-                     rounded-control bg-ink px-3 py-2 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
+                     rounded-control bg-ink px-2.5 py-1.5 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
           style={{
             left: `${((hover * step + step / 2) / W) * 100}%`,
             top: `${(Math.max(0, PLOT_H - (data[hover].cash + data[hover].transfer) * scale) / H) * 100}%`,
           }}
         >
-          <div className="font-display text-lg leading-none font-extrabold">
+          <div className="num font-semibold">
             {formatMoney((data[hover].cash + data[hover].transfer) * 100)}
           </div>
           <div className="flex items-center gap-1.5 text-txt-onDarkSoft">
@@ -129,13 +129,13 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-center gap-5 text-tiny font-medium text-txt-soft">
+      <div className="mt-3 flex items-center gap-4 text-tiny text-txt-soft">
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-[3px] bg-chart-cash shrink-0" aria-hidden="true" />
+          <span className="size-2 rounded-full bg-chart-cash shrink-0" aria-hidden="true" />
           Efectivo
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2.5 rounded-[3px] bg-chart-transfer shrink-0" aria-hidden="true" />
+          <span className="size-2 rounded-full bg-chart-transfer shrink-0" aria-hidden="true" />
           Transferencia
         </span>
       </div>

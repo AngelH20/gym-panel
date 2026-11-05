@@ -1,17 +1,18 @@
 import Link from "next/link";
 
+/** Color de cada métrica. En el diseño neutro el color no pinta la tarjeta:
+ *  solo el ícono, chico, y solo cuando es un estado (rojo = vencidos). */
 export const STAT_ACCENT = {
-  green: "bg-plate-green/12 text-plate-green",
-  blue: "bg-plate-blue/12 text-plate-blue",
-  red: "bg-plate-red/12 text-plate-red",
-  amber: "bg-plate-amber/25 text-plate-amberInk",
+  green: "text-txt-faint",
+  blue: "text-txt-faint",
+  red: "text-plate-red",
+  amber: "text-txt-faint",
 } as const;
 
 export type StatAccent = keyof typeof STAT_ACCENT;
 
-/** Tarjeta de métrica, tipo marcador: rótulo chico con el ícono en el color
- *  del disco que le corresponde, y abajo el número grande y condensado.
- *  Mismo patrón en Panel, Socios, Caja y Métricas — un solo componente. */
+/** Métrica: rótulo chico arriba, número grande abajo. Mismo patrón en Inicio,
+ *  Caja y Métricas — un solo componente. */
 export function StatCard({
   label,
   value,
@@ -29,29 +30,21 @@ export function StatCard({
 }) {
   const content = (
     <>
-      <div className="flex items-center gap-2 min-w-0">
-        <span
-          className={`flex size-7 shrink-0 items-center justify-center rounded-full [&>svg]:size-4 ${STAT_ACCENT[accent]}`}
-          aria-hidden="true"
-        >
+      <p className="flex items-center gap-1.5 text-tiny text-txt-soft min-w-0">
+        <span className={`shrink-0 [&>svg]:size-4 ${STAT_ACCENT[accent]}`} aria-hidden="true">
           {icon}
         </span>
-        <p className="text-tiny font-semibold text-txt-soft truncate">{label}</p>
-      </div>
-      <div className="min-w-0">
-        <p className="scoreboard text-display sm:text-huge [overflow-wrap:anywhere]">{value}</p>
-        {caption && <p className="mt-1.5 text-tiny text-txt-faint truncate">{caption}</p>}
-      </div>
+        <span className="truncate">{label}</span>
+      </p>
+      <p className="mt-1.5 sm:mt-2 num text-[1.625rem] leading-8 sm:text-huge font-semibold [overflow-wrap:anywhere]">{value}</p>
+      {caption && <p className="mt-0.5 text-tiny text-txt-faint truncate">{caption}</p>}
     </>
   );
 
-  const className = "card p-4 flex flex-col gap-3 min-w-0";
+  const className = "card px-4 py-3.5 block min-w-0";
 
   return href ? (
-    <Link
-      href={href}
-      className={`${className} hover:border-line-strong hover:shadow-lift transition-[border-color,box-shadow]`}
-    >
+    <Link href={href} className={`${className} transition-colors hover:border-line-strong hover:bg-surface-hover`}>
       {content}
     </Link>
   ) : (

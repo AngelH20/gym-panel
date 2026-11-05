@@ -43,7 +43,7 @@ export function PeakBarChart({
           Pico:{" "}
           <span className="font-medium text-txt">{data[peakIndex].label}</span>
           {" · "}
-          <span className="font-display text-lg leading-none font-extrabold text-plate-blue">
+          <span className="num font-semibold text-txt">
             {data[peakIndex].value}
           </span>{" "}
           {unit}
@@ -90,8 +90,7 @@ export function PeakBarChart({
                     width={barW}
                     height={Math.max(2, h)}
                     rx={Math.min(3, barW / 2)}
-                    className="fill-plate-blue"
-                    opacity={isPeak ? 1 : isHover ? 0.85 : 0.4}
+                    className={isPeak ? "fill-plate-blue" : isHover ? "fill-txt-faint" : "fill-line-strong"}
                   />
                 ) : (
                   <rect x={x} y={PLOT_H - 1.5} width={barW} height={1.5} fill="rgb(var(--color-line-strong))" />
@@ -102,7 +101,7 @@ export function PeakBarChart({
                     x={x + barW / 2}
                     y={PLOT_H + 16}
                     textAnchor="middle"
-                    className={`text-[11px] font-sans ${isPeak ? "fill-txt font-bold" : "fill-txt-faint font-medium"}`}
+                    className={`text-[11px] ${isPeak ? "fill-txt font-semibold" : "fill-txt-faint"}`}
                   >
                     {d.label}
                   </text>
@@ -115,13 +114,13 @@ export function PeakBarChart({
         {hover != null && (
           <div
             className="pointer-events-none absolute -translate-x-1/2 -translate-y-full
-                       rounded-control bg-ink px-3 py-2 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
+                       rounded-control bg-ink px-2.5 py-1.5 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
             style={{
               left: `${((hover * step + step / 2) / W) * 100}%`,
               top: `${(Math.max(0, PLOT_H - (data[hover].value / max) * (PLOT_H - 8)) / H) * 100}%`,
             }}
           >
-            <span className="font-display text-lg leading-none font-extrabold">{data[hover].value}</span> {unit}
+            <span className="num font-semibold">{data[hover].value}</span> {unit}
             <div className="text-txt-onDarkSoft">{data[hover].label}</div>
           </div>
         )}

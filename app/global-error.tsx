@@ -14,7 +14,7 @@ export default function GlobalError({
 }) {
   return (
     <html lang="es-AR">
-      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#E9EDF2", color: "#0D182B" }}>
+      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#FFFFFF", color: "#16181D" }}>
         <main
           style={{
             minHeight: "100dvh",
@@ -25,20 +25,20 @@ export default function GlobalError({
           }}
         >
           <div style={{ textAlign: "center", maxWidth: 360 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 8px" }}>Algo salió mal</h1>
-            <p style={{ color: "#424F64", margin: "0 0 20px" }}>
+            <h1 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px" }}>Algo salió mal</h1>
+            <p style={{ color: "#565B67", margin: "0 0 20px" }}>
               Hubo un problema inesperado. Probá de nuevo en un momento.
             </p>
             <button
               type="button"
               onClick={() => reset()}
               style={{
-                background: "#1F5FAF",
+                background: "#2452C2",
                 color: "#fff",
                 border: "none",
-                borderRadius: 7,
-                padding: "12px 22px",
-                fontWeight: 600,
+                borderRadius: 8,
+                padding: "10px 18px",
+                fontWeight: 500,
                 fontSize: 14,
                 cursor: "pointer",
               }}

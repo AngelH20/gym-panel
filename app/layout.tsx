@@ -1,20 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Geist } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
 /**
- * Una sola familia, Archivo variable, con el eje de ancho cargado:
- *   cuerpo  -> ancho normal. Grotesca robusta, muy legible en chico.
- *   títulos -> condensada y pesada (font-display), como el marcador de un
- *              reloj de sala: entra grande en la pantalla del celular.
- *   números -> cifras tabulares, apenas angostas (font-mono).
- * Ver tailwind.config.ts y globals.css.
+ * Una sola familia: Geist, una sans neutra y sencilla. La jerarquía sale
+ * de tamaño y peso; los números usan cifras tabulares (ver globals.css).
  */
-const archivo = Archivo({
+const geist = Geist({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  variable: "--font-geist",
   display: "swap",
 });
 
@@ -36,8 +31,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#13264A" },
-    { media: "(prefers-color-scheme: dark)", color: "#13264A" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#111215" },
   ],
 };
 
@@ -81,7 +76,7 @@ export default async function RootLayout({
    * attributes...". Es el patrón estándar para theme scripts inline. */
   return (
     <html lang="es-AR" suppressHydrationWarning>
-      <body className={archivo.variable}>
+      <body className={geist.variable}>
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
       </body>

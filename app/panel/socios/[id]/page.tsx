@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
@@ -6,6 +5,7 @@ import type { MemberOverview, Membership, Plan } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import { formatDate, formatDateTime, todayLocal } from "@/lib/labels";
 import { Avatar } from "@/components/Avatar";
+import { BackLink } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
 import { MemberActions } from "./MemberActions";
@@ -90,69 +90,50 @@ export default async function SocioPage({
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1700px] space-y-4">
-      <Link
-        href="/panel/socios"
-        className="-ml-1 inline-flex min-h-10 items-center gap-1.5 rounded-control px-1 text-tiny font-semibold text-txt-soft hover:text-txt transition-colors"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className="size-3.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <path d="M15 19l-7-7 7-7" />
-        </svg>
-        Socios
-      </Link>
+    <div className="w-full max-w-[1400px] space-y-6">
+      {/* Quién es y si puede entrar */}
+      <div className="space-y-3">
+        <BackLink href="/panel/socios" label="Socios" />
+        <div className="flex items-center gap-4">
+          <Avatar name={m.full_name} url={m.photo_url} size={56} />
+          <div className="min-w-0 flex-1">
+            <h1 className="h1 break-words">{m.full_name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <StatusBadge status={m.effective_status} />
+              {m.checked_in_today && (
+                <span className="inline-flex items-center gap-1.5 text-tiny text-txt-soft">
+                  <span className="size-1.5 rounded-full bg-plate-green" aria-hidden="true" />
+                  {m.visits_today > 1 ? `Entró ${m.visits_today} veces hoy` : "Entró hoy"}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/*
-        Dos columnas anchas y parejas en escritorio (una en celular), con un
-        tope de ancho para que no se estire infinito y los márgenes queden
-        iguales a los dos lados. La izquierda es lo que se viene a hacer
-        (ver entradas, renovar el pase); la derecha, de consulta (datos,
-        últimas entradas, historial). Las dos quedan de alto parecido.
+        Dos columnas en escritorio (una en celular). La izquierda es lo que
+        se viene a hacer (ver el pase, renovarlo); la derecha, de consulta
+        (datos, familia, últimas entradas, historial).
       */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-        <div className="space-y-5 min-w-0">
-          {/* Cabecera: quién es y si puede entrar */}
-          <section className="card overflow-hidden">
-            <div className="p-5 flex items-center gap-4">
-              <Avatar name={m.full_name} url={m.photo_url} size={64} />
-
-              <div className="min-w-0 flex-1">
-                <h1 className="font-display text-[1.875rem] leading-[1.05] font-extrabold break-words">
-                  {m.full_name}
-                </h1>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <StatusBadge status={m.effective_status} />
-                  {m.checked_in_today && (
-                    <span className="badge border-plate-green/30 bg-plate-green/10 text-plate-green">
-                      {m.visits_today > 1 ? `Entró ${m.visits_today} veces hoy` : "Entró hoy"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-6 min-w-0">
+          <section className="card">
             {m.uses_total != null && m.uses_remaining != null ? (
               <>
-                {/* El contador, con el mayor peso visual de la pantalla */}
-                <div className="px-5 py-5 bg-surface-sunk border-y border-line">
-                  <div className="flex items-baseline justify-between gap-3 mb-2">
+                {/* El contador, con el mayor peso de la pantalla */}
+                <div className="p-5">
+                  <div className="flex items-baseline justify-between gap-3 mb-3">
                     <span className="eyebrow">Entradas restantes</span>
                     <span className="text-tiny font-medium text-txt-soft truncate">{m.plan_name}</span>
                   </div>
                   <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="lg" />
                 </div>
 
-                <dl className="grid grid-cols-2 divide-x divide-line">
-                  <div className="p-4">
+                <dl className="grid grid-cols-2 divide-x divide-line border-t border-line">
+                  <div className="px-5 py-4">
                     <dt className="eyebrow">Vence</dt>
-                    <dd className="mt-1 font-mono text-lg font-semibold">
+                    <dd className="mt-0.5 num text-base font-medium">
                       {formatDate(m.period_end)}
                       {m.days_left != null && m.days_left >= 0 && (
                         <span
@@ -165,20 +146,18 @@ export default async function SocioPage({
                       )}
                     </dd>
                   </div>
-                  <div className="p-4">
+                  <div className="px-5 py-4">
                     <dt className="eyebrow">Última entrada</dt>
-                    <dd className="mt-1 font-mono text-lg font-semibold">
+                    <dd className="mt-0.5 num text-base font-medium">
                       {formatDateTime(m.last_check_in_at)}
                     </dd>
                   </div>
                 </dl>
               </>
             ) : (
-              <div className="px-5 pb-5">
-                <p className="note">
-                  Este socio no tiene un pase activo. Activale uno abajo para que pueda entrar.
-                </p>
-              </div>
+              <p className="p-5 text-tiny text-txt-soft">
+                Este socio no tiene un pase activo. Activale uno abajo para que pueda entrar.
+              </p>
             )}
           </section>
 
@@ -217,10 +196,10 @@ export default async function SocioPage({
 
           {/* Últimas entradas */}
           <section className="card p-5">
-            <h2 className="h3 mb-3">Últimas entradas</h2>
+            <h2 className="h3 mb-2">Últimas entradas</h2>
 
             {(checkIns ?? []).length === 0 ? (
-              <p className="text-base text-txt-soft">
+              <p className="text-tiny text-txt-faint">
                 Todavía no registró ninguna entrada.
               </p>
             ) : (
@@ -229,11 +208,11 @@ export default async function SocioPage({
                   <li key={c.id} className="py-2.5 flex items-center gap-2.5">
                     <span
                       className={`size-1.5 rounded-full shrink-0 ${
-                        c.charged ? "bg-plate-green" : "bg-plate-blue"
+                        c.charged ? "bg-txt-soft" : "bg-line-strong"
                       }`}
                       aria-hidden="true"
                     />
-                    <span className="font-mono text-tiny text-txt-soft">
+                    <span className="num text-tiny text-txt-soft">
                       {formatDateTime(c.checked_in_at)}
                     </span>
                     {!c.charged && (
@@ -259,19 +238,19 @@ export default async function SocioPage({
                 (h) => (
                   <li key={h.id} className="py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-base font-medium truncate">
+                      <p className="text-base truncate">
                         {h.plans?.name ?? "Plan eliminado"}
                       </p>
-                      <p className="font-mono text-micro text-txt-faint mt-0.5">
+                      <p className="num text-micro text-txt-faint mt-0.5">
                         {formatDate(h.period_start)} → {formatDate(h.period_end)}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <span className="font-display text-title leading-none font-extrabold">
+                      <span className="num text-base font-semibold">
                         {h.uses_total - h.uses_remaining}
                       </span>
-                      <span className="font-mono text-tiny text-txt-faint">
+                      <span className="num text-tiny text-txt-faint">
                         /{h.uses_total}
                       </span>
                       <p className="text-micro text-txt-faint">usadas</p>

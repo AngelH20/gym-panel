@@ -37,7 +37,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
   }
 
   return (
-    <form action={action} className="card p-5 space-y-4 border-plate-blue ring-[3px] ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-4 border-line-strong">
       <h2 className="h3">Editar datos</h2>
       <input type="hidden" name="id" value={member.id} />
 
@@ -123,7 +123,7 @@ function Row({
 }) {
   return (
     <div className={`py-2.5 flex items-baseline gap-3 ${wide ? "sm:col-span-2" : ""}`}>
-      <dt className="text-tiny font-medium text-txt-faint w-24 shrink-0">{label}</dt>
+      <dt className="text-tiny text-txt-faint w-24 shrink-0">{label}</dt>
       <dd className={`text-base truncate ${mono ? "font-mono" : ""}`}>
         {value || <span className="text-txt-faint">—</span>}
       </dd>

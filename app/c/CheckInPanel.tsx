@@ -34,17 +34,13 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
 
     return (
       <section
-        className={`card p-6 text-center space-y-4 border-2 shadow-lift ${
-          isBirthday
-            ? "border-plate-amber"
-            : success
-              ? "border-plate-green"
-              : "border-plate-red"
+        className={`card p-6 text-center space-y-4 ${
+          isBirthday ? "border-plate-amber" : success ? "border-plate-green" : "border-plate-red"
         }`}
       >
         {isBirthday && (
           <div className="flex justify-center">
-            <span className="badge text-tiny px-3 py-1 border-plate-amber/60 bg-plate-amber/20 text-plate-amberInk">
+            <span className="badge text-tiny px-3 py-1">
               🎂 ¡Feliz cumpleaños!
             </span>
           </div>
@@ -56,10 +52,8 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
           </div>
         ) : (
           <span
-            className={`mx-auto flex size-16 items-center justify-center rounded-full ${
-              success
-                ? "bg-plate-green text-txt-onAccent"
-                : "bg-plate-red text-txt-onAccent"
+            className={`mx-auto flex size-14 items-center justify-center rounded-full border border-line ${
+              success ? "text-plate-green" : "text-plate-red"
             }`}
             aria-hidden="true"
           >
@@ -76,7 +70,7 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
           </span>
         )}
 
-        <p className="font-display text-title font-extrabold text-balance">{result.message}</p>
+        <p className="text-title font-semibold text-balance">{result.message}</p>
 
         {result.code === "CHECKED_IN" &&
           result.uses_total != null &&
@@ -108,7 +102,7 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
   }
 
   return (
-    <section className="card p-5 shadow-lift">
+    <section>
       <form action={action} className="space-y-5">
         <input type="hidden" name="qr_token" value={qrToken} />
 
@@ -122,13 +116,13 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
             minLength={8}
             maxLength={8}
             title="8 dígitos numéricos"
-            className="field min-h-16 text-center font-mono text-[1.75rem] font-semibold tracking-[0.15em]"
+            className="field min-h-14 text-center num text-[1.5rem] font-medium tracking-[0.12em]"
             placeholder="30111222"
             autoFocus
           />
         </Field>
 
-        <SubmitButton pendingLabel="Registrando…" className="btn-primary w-full min-h-14 text-lg">
+        <SubmitButton pendingLabel="Registrando…" className="btn-primary w-full min-h-12 text-base">
           Marcar entrada
         </SubmitButton>
       </form>

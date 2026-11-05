@@ -46,9 +46,9 @@ export function UsersList({
       ) : (
         <button
           onClick={() => setCreating(true)}
-          className="w-full rounded-card border-2 border-dashed border-line-strong
-                     min-h-14 py-4 text-base font-semibold text-txt-soft
-                     hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
+          className="w-full rounded-card border border-dashed border-line-strong
+                     min-h-12 py-3 text-tiny font-medium text-txt-soft
+                     hover:border-txt-faint hover:text-txt hover:bg-surface-hover
                      transition-colors"
         >
           + Agregar cuenta
@@ -77,13 +77,13 @@ function StaffRow({
     <li className="card h-full p-4 space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-semibold truncate">
+          <p className="text-base font-medium truncate">
             {staff.full_name || staff.email}
             {isSelf && <span className="ml-1.5 text-tiny text-txt-faint">(vos)</span>}
           </p>
           <p className="text-tiny text-txt-faint truncate">{staff.email}</p>
         </div>
-        <span className="badge border-ink bg-ink text-txt-onDark shrink-0">
+        <span className="badge shrink-0">
           {ROLE_LABEL[staff.role]}
         </span>
       </div>
@@ -161,7 +161,7 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
   const [role, setRole] = useState<AdminRole>("profesor");
 
   return (
-    <form action={action} className="card p-5 space-y-3 border-plate-blue ring-[3px] ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-3 border-line-strong">
       <h2 className="h3">Nueva cuenta</h2>
 
       <Field label="Nombre">

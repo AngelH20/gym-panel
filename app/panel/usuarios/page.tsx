@@ -4,6 +4,7 @@ import { getCurrentAdminRole } from "@/lib/supabase/role";
 import type { Staff } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import { UsersList } from "./UsersList";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function UsuariosPage() {
   const supabase = await createClient();
@@ -27,15 +28,15 @@ export default async function UsuariosPage() {
   if (!isManagerRole(actorRole)) redirect("/panel");
 
   return (
-    <div className="space-y-5 max-w-4xl">
-      <div>
-        <h1 className="h1">Usuarios</h1>
-        <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          {actorRole === "programador"
+    <div className="space-y-6 max-w-4xl">
+      <PageHeader
+        title="Usuarios"
+        description={
+          actorRole === "programador"
             ? "Quién puede entrar al panel y con qué rol."
-            : "Quién puede entrar al panel. Podés dar de alta y borrar cuentas de profesor."}
-        </p>
-      </div>
+            : "Quién puede entrar al panel. Podés dar de alta y borrar cuentas de profesor."
+        }
+      />
 
       <UsersList
         staff={(staff ?? []) as Staff[]}

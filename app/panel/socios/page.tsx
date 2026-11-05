@@ -5,8 +5,7 @@ import { Avatar } from "@/components/Avatar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
 import { EmptyState } from "@/components/Form";
-import { StatCard } from "@/components/StatCard";
-import { IconPeople, IconCheck, IconAlert, IconPersonMinus } from "@/components/icons";
+import { PageHeader } from "@/components/PageHeader";
 import { SearchBox } from "./SearchBox";
 import { ViewToggle, type SociosView } from "./ViewToggle";
 import { formatDate } from "@/lib/labels";
@@ -96,63 +95,45 @@ export default async function SociosPage({
   const entraronHoy = all.filter((m) => m.checked_in_today).length;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="h1">Socios</h1>
-          <p className="mt-2 text-tiny sm:text-base text-txt-soft">
+    <div className="space-y-6">
+      <PageHeader
+        title="Socios"
+        description={
+          <>
             Gestioná los socios de tu gimnasio
             {entraronHoy > 0 && (
               <>
-                {" · "}
-                <span className="font-mono font-bold text-plate-green">
-                  {entraronHoy}
-                </span>{" "}
-                {entraronHoy === 1 ? "entró" : "entraron"} hoy
+                {". "}
+                <span className="num font-medium text-txt">{entraronHoy}</span>{" "}
+                {entraronHoy === 1 ? "entró" : "entraron"} hoy.
               </>
             )}
-          </p>
-        </div>
+          </>
+        }
+        actions={
+          <Link href="/panel/socios/nuevo" className="btn-primary">
+            <svg
+              viewBox="0 0 24 24"
+              className="size-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Nuevo socio
+          </Link>
+        }
+      />
 
-        <Link href="/panel/socios/nuevo" className="btn-primary shrink-0">
-          <svg
-            viewBox="0 0 24 24"
-            className="size-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            aria-hidden="true"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Nuevo socio
-        </Link>
-      </div>
+      {/* Buscar primero: es a lo que se viene */}
+      <div className="space-y-3">
+        <SearchBox defaultValue={q} />
 
-      {!showArchived && (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total" value={all.length} accent="blue" icon={<IconPeople />} />
-        <StatCard label="Al día" value={activos.length} accent="green" icon={<IconCheck />} />
-        <StatCard
-          label="Por vencer"
-          value={porVencer.length}
-          accent="amber"
-          icon={<IconAlert />}
-        />
-        <StatCard
-          label="Vencidos"
-          value={vencidos.length}
-          accent="red"
-          icon={<IconPersonMinus />}
-        />
-      </div>
-      )}
-
-      <SearchBox defaultValue={q} />
-
-      <div className="flex items-center gap-3">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -ml-4 pl-4 sm:ml-0 sm:pl-0 flex-1">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar -ml-4 pl-4 sm:ml-0 sm:pl-0 flex-1">
           {FILTERS.map((filter) => {
             const active = f === filter.key;
             const count =
@@ -179,10 +160,7 @@ export default async function SociosPage({
                 {filter.label}
                 {count && (
                   <span
-                    className={[
-                      "font-mono text-micro font-bold rounded-full px-1.5 min-w-5 text-center",
-                      active ? "bg-ink-raised" : "bg-plate-amber/30 text-plate-amberInk",
-                    ].join(" ")}
+                    className={`num text-micro ${active ? "text-txt-onDarkSoft" : "text-txt-faint"}`}
                   >
                     {count}
                   </span>
@@ -190,10 +168,30 @@ export default async function SociosPage({
               </Link>
             );
           })}
-        </div>
+          </div>
 
-        <ViewToggle value={view} />
+          <ViewToggle value={view} />
+        </div>
       </div>
+
+      {!showArchived && (
+        <dl className="grid grid-cols-4 divide-x divide-line border-y border-line">
+          {[
+            { label: "Total", value: all.length, dot: null },
+            { label: "Al día", value: activos.length, dot: "bg-plate-green" },
+            { label: "Por vencer", value: porVencer.length, dot: "bg-plate-amber" },
+            { label: "Vencidos", value: vencidos.length, dot: "bg-plate-red" },
+          ].map((stat) => (
+            <div key={stat.label} className="px-2 sm:px-4 py-2.5 first:pl-0 min-w-0">
+              <dt className="flex items-center gap-1.5 text-micro sm:text-tiny text-txt-faint truncate">
+                {stat.dot && <span className={`size-1.5 rounded-full shrink-0 ${stat.dot}`} aria-hidden="true" />}
+                {stat.label}
+              </dt>
+              <dd className="num text-lg sm:text-title font-semibold">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       {members.length === 0 ? (
         <EmptyState
@@ -219,12 +217,12 @@ export default async function SociosPage({
           )}
         </EmptyState>
       ) : view === "list" ? (
-        <ul className="card divide-y divide-line overflow-hidden">
+        <ul className="border-y border-line divide-y divide-line">
           {members.map((m) => (
             <li key={m.id}>
               <Link
                 href={`/panel/socios/${m.id}`}
-                className="flex items-center gap-3 px-4 py-2.5 min-h-14 hover:bg-surface-hover transition-colors"
+                className="flex items-center gap-3 px-1 py-2.5 min-h-14 hover:bg-surface-hover transition-colors"
               >
                 <div className="relative shrink-0">
                   <Avatar name={m.full_name} url={m.photo_url} size={32} />
@@ -237,7 +235,7 @@ export default async function SociosPage({
                   )}
                 </div>
 
-                <span className="min-w-0 flex-1 truncate font-semibold">{m.full_name}</span>
+                <span className="min-w-0 flex-1 truncate font-medium">{m.full_name}</span>
 
                 <StatusBadge status={m.effective_status} />
 
@@ -246,14 +244,14 @@ export default async function SociosPage({
                 </span>
 
                 {m.uses_total != null && m.uses_remaining != null ? (
-                  <span className="hidden md:block w-24 shrink-0 font-mono text-tiny text-txt-soft text-right">
+                  <span className="hidden md:block w-24 shrink-0 num text-tiny text-txt-soft text-right">
                     {m.uses_remaining}/{m.uses_total}
                   </span>
                 ) : (
                   <span className="hidden md:block w-24 shrink-0" />
                 )}
 
-                <span className="hidden lg:block w-24 shrink-0 text-right font-mono text-tiny text-txt-faint">
+                <span className="hidden lg:block w-24 shrink-0 text-right num text-tiny text-txt-faint">
                   {m.period_end ? formatDate(m.period_end) : "—"}
                 </span>
               </Link>
@@ -261,16 +259,16 @@ export default async function SociosPage({
           ))}
         </ul>
       ) : (
-        <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {members.map((m) => (
             <li key={m.id}>
-              <Link href={`/panel/socios/${m.id}`} className="card-link h-full p-4">
-                <div className="flex items-center gap-3.5">
+              <Link href={`/panel/socios/${m.id}`} className="card-link h-full px-4 py-3.5">
+                <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
                     <Avatar name={m.full_name} url={m.photo_url} />
                     {m.checked_in_today && (
                       <span
-                        className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full
+                        className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full
                                    bg-plate-green ring-2 ring-surface"
                         title="Entró hoy"
                       />
@@ -278,8 +276,8 @@ export default async function SociosPage({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-lg leading-tight font-semibold truncate">{m.full_name}</p>
-                    <div className="mt-1.5 flex items-center gap-2">
+                    <p className="text-base leading-tight font-medium truncate">{m.full_name}</p>
+                    <div className="mt-1 flex items-center gap-2 min-w-0">
                       <StatusBadge status={m.effective_status} />
                       <span className="text-tiny text-txt-faint truncate">
                         {m.plan_name ?? "Sin plan"}
@@ -288,7 +286,7 @@ export default async function SociosPage({
                   </div>
 
                   {m.uses_total != null && m.uses_remaining != null && (
-                    <div className="w-24 sm:w-32 shrink-0">
+                    <div className="w-20 sm:w-28 shrink-0">
                       <UsesTally
                         total={m.uses_total}
                         remaining={m.uses_remaining}
