@@ -31,13 +31,31 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
     // Gesto lindo: si hoy es el cumpleaños del socio, lo festejamos distinto
     // en vez de la tarjeta verde de siempre.
     const isBirthday = success && result.is_birthday;
+    // Pase pausado: no es un error del socio, así que no va en rojo. El
+    // mensaje (de la base) ya dice hasta cuándo y qué hacer si volvió antes.
+    const isPaused = result.code === "PAUSED";
 
     return (
       <section
         className={`card p-6 text-center space-y-4 ${
-          isBirthday ? "border-plate-amber" : success ? "border-plate-green" : "border-plate-red"
+          isBirthday
+            ? "border-plate-amber"
+            : success
+              ? "border-plate-green"
+              : isPaused
+                ? "border-plate-blue"
+                : "border-plate-red"
         }`}
       >
+        {isPaused && (
+          <div className="flex justify-center">
+            <span className="inline-flex items-center gap-1.5 text-tiny font-medium text-txt-soft">
+              <span className="size-1.5 rounded-full bg-plate-blue" aria-hidden="true" />
+              Pase pausado
+            </span>
+          </div>
+        )}
+
         {isBirthday && (
           <div className="flex justify-center">
             <span className="badge text-tiny px-3 py-1">

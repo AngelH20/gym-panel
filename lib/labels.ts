@@ -15,6 +15,7 @@ export const effectiveStatusLabel: Record<EffectiveStatus, string> = {
   exhausted: "Sin usos",
   suspended: "Suspendido",
   no_membership: "Sin pase",
+  paused: "Pausado",
 };
 
 /** Clases de color por estado. Verde = puede entrar; rojo = no. */
@@ -24,6 +25,7 @@ export const effectiveStatusStyle: Record<EffectiveStatus, string> = {
   exhausted: "bg-alert/10 text-alert border-alert/35",
   suspended: "bg-ink/8 text-ink-soft border-plate",
   no_membership: "bg-ink/8 text-ink-soft border-plate",
+  paused: "bg-ink/8 text-ink-soft border-plate",
 };
 
 export const memberStatusLabel: Record<MemberStatus, string> = {

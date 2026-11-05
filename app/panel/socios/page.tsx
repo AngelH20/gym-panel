@@ -36,6 +36,8 @@ const FILTERS = [
   { key: "al-dia", label: "Al día" },
   { key: "por-vencer", label: "Por vencer" },
   { key: "vencidos", label: "Vencidos" },
+  // Solo aparece si hay alguno (o si es el filtro elegido): ver abajo.
+  { key: "pausados", label: "Pausados" },
   { key: "baja", label: "Dados de baja" },
 ] as const;
 
@@ -82,6 +84,8 @@ export default async function SociosPage({
   const vencidos = all.filter(
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
+  // Pase pausado (sql/33): no está al día, ni por vencer, ni vencido.
+  const pausados = all.filter((m) => m.effective_status === "paused");
 
   let members = all;
   if (f === "al-dia") {
@@ -90,6 +94,8 @@ export default async function SociosPage({
     members = vencidos;
   } else if (f === "por-vencer") {
     members = porVencer;
+  } else if (f === "pausados") {
+    members = pausados;
   }
 
   const entraronHoy = all.filter((m) => m.checked_in_today).length;
@@ -136,12 +142,15 @@ export default async function SociosPage({
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar -ml-4 pl-4 sm:ml-0 sm:pl-0 flex-1">
           {FILTERS.map((filter) => {
             const active = f === filter.key;
+            if (filter.key === "pausados" && pausados.length === 0 && !active) return null;
             const count =
               filter.key === "por-vencer" && porVencer.length > 0
                 ? porVencer.length
-                : filter.key === "baja" && archivedCount
-                  ? archivedCount
-                  : null;
+                : filter.key === "pausados" && pausados.length > 0
+                  ? pausados.length
+                  : filter.key === "baja" && archivedCount
+                    ? archivedCount
+                    : null;
             const qs = [
               `f=${filter.key}`,
               q ? `q=${encodeURIComponent(q)}` : "",

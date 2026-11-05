@@ -12,6 +12,7 @@ import { MemberActions } from "./MemberActions";
 import { ArchivedBanner } from "./ArchivedBanner";
 import { EditMemberForm } from "./EditMemberForm";
 import { FamilyCard, type FamilyCandidate, type FamilyMember } from "./FamilyCard";
+import { PausePass } from "./PausePass";
 
 /** Columnas explícitas, sin qr_token: la fila termina serializada en
  *  componentes cliente (MemberActions, EditMemberForm) y ese token viejo
@@ -83,6 +84,17 @@ export default async function SocioPage({
   if (!member) notFound();
   const m = member as MemberOverview;
 
+  // Pausa del pase vigente. Sale de memberships (select "*", ya pedido para
+  // el historial) y no de la vista: así la ficha anda igual aunque la base
+  // todavía no tenga las columnas de sql/33 (quedan undefined).
+  const today = todayLocal();
+  const activeMembership =
+    ((history ?? []) as Membership[]).find((h) => h.id === m.membership_id) ?? null;
+  const pausedUntil =
+    activeMembership?.paused_until && activeMembership.paused_until > today
+      ? activeMembership.paused_until
+      : null;
+
   // El socio cuenta: una familia de 2 más él son 3, y ahí ya va el pack.
   const familySize = familyId ? familyIds.length + 1 : 1;
   const sellablePlans = ((plans ?? []) as Plan[]).filter(
@@ -153,6 +165,25 @@ export default async function SocioPage({
                     </dd>
                   </div>
                 </dl>
+
+                {activeMembership && m.period_end && (
+                  <PausePass
+                    membershipId={activeMembership.id}
+                    periodEnd={m.period_end}
+                    today={today}
+                    pausedUntil={pausedUntil}
+                    pausedAt={activeMembership.paused_at}
+                    pausedByName={activeMembership.paused_by_name}
+                    pauseReason={activeMembership.pause_reason}
+                    canPause={
+                      // "paused_until" in ...: la base ya tiene sql/33.
+                      "paused_until" in activeMembership &&
+                      m.period_end >= today &&
+                      m.uses_remaining > 0
+                    }
+                    canManage={isManagerRole(role)}
+                  />
+                )}
               </>
             ) : (
               <p className="p-5 text-tiny text-txt-soft">
@@ -172,7 +203,7 @@ export default async function SocioPage({
             <MemberActions
               member={m}
               plans={sellablePlans}
-              today={todayLocal()}
+              today={today}
               latestMembership={(history?.[0] as Membership | undefined) ?? null}
               role={role}
               familySize={familySize}
