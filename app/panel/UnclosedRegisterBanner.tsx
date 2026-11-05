@@ -23,7 +23,15 @@ export async function UnclosedRegisterBanner({ exclude }: { exclude?: string }) 
         .lt("opening_date", today)
         .order("opening_date", { ascending: false })
         .limit(1000),
-      supabase.from("cash_closings").select("closing_date").lt("closing_date", today).limit(1000),
+      // Mismo orden que las aperturas: sin él, cuando haya más de 1000
+      // cierres llegan 1000 cualquiera y días ya cerrados aparecen como
+      // "sin cerrar".
+      supabase
+        .from("cash_closings")
+        .select("closing_date")
+        .lt("closing_date", today)
+        .order("closing_date", { ascending: false })
+        .limit(1000),
     ]);
     if (e1 || e2) return null;
 
