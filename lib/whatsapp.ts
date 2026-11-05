@@ -80,8 +80,14 @@ export function firstName(fullName: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Plantillas. Cortas, cálidas y en voseo. Cada una recibe el nombre completo
-// (se usa el de pila) y el nombre del gimnasio (settings.gym_name).
+// Plantillas. Tienen que sonar a una persona de recepción que le escribe a
+// alguien que conoce, no a un aviso automático:
+//   - En primera persona ("te escribo", "te aviso"), no "te escribimos de".
+//   - Sin "¡" de apertura ni cierres de folleto ("¡Te esperamos!"): así
+//     escribe la gente en WhatsApp.
+//   - Una sola idea por mensaje y, como mucho, un emoji.
+// Cada una recibe el nombre completo (se usa el de pila) y el nombre del
+// gimnasio (settings.gym_name).
 // ---------------------------------------------------------------------------
 
 type Base = { fullName: string; gymName: string };
@@ -105,16 +111,15 @@ export function expiringMessage({
   daysLeft?: number | null;
   usesRemaining?: number | null;
 }): string {
-  const hola = `¡Hola ${firstName(fullName)}! Te escribimos de ${gymName}.`;
   const byDate = daysLeft == null || daysLeft <= 3 || usesRemaining == null || usesRemaining > 2;
   const aviso = byDate
-    ? `Tu pase vence ${whenLabel(periodEnd, daysLeft)}.`
+    ? `el pase te vence ${whenLabel(periodEnd, daysLeft)}`
     : usesRemaining === 1
-      ? "Te queda 1 sola entrada en el pase."
+      ? "te queda una sola entrada del pase"
       : usesRemaining === 0
-        ? "Ya usaste todas las entradas del pase."
-        : `Te quedan ${usesRemaining} entradas en el pase.`;
-  return `${hola} ${aviso} Si querés renovarlo, lo hacemos cuando vengas. ¡Te esperamos!`;
+        ? "ya usaste todas las entradas del pase"
+        : `te quedan ${usesRemaining} entradas del pase`;
+  return `Hola ${firstName(fullName)}, ¿cómo andás? Te aviso que ${aviso}. Cuando pases por ${gymName} lo renovamos y listo 💪`;
 }
 
 /** Pase vencido (por fecha o porque se quedó sin entradas). */
@@ -126,12 +131,12 @@ export function expiredMessage({
 }: Base & { periodEnd: string | null; exhausted?: boolean }): string {
   const aviso = exhausted
     ? "se te terminaron las entradas del pase"
-    : `tu pase venció el ${formatDayMonth(periodEnd)}`;
-  return `¡Hola ${firstName(fullName)}! ¿Cómo andás? Te escribimos de ${gymName}: ${aviso}. Cuando quieras lo renovamos y seguís entrenando. ¡Te esperamos!`;
+    : `el pase se te venció el ${formatDayMonth(periodEnd)}`;
+  return `Hola ${firstName(fullName)}, ¿todo bien? Te escribo porque ${aviso}. Cuando quieras pasate por ${gymName} y lo renovamos, así no cortás el ritmo.`;
 }
 
 export function birthdayMessage({ fullName, gymName }: Base): string {
-  return `¡Feliz cumpleaños, ${firstName(fullName)}! 🎂 Todo el equipo de ${gymName} te desea un día genial. ¡Que lo disfrutes mucho!`;
+  return `Feliz cumple, ${firstName(fullName)}! 🎂 Que lo pases muy lindo hoy. Un abrazo grande de parte de todos en ${gymName}.`;
 }
 
 /** No viene hace un tiempo. Si nunca vino en este pase, lo dice así. */
@@ -141,14 +146,14 @@ export function inactiveMessage({
   days,
   neverCame = false,
 }: Base & { days: number; neverCame?: boolean }): string {
-  const hace = neverCame
-    ? `Todavía no te vimos por ${gymName} desde que arrancó tu pase.`
-    : `Hace ${days} días que no te vemos por ${gymName}.`;
-  return `¡Hola ${firstName(fullName)}! ${hace} ¿Está todo bien? Tu pase sigue vigente, así que cuando quieras te esperamos para volver a entrenar.`;
+  const hola = `Hola ${firstName(fullName)}, ¿cómo va?`;
+  return neverCame
+    ? `${hola} Vi que todavía no pudiste arrancar con el pase, ¿todo bien? Sigue activo, así que cuando quieras te venís a ${gymName} y arrancamos.`
+    : `${hola} Hace unos ${days} días que no te vemos por ${gymName}, ¿todo bien? El pase sigue activo, así que cuando quieras te venís y retomamos.`;
 }
 
 export function genericMessage({ fullName, gymName }: Base): string {
-  return `¡Hola ${firstName(fullName)}! Te escribimos de ${gymName}.`;
+  return `Hola ${firstName(fullName)}, ¿cómo andás? Te escribo de ${gymName}.`;
 }
 
 /**
