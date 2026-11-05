@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { closeCashRegister } from "./actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatDate, formatMoney } from "@/lib/labels";
@@ -24,7 +24,19 @@ export function CloseRegisterForm({
   const title = pastDate ? `Cerrar la caja del ${formatDate(pastDate)}` : "Cerrar caja";
   const [confirm, setConfirm] = useState(false);
   const [state, action] = useActionState(closeCashRegister, null);
+  // Controlados: React 19 vacía los campos no controlados después de cada
+  // envío, también si vuelve un error.
   const [counted, setCounted] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // Cerrada bien: se pliega y queda vacío (antes lo vaciaba React solo).
+  useEffect(() => {
+    if (state?.ok) {
+      setConfirm(false);
+      setCounted("");
+      setNotes("");
+    }
+  }, [state]);
 
   if (!confirm) {
     return (
@@ -85,7 +97,12 @@ export function CloseRegisterForm({
         )}
 
         <Field label="Notas (opcional)">
-          <input name="notes" className="field text-tiny" />
+          <input
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="field text-tiny"
+          />
         </Field>
 
         <p className="text-tiny text-txt-faint">

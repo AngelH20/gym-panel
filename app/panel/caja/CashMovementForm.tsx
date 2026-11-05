@@ -12,13 +12,6 @@ import { MAX_MOVEMENT_PESOS, MAX_MOVEMENT_REASON } from "@/lib/cashMovements";
  */
 export function CashMovementForm() {
   const [open, setOpen] = useState(false);
-  const [state, action] = useActionState(addCashMovement, null);
-  const [kind, setKind] = useState<"expense" | "income">("expense");
-
-  // Guardado: se pliega solo y queda listo para el próximo.
-  useEffect(() => {
-    if (state?.ok) setOpen(false);
-  }, [state]);
 
   if (!open) {
     return (
@@ -35,6 +28,26 @@ export function CashMovementForm() {
       </div>
     );
   }
+
+  // Se monta de cero cada vez que se abre: sin el error ni los datos de la
+  // vez anterior.
+  return <OpenForm onClose={() => setOpen(false)} />;
+}
+
+function OpenForm({ onClose }: { onClose: () => void }) {
+  const [state, action] = useActionState(addCashMovement, null);
+  const [kind, setKind] = useState<"expense" | "income">("expense");
+  // Controlados a propósito: React 19 vacía los campos no controlados de un
+  // <form action> después de cada envío, también cuando el server action
+  // devuelve un error, y se perdía lo escrito.
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("cash");
+  const [reason, setReason] = useState("");
+
+  // Guardado: se pliega solo y queda listo para el próximo.
+  useEffect(() => {
+    if (state?.ok) onClose();
+  }, [state, onClose]);
 
   return (
     <div className="card p-5 space-y-3">
@@ -77,13 +90,20 @@ export function CashMovementForm() {
             max={MAX_MOVEMENT_PESOS}
             step="1"
             required
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
             className="field font-mono"
             autoFocus
           />
         </Field>
 
         <Field label="Medio">
-          <select name="method" defaultValue="cash" className="field">
+          <select
+            name="method"
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            className="field"
+          >
             <option value="cash">Efectivo</option>
             <option value="transfer">Transferencia</option>
           </select>
@@ -94,6 +114,8 @@ export function CashMovementForm() {
             name="reason"
             required
             maxLength={MAX_MOVEMENT_REASON}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
             className="field"
           />
         </Field>
@@ -104,7 +126,7 @@ export function CashMovementForm() {
           <SubmitButton className="btn-primary btn-sm" pendingLabel="Guardando…">
             {kind === "expense" ? "Registrar gasto" : "Registrar ingreso"}
           </SubmitButton>
-          <button type="button" onClick={() => setOpen(false)} className="btn-ghost btn-sm">
+          <button type="button" onClick={onClose} className="btn-ghost btn-sm">
             Cancelar
           </button>
         </div>

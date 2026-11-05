@@ -20,6 +20,9 @@ export function VoidMovementButton({
 }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(voidCashMovement, null);
+  // Controlado: React 19 vacía los campos no controlados después de cada
+  // envío, también si vuelve un error, y se perdía el motivo escrito.
+  const [reason, setReason] = useState("");
 
   if (!open) {
     return (
@@ -48,6 +51,8 @@ export function VoidMovementButton({
           name="reason"
           required
           autoFocus
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
           maxLength={500}
           className="field text-tiny"
         />

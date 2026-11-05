@@ -46,7 +46,10 @@ export function PausePass({
   canManage: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Controlados: React 19 vacía los campos no controlados después de cada
+  // envío, también si vuelve un error.
   const [until, setUntil] = useState("");
+  const [reason, setReason] = useState("");
   const [pauseState, pauseAction] = useActionState(pauseMembership, null);
   const [resumeState, resumeAction] = useActionState(resumeMembership, null);
 
@@ -55,6 +58,7 @@ export function PausePass({
     if (pauseState && !pauseState.error) {
       setOpen(false);
       setUntil("");
+      setReason("");
     }
   }, [pauseState]);
 
@@ -130,6 +134,8 @@ export function PausePass({
               name="reason"
               type="text"
               maxLength={300}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
               className="field"
             />
           </Field>

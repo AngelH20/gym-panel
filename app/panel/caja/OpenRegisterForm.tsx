@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { openCashRegister } from "./actions";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 
@@ -12,6 +12,19 @@ import { Field, FormError, SubmitButton } from "@/components/Form";
 export function OpenRegisterForm() {
   const [confirm, setConfirm] = useState(false);
   const [state, action] = useActionState(openCashRegister, null);
+  // Controlados: React 19 vacía los campos no controlados después de cada
+  // envío, también si vuelve un error.
+  const [startingCash, setStartingCash] = useState("");
+  const [notes, setNotes] = useState("");
+
+  // Abierta bien: se pliega y queda vacío (antes lo vaciaba React solo).
+  useEffect(() => {
+    if (state?.ok) {
+      setConfirm(false);
+      setStartingCash("");
+      setNotes("");
+    }
+  }, [state]);
 
   if (!confirm) {
     return (
@@ -42,13 +55,20 @@ export function OpenRegisterForm() {
             min={0}
             step="1"
             required
+            value={startingCash}
+            onChange={(e) => setStartingCash(e.target.value)}
             className="field font-mono"
             autoFocus
           />
         </Field>
 
         <Field label="Notas (opcional)">
-          <input name="notes" className="field text-tiny" />
+          <input
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="field text-tiny"
+          />
         </Field>
 
         <FormError message={state?.error} />
