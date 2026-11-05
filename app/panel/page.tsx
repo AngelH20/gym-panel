@@ -33,7 +33,7 @@ import {
 } from "@/lib/labels";
 import { WeeklyAttendanceChart, type DayCount } from "./WeeklyAttendanceChart";
 import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
-import { UnclosedRegisterBanner } from "./UnclosedRegisterBanner";
+import { UnclosedRegisterBanner, preloadUnclosedRegisters } from "./UnclosedRegisterBanner";
 
 const WEEK_LENGTH = 7;
 
@@ -82,6 +82,8 @@ export default async function PanelHome() {
   const supabase = await createClient();
   const today = todayLocal();
   const weekStart = daysAgoLocal(WEEK_LENGTH - 1);
+  // El aviso de caja sin cerrar sale junto con el resto, no después.
+  preloadUnclosedRegisters();
 
   const [
     { data },
