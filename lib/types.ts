@@ -143,6 +143,10 @@ export type Payment = {
   local_date: string;
   paid_at: string;
   created_by: string | null;
+  /** Quién lo cobró (nombre o email del admin), guardado en el propio cobro
+   *  por un trigger (sql/31_cobrado_por.sql). Opcional: no existe hasta que
+   *  se corra ese SQL, y es null en cobros hechos fuera del panel. */
+  created_by_name?: string | null;
   /** Si no es null, el cobro fue anulado: se muestra tachado y no suma. */
   voided_at: string | null;
   voided_by: string | null;

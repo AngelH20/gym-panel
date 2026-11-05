@@ -8,14 +8,16 @@ import { EmptyState } from "@/components/Form";
 import { PageHeader } from "@/components/PageHeader";
 import { SearchBox } from "./SearchBox";
 import { ViewToggle, type SociosView } from "./ViewToggle";
-import { formatDate } from "@/lib/labels";
+import { formatDate, todayLocal } from "@/lib/labels";
+import { daysWithoutComing, INACTIVE_DAYS, isInactive } from "@/lib/inactive";
 
 // Solo las columnas que usa la lista. member_overview calcula cada columna
 // por socio (cumpleaños, última entrada, entradas de hoy...) y con select("*")
 // se calculaban y viajaban todas, incluidas las que acá no se muestran.
+// last_check_in_at y period_start son para el filtro "Inactivos".
 const LIST_COLUMNS =
   "id, full_name, photo_url, effective_status, plan_name, uses_total, uses_remaining, " +
-  "days_left, period_end, checked_in_today";
+  "days_left, period_start, period_end, checked_in_today, last_check_in_at";
 
 type ListMember = Pick<
   MemberOverview,
@@ -27,8 +29,10 @@ type ListMember = Pick<
   | "uses_total"
   | "uses_remaining"
   | "days_left"
+  | "period_start"
   | "period_end"
   | "checked_in_today"
+  | "last_check_in_at"
 >;
 
 const FILTERS = [
@@ -36,8 +40,26 @@ const FILTERS = [
   { key: "al-dia", label: "Al día" },
   { key: "por-vencer", label: "Por vencer" },
   { key: "vencidos", label: "Vencidos" },
+  { key: "inactivos", label: "Inactivos" },
   { key: "baja", label: "Dados de baja" },
 ] as const;
+
+/**
+ * Texto del buscador listo para meter en un filtro .or() de PostgREST.
+ *
+ * El .or() es un string: una coma o un paréntesis del usuario lo cortaban
+ * (error) o le agregaban condiciones propias. Se sacan los caracteres con
+ * significado ahí (coma, paréntesis, comillas, barra invertida y el
+ * comodín *) y los comodines de LIKE (% y _), que no tienen sentido en una
+ * búsqueda por nombre o número.
+ */
+function sanitizeSearch(raw: string): string {
+  return raw
+    .replace(/[,()"\\*%_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+}
 
 export default async function SociosPage({
   searchParams,
@@ -55,11 +77,12 @@ export default async function SociosPage({
   query = showArchived
     ? query.not("archived_at", "is", null)
     : query.is("archived_at", null);
-  if (q.trim()) {
-    const term = q.trim();
-    const dniTerm = term.replace(/\D/g, "");
-    query = dniTerm
-      ? query.or(`full_name.ilike.%${term}%,dni.ilike.%${dniTerm}%`)
+  const term = sanitizeSearch(q);
+  if (term) {
+    // Con dígitos se busca también por DNI y por teléfono ("30.123", "299 412").
+    const digits = term.replace(/\D/g, "");
+    query = digits
+      ? query.or(`full_name.ilike.%${term}%,dni.ilike.%${digits}%,phone.ilike.%${digits}%`)
       : query.ilike("full_name", `%${term}%`);
   }
 
@@ -82,6 +105,9 @@ export default async function SociosPage({
   const vencidos = all.filter(
     (m) => m.effective_status === "expired" || m.effective_status === "exhausted"
   );
+  // Pase al día pero no vienen hace rato (la regla vive en lib/inactive.ts).
+  const today = todayLocal();
+  const inactivos = all.filter((m) => isInactive(m, today));
 
   let members = all;
   if (f === "al-dia") {
@@ -90,6 +116,12 @@ export default async function SociosPage({
     members = vencidos;
   } else if (f === "por-vencer") {
     members = porVencer;
+  } else if (f === "inactivos") {
+    // Los que hace más que no vienen, primero.
+    members = inactivos
+      .map((m) => ({ m, days: daysWithoutComing(m, today) ?? 0 }))
+      .sort((a, b) => b.days - a.days)
+      .map((x) => x.m);
   }
 
   const entraronHoy = all.filter((m) => m.checked_in_today).length;
@@ -139,7 +171,9 @@ export default async function SociosPage({
             const count =
               filter.key === "por-vencer" && porVencer.length > 0
                 ? porVencer.length
-                : filter.key === "baja" && archivedCount
+                : filter.key === "inactivos" && inactivos.length > 0
+                  ? inactivos.length
+                  : filter.key === "baja" && archivedCount
                   ? archivedCount
                   : null;
             const qs = [
@@ -200,17 +234,21 @@ export default async function SociosPage({
               ? "Ningún socio coincide"
               : showArchived
                 ? "No hay socios dados de baja"
-                : "Todavía no hay socios"
+                : f === "inactivos"
+                  ? "Nadie inactivo"
+                  : "Todavía no hay socios"
           }
           description={
             q
-              ? "Probá con otro nombre o revisá la ortografía."
+              ? "Probá con otro nombre, DNI o teléfono, o revisá la ortografía."
               : showArchived
                 ? "Cuando des de baja a alguien desde su ficha, aparece acá y lo podés reactivar."
-                : "Cargá el primero y en el mismo paso le activás el pase."
+                : f === "inactivos"
+                  ? `Todos los que tienen el pase al día vinieron en los últimos ${INACTIVE_DAYS} días.`
+                  : "Cargá el primero y en el mismo paso le activás el pase."
           }
         >
-          {!q && !showArchived && (
+          {!q && !showArchived && f !== "inactivos" && (
             <Link href="/panel/socios/nuevo" className="btn-primary">
               Cargar socio
             </Link>

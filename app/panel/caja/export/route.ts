@@ -83,7 +83,7 @@ export async function GET(request: Request) {
   ]);
   csv += "\r\n";
 
-  csv += csvRow(["Hora", "Socio", "Plan", "Método", "Monto", "Anulado"]);
+  csv += csvRow(["Hora", "Socio", "Plan", "Método", "Monto", "Cobró", "Anulado"]);
   for (const p of payments) {
     csv += csvRow([
       formatDateTime(p.paid_at),
@@ -91,6 +91,8 @@ export async function GET(request: Request) {
       p.plan_name,
       paymentMethodLabel[p.method],
       p.amount_cents / 100,
+      // Vacío hasta que se corra sql/31_cobrado_por.sql (select * no la trae).
+      p.created_by_name ?? "",
       p.voided_at
         ? `Sí, por ${p.voided_by_name ?? "un admin"} el ${formatDateTime(p.voided_at)}${
             p.void_reason ? ` (${p.void_reason})` : ""

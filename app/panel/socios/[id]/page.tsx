@@ -8,6 +8,9 @@ import { Avatar } from "@/components/Avatar";
 import { BackLink } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { UsesTally } from "@/components/UsesTally";
+import { WhatsAppLink } from "@/components/WhatsAppLink";
+import { getGymName } from "@/lib/gym";
+import { suggestedMessage } from "@/lib/whatsapp";
 import { MemberActions } from "./MemberActions";
 import { ArchivedBanner } from "./ArchivedBanner";
 import { EditMemberForm } from "./EditMemberForm";
@@ -61,6 +64,7 @@ export default async function SocioPage({
     { data: checkIns },
     role,
     { members, familyId, familyIds, family },
+    gymName,
   ] = await Promise.all([
       supabase.from("member_overview").select(MEMBER_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
       supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
@@ -78,6 +82,8 @@ export default async function SocioPage({
       // Cacheado por request: el layout ya lo pidió, no es otro viaje.
       getCurrentAdminRole(),
       familyPromise,
+      // Para el mensaje de WhatsApp. Cacheado: el layout ya lo pidió.
+      getGymName(),
     ]);
 
   if (!member) notFound();
@@ -108,6 +114,15 @@ export default async function SocioPage({
               )}
             </div>
           </div>
+          {/* El mensaje se elige según cómo está: cumpleaños, vencido, por
+              vencer, no viene hace rato o un saludo (ver lib/whatsapp.ts). */}
+          <WhatsAppLink
+            phone={m.phone}
+            name={m.full_name}
+            label="WhatsApp"
+            message={suggestedMessage(m, gymName, todayLocal())}
+            className="shrink-0"
+          />
         </div>
       </div>
 

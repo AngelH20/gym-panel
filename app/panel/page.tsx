@@ -5,6 +5,15 @@ import { Avatar } from "@/components/Avatar";
 import { UsesTally } from "@/components/UsesTally";
 import { StatCard } from "@/components/StatCard";
 import { PageHeader } from "@/components/PageHeader";
+import { WhatsAppLink } from "@/components/WhatsAppLink";
+import { getGymName } from "@/lib/gym";
+import {
+  cameDuringCurrentPass,
+  daysWithoutComing,
+  INACTIVE_DAYS,
+  isInactive,
+} from "@/lib/inactive";
+import { birthdayMessage, expiredMessage, expiringMessage, inactiveMessage } from "@/lib/whatsapp";
 import {
   IconPeople,
   IconPersonPlus,
@@ -31,18 +40,20 @@ const WEEK_LENGTH = 7;
 // por socio (cumpleaños, entradas de hoy, última entrada...) y con select("*")
 // se calculaban y viajaban todas, incluidas las que acá no se muestran.
 const DASHBOARD_COLUMNS =
-  "id, full_name, photo_url, effective_status, uses_total, uses_remaining, days_left, " +
-  "period_end, checked_in_today, visits_today, last_check_in_at, is_birthday_today";
+  "id, full_name, phone, photo_url, effective_status, uses_total, uses_remaining, days_left, " +
+  "period_start, period_end, checked_in_today, visits_today, last_check_in_at, is_birthday_today";
 
 type DashboardMember = Pick<
   MemberOverview,
   | "id"
   | "full_name"
+  | "phone"
   | "photo_url"
   | "effective_status"
   | "uses_total"
   | "uses_remaining"
   | "days_left"
+  | "period_start"
   | "period_end"
   | "checked_in_today"
   | "visits_today"
@@ -54,6 +65,9 @@ type DashboardMember = Pick<
 // esto se asume que dejó el gimnasio y deja de ocupar el panel (sigue en
 // Socios, con su estado).
 const OVERDUE_WINDOW_DAYS = 30;
+
+// Cuántos inactivos se muestran en Inicio; el resto, en Socios > Inactivos.
+const INACTIVE_LIMIT = 30;
 
 /** "vence hoy" / "vence mañana" / "vence el 20/10", para la lista de cobro. */
 function dueLabel(daysLeft: number | null, periodEnd: string | null): string | null {
@@ -68,8 +82,13 @@ export default async function PanelHome() {
   const today = todayLocal();
   const weekStart = daysAgoLocal(WEEK_LENGTH - 1);
 
-  const [{ data }, { data: paymentsToday }, { data: weekCheckIns }, { data: weekPayments }] =
-    await Promise.all([
+  const [
+    { data },
+    { data: paymentsToday },
+    { data: weekCheckIns },
+    { data: weekPayments },
+    gymName,
+  ] = await Promise.all([
       supabase.from("member_overview").select(DASHBOARD_COLUMNS).is("archived_at", null),
       supabase
         .from("payments")
@@ -82,6 +101,8 @@ export default async function PanelHome() {
         .select("local_date, method, amount_cents")
         .gte("local_date", weekStart)
         .is("voided_at", null),
+      // Para los mensajes de WhatsApp. Cacheado: el layout ya lo pidió.
+      getGymName(),
     ]);
   const all = (data ?? []) as unknown as DashboardMember[];
   const pagos = paymentsToday ?? [];
@@ -140,6 +161,13 @@ export default async function PanelHome() {
   const vencidosSinRenovar = vencidos
     .filter((m) => m.period_end != null && m.period_end >= overdueSince)
     .sort((a, b) => (a.period_end ?? "").localeCompare(b.period_end ?? ""));
+
+  // Pagan pero no vienen (ver lib/inactive.ts). Los que hace más que no
+  // vienen, primero.
+  const inactivos = all
+    .filter((m) => isInactive(m, today))
+    .map((m) => ({ m, days: daysWithoutComing(m, today) ?? 0 }))
+    .sort((a, b) => b.days - a.days);
 
   return (
     <div className="space-y-8">
@@ -201,7 +229,23 @@ export default async function PanelHome() {
             ) : (
               <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(22rem,100%),1fr))]`}>
                 {porVencer.map((m) => (
-                  <ListRow key={m.id} member={m}>
+                  <ListRow
+                    key={m.id}
+                    member={m}
+                    action={
+                      <WhatsAppLink
+                        phone={m.phone}
+                        name={m.full_name}
+                        message={expiringMessage({
+                          fullName: m.full_name,
+                          gymName,
+                          periodEnd: m.period_end,
+                          daysLeft: m.days_left,
+                          usesRemaining: m.uses_remaining,
+                        })}
+                      />
+                    }
+                  >
                     {m.uses_total != null && m.uses_remaining != null ? (
                       <div className="w-28 sm:w-36 shrink-0">
                         <UsesTally total={m.uses_total} remaining={m.uses_remaining} size="sm" />
@@ -235,12 +279,68 @@ export default async function PanelHome() {
                           : `Venció el ${formatDayMonth(m.period_end)}`}
                       </span>
                     }
+                    action={
+                      <WhatsAppLink
+                        phone={m.phone}
+                        name={m.full_name}
+                        message={expiredMessage({
+                          fullName: m.full_name,
+                          gymName,
+                          periodEnd: m.period_end,
+                          exhausted: m.effective_status === "exhausted",
+                        })}
+                      />
+                    }
                   />
                 ))}
               </ul>
             )}
           </section>
         </div>
+      )}
+
+      {inactivos.length > 0 && (
+        <section className="flex flex-col min-w-0">
+          <ListHeader
+            title={`No vienen hace ${INACTIVE_DAYS} días o más`}
+            count={inactivos.length}
+            hint="Tienen el pase al día pero hace rato que no entran. Un mensaje a tiempo ayuda a que no lo dejen."
+            tone="neutral"
+            action={
+              <Link
+                href="/panel/socios?f=inactivos"
+                className="text-tiny font-medium text-plate-blue hover:underline underline-offset-4 shrink-0"
+              >
+                Ver todos
+              </Link>
+            }
+          />
+          <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))]`}>
+            {inactivos.slice(0, INACTIVE_LIMIT).map(({ m, days }) => {
+              const neverCame = !cameDuringCurrentPass(m);
+              return (
+                <ListRow
+                  key={m.id}
+                  member={m}
+                  subtitle={
+                    <span className="text-txt-faint">
+                      {neverCame
+                        ? `No vino en este pase · ${days} días`
+                        : `Hace ${days} días que no viene`}
+                    </span>
+                  }
+                  action={
+                    <WhatsAppLink
+                      phone={m.phone}
+                      name={m.full_name}
+                      message={inactiveMessage({ fullName: m.full_name, gymName, days, neverCame })}
+                    />
+                  }
+                />
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {cumpleañosHoy.length > 0 && (
@@ -257,16 +357,21 @@ export default async function PanelHome() {
 
           <ul className="mt-1 grid grid-cols-1 gap-x-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {cumpleañosHoy.map((m) => (
-              <li key={m.id}>
+              <li key={m.id} className="flex items-center gap-1">
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2.5 flex items-center gap-3 group"
+                  className="flex-1 min-w-0 py-2.5 flex items-center gap-3 group"
                 >
                   <Avatar name={m.full_name} url={m.photo_url} size={32} />
                   <span className="flex-1 min-w-0 truncate text-base group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
                 </Link>
+                <WhatsAppLink
+                  phone={m.phone}
+                  name={m.full_name}
+                  message={birthdayMessage({ fullName: m.full_name, gymName })}
+                />
               </li>
             ))}
           </ul>
@@ -328,16 +433,22 @@ const SCROLL_LIST =
 function ListRow({
   member: m,
   subtitle,
+  action,
   children,
 }: {
   member: DashboardMember;
   subtitle?: React.ReactNode;
+  /** Va al lado del link a la ficha, no adentro (p. ej. WhatsApp). */
+  action?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
-    <li className="border-b border-line">
-      <Link href={`/panel/socios/${m.id}`} className="py-2 min-h-12 flex items-center gap-3 group">
+    <li className="border-b border-line flex items-center gap-1">
+      <Link
+        href={`/panel/socios/${m.id}`}
+        className="flex-1 min-w-0 py-2 min-h-12 flex items-center gap-3 group"
+      >
         <Avatar name={m.full_name} url={m.photo_url} size={28} />
         <span className="flex-1 sm:flex-none sm:w-44 min-w-0">
           <span className="block truncate text-base leading-tight group-hover:text-plate-blue transition-colors">
@@ -355,6 +466,7 @@ function ListRow({
         </span>
         {children}
       </Link>
+      {action}
     </li>
   );
 }
@@ -364,21 +476,23 @@ function ListHeader({
   count,
   hint,
   tone,
+  action,
 }: {
   title: string;
   count: number;
   hint: string;
-  tone: "amber" | "red";
+  tone: "amber" | "red" | "neutral";
+  action?: React.ReactNode;
 }) {
+  const dot =
+    tone === "amber" ? "bg-plate-amber" : tone === "red" ? "bg-plate-red" : "bg-line-strong";
   return (
     <div className="pb-3 border-b border-line">
       <div className="flex items-center gap-2">
-        <span
-          className={`size-2 rounded-full shrink-0 ${tone === "amber" ? "bg-plate-amber" : "bg-plate-red"}`}
-          aria-hidden="true"
-        />
+        <span className={`size-2 rounded-full shrink-0 ${dot}`} aria-hidden="true" />
         <h2 className="h3">{title}</h2>
         <span className="num text-tiny text-txt-faint">{count}</span>
+        {action && <span className="ml-auto">{action}</span>}
       </div>
       <p className="mt-0.5 text-tiny text-txt-faint">{hint}</p>
     </div>
