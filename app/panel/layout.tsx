@@ -27,9 +27,16 @@ export default async function PanelLayout({
   // dice si está en la allowlist (null = no es admin), así que no hace falta
   // preguntar is_admin() aparte. getCurrentAdminRole está cacheado por
   // request: si la página también pide el rol, no hay un segundo viaje.
-  const [role, { data: setting }] = await Promise.all([
+  // Quién está logueado, para mostrar su nombre abajo del menú. getClaims
+  // verifica el JWT acá mismo (sin ir a Supabase Auth).
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = (claimsData?.claims?.sub as string | undefined) ?? "";
+  const userEmail = (claimsData?.claims?.email as string | undefined) ?? "";
+
+  const [role, { data: setting }, { data: me }] = await Promise.all([
     getCurrentAdminRole(),
     supabase.from("settings").select("value").eq("key", "gym_name").single(),
+    supabase.from("admins").select("full_name, email").eq("user_id", userId).maybeSingle(),
   ]);
 
   if (!role) {
@@ -40,6 +47,7 @@ export default async function PanelLayout({
   const gymName = (setting?.value as string) ?? "CAREF";
 
   const roleLabel = ROLE_LABEL[role];
+  const displayName = staffDisplayName(me?.full_name, me?.email ?? userEmail);
 
   const salir = (
     <form action={signOut}>
@@ -61,8 +69,10 @@ export default async function PanelLayout({
   const account = (
     <div className="flex items-center justify-between gap-2 px-1">
       <div className="min-w-0 px-2">
-        <p className="text-tiny font-medium text-txt truncate">{roleLabel}</p>
-        <p className="text-micro text-txt-faint truncate">{gymName}</p>
+        <p className="text-tiny font-medium text-txt truncate" title={me?.email ?? userEmail}>
+          {displayName}
+        </p>
+        <p className="text-micro text-txt-faint truncate">{roleLabel}</p>
       </div>
       <div className="flex items-center gap-0.5 shrink-0">
         <ThemeToggle />
@@ -114,4 +124,17 @@ export default async function PanelLayout({
       </div>
     </div>
   );
+}
+
+/** El nombre cargado en la cuenta; si no tiene, uno armado con el email
+ *  ("juan.perez92@gmail.com" → "Juan Perez"). */
+function staffDisplayName(fullName: string | null | undefined, email: string): string {
+  if (fullName?.trim()) return fullName.trim();
+  const local = email.split("@")[0] ?? "";
+  const words = local
+    .replace(/\d+/g, " ")
+    .split(/[._\-\s]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  return words.join(" ") || "Mi cuenta";
 }

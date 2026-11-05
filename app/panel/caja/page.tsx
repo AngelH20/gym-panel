@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { CloseRegisterForm } from "./CloseRegisterForm";
 import { OpenRegisterForm } from "./OpenRegisterForm";
 import { VoidSaleButton } from "./VoidSaleButton";
+import { MoreOptions } from "./MoreOptions";
 
 type PaymentRow = Payment & { members: { full_name: string } | null };
 
@@ -39,9 +40,11 @@ function shiftDate(date: string, days: number) {
 export default async function CajaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; ver?: string }>;
 }) {
-  const { date: dateParam } = await searchParams;
+  const { date: dateParam, ver } = await searchParams;
+  // "Más opciones" → Cobros anulados: otra vista de la misma pantalla.
+  const showVoids = ver === "anulados";
   const today = todayLocal();
   const date = dateParam ?? today;
   const isToday = date === today;
@@ -70,12 +73,15 @@ export default async function CajaPage({
         .limit(30),
       // Cacheado por request: el layout ya lo pidió, no es otro viaje.
       getCurrentAdminRole(),
-      supabase
-        .from("payments")
-        .select("*, members(full_name)")
-        .not("voided_at", "is", null)
-        .order("voided_at", { ascending: false })
-        .limit(40),
+      // Los anulados solo se piden cuando se abre esa vista.
+      showVoids
+        ? supabase
+            .from("payments")
+            .select("*, members(full_name)")
+            .not("voided_at", "is", null)
+            .order("voided_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] as PaymentRow[] }),
     ]);
 
   const payments = (paymentsRaw ?? []) as PaymentRow[];
@@ -103,6 +109,8 @@ export default async function CajaPage({
     else voidsBySale.set(key, { ...v });
   }
   const voids = [...voidsBySale.values()];
+
+  if (showVoids) return <VoidsView voids={voids} />;
 
   const totals = closing
     ? { cash: closing.total_cash_cents, transfer: closing.total_transfer_cents }
@@ -150,6 +158,25 @@ export default async function CajaPage({
                 <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
               </span>
             )}
+            <MoreOptions
+              items={[
+                {
+                  href: "/panel/caja?ver=anulados",
+                  label: "Cobros anulados",
+                  hint: "Quién anuló cada venta, cuándo y por qué",
+                },
+                ...(payments.length > 0
+                  ? [
+                      {
+                        href: `/panel/caja/export?date=${date}`,
+                        label: "Exportar este día",
+                        hint: "Planilla CSV con los movimientos",
+                        download: true,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </div>
         }
       />
@@ -238,18 +265,13 @@ export default async function CajaPage({
 
       {/* Los dos listados, lado a lado en escritorio para no dejar media
           pantalla vacía */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
-      <section className="card p-5">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="h3">
-            Movimientos de esta caja <span className="num font-normal text-txt-faint">{active.length}</span>
-          </h2>
-          {payments.length > 0 && (
-            <a href={`/panel/caja/export?date=${date}`} className="btn-ghost btn-sm">
-              Exportar
-            </a>
-          )}
-        </div>
+      {/* Los dos listados con la misma altura; cada uno se scrollea por
+          dentro si no entra. */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <section className={LIST_CARD}>
+        <h2 className="h3 mb-3 shrink-0">
+          Movimientos de esta caja <span className="num font-normal text-txt-faint">{active.length}</span>
+        </h2>
 
         {payments.length === 0 ? (
           <EmptyState
@@ -257,7 +279,7 @@ export default async function CajaPage({
             description="Todavía no se registró ninguna venta este día."
           />
         ) : (
-          <ul className="datalist">
+          <ul className={`datalist ${LIST_SCROLL}`}>
             {payments.map((p) => {
               const sale = saleTotals.get(saleKey(p));
               return (
@@ -298,13 +320,15 @@ export default async function CajaPage({
         )}
       </section>
 
-      <section className="card p-5">
-        <h2 className="h3 mb-3">Historial de cajas</h2>
+      <section className={LIST_CARD}>
+        <h2 className="h3 mb-3 shrink-0">
+          Historial de cajas <span className="num font-normal text-txt-faint">{history.length}</span>
+        </h2>
 
         {history.length === 0 ? (
           <p className="text-base text-txt-soft">Todavía no se cerró ninguna caja.</p>
         ) : (
-          <ul className="datalist">
+          <ul className={`datalist ${LIST_SCROLL}`}>
             {history.map((h) => (
               <li key={h.id} className="py-3 flex items-center justify-between gap-3">
                 <Link
@@ -350,12 +374,27 @@ export default async function CajaPage({
       </section>
       </div>
 
-      {voids.length > 0 && (
-        <section className="card p-5">
-          <h2 className="h3 mb-1">Cobros anulados</h2>
-          <p className="mb-3 text-tiny text-txt-soft">
-            Quién anuló cada venta, cuándo y por qué. Las más recientes primero.
-          </p>
+    </div>
+  );
+}
+
+const LIST_CARD = "card p-5 flex flex-col h-[26rem] lg:h-[34rem]";
+const LIST_SCROLL = "flex-1 min-h-0 overflow-y-auto -mr-3 pr-3 [scrollbar-gutter:stable]";
+
+/** Caja → Más opciones → Cobros anulados. */
+function VoidsView({ voids }: { voids: PaymentRow[] }) {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        back={{ href: "/panel/caja", label: "Caja" }}
+        title="Cobros anulados"
+        description="Quién anuló cada venta, cuándo y por qué. Las más recientes primero."
+      />
+
+      <section className="card p-5">
+        {voids.length === 0 ? (
+          <EmptyState title="Sin anulaciones" description="Todavía no se anuló ningún cobro." />
+        ) : (
           <ul className="datalist">
             {voids.map((v) => (
               <li key={v.id} className="py-3 flex items-center justify-between gap-3">
@@ -372,7 +411,7 @@ export default async function CajaPage({
                     el {formatDateTime(v.voided_at)} · venta del{" "}
                     <Link
                       href={`/panel/caja?date=${v.local_date}`}
-                      className="hover:text-plate-blue transition-colors"
+                      className="underline-offset-2 hover:underline hover:text-plate-blue transition-colors"
                     >
                       {formatDate(v.local_date)}
                     </Link>
@@ -381,14 +420,14 @@ export default async function CajaPage({
                     <p className="mt-0.5 text-tiny text-txt-soft">“{v.void_reason}”</p>
                   )}
                 </div>
-                <span className="font-mono text-base font-medium shrink-0 line-through text-txt-faint">
+                <span className="num text-base font-medium shrink-0 line-through text-txt-faint">
                   {formatMoney(v.amount_cents)}
                 </span>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+      </section>
     </div>
   );
 }
