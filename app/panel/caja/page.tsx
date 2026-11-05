@@ -19,7 +19,7 @@ import { VoidSaleButton } from "./VoidSaleButton";
 import { MoreOptions } from "./MoreOptions";
 import { CashMovementForm } from "./CashMovementForm";
 import { VoidMovementButton } from "./VoidMovementButton";
-import { UnclosedRegisterBanner } from "../UnclosedRegisterBanner";
+import { UnclosedRegisterBanner, preloadUnclosedRegisters } from "../UnclosedRegisterBanner";
 import {
   cashMovementKindLabel,
   fetchCashMovements,
@@ -68,6 +68,9 @@ export default async function CajaPage({
   const isToday = date === today;
 
   const supabase = await createClient();
+  // El aviso de caja sin cerrar (solo en la vista principal) sale junto con
+  // el resto de las consultas, no después.
+  if (!showVoids && !showManage) preloadUnclosedRegisters();
 
   const [
     { data: paymentsRaw },

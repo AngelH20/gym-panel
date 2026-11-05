@@ -7,6 +7,7 @@ import { StatCard } from "@/components/StatCard";
 import { PageHeader } from "@/components/PageHeader";
 import { WhatsAppLink } from "@/components/WhatsAppLink";
 import { getGymName } from "@/lib/gym";
+import { fetchCheckInStats } from "@/lib/checkInStats";
 import {
   cameDuringCurrentPass,
   daysWithoutComing,
@@ -33,7 +34,7 @@ import {
 } from "@/lib/labels";
 import { WeeklyAttendanceChart, type DayCount } from "./WeeklyAttendanceChart";
 import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
-import { UnclosedRegisterBanner } from "./UnclosedRegisterBanner";
+import { UnclosedRegisterBanner, preloadUnclosedRegisters } from "./UnclosedRegisterBanner";
 
 const WEEK_LENGTH = 7;
 
@@ -82,11 +83,13 @@ export default async function PanelHome() {
   const supabase = await createClient();
   const today = todayLocal();
   const weekStart = daysAgoLocal(WEEK_LENGTH - 1);
+  // El aviso de caja sin cerrar sale junto con el resto, no después.
+  preloadUnclosedRegisters();
 
   const [
     { data },
     { data: paymentsToday },
-    { data: weekCheckIns },
+    weekStats,
     { data: weekPayments },
     gymName,
   ] = await Promise.all([
@@ -96,7 +99,9 @@ export default async function PanelHome() {
         .select("amount_cents, method")
         .eq("local_date", today)
         .is("voided_at", null),
-      supabase.from("check_ins").select("local_date").gte("local_date", weekStart),
+      // Entradas por día, ya contadas en Postgres (sql/50; ver
+      // lib/checkInStats.ts). Antes venía una fila por entrada de la semana.
+      fetchCheckInStats(supabase, weekStart),
       supabase
         .from("payments")
         .select("local_date, method, amount_cents")
@@ -114,13 +119,9 @@ export default async function PanelHome() {
     return { date, label: weekdayShort(date) };
   });
 
-  const checkInsByDay = new Map<string, number>();
-  for (const c of weekCheckIns ?? []) {
-    checkInsByDay.set(c.local_date, (checkInsByDay.get(c.local_date) ?? 0) + 1);
-  }
   const attendanceData: DayCount[] = week.map((d) => ({
     ...d,
-    count: checkInsByDay.get(d.date) ?? 0,
+    count: weekStats.byDay[d.date] ?? 0,
   }));
 
   const revenueByDay = new Map<string, { cash: number; transfer: number }>();
