@@ -11,6 +11,7 @@ const styles: Record<EffectiveStatus, { text: string; dot: string }> = {
   exhausted: { text: "text-plate-red", dot: "bg-plate-red" },
   suspended: { text: "text-txt-faint", dot: "bg-line-strong" },
   no_membership: { text: "text-txt-faint", dot: "bg-line-strong" },
+  paused: { text: "text-txt-soft", dot: "bg-plate-blue" },
 };
 
 /** Estado como punto + rótulo chico, sin fondo de color. */

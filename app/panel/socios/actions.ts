@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { todayLocal } from "@/lib/labels";
+import { addDaysLocal, todayLocal } from "@/lib/labels";
 
 type Result = { error?: string };
 
@@ -333,6 +333,65 @@ export async function updateMembershipPlan(_prev: unknown, formData: FormData): 
   revalidatePath(`/panel/socios/${member_id}`);
 
   if (error) return { error: error.message };
+  return {};
+}
+
+/** Tope de una pausa, en días. El mismo que pone pause_membership en la base. */
+const MAX_PAUSE_DAYS = 90;
+
+/** Mensaje legible si la base todavía no tiene sql/33_pause_membership.sql. */
+function pauseRpcError(error: { code?: string; message: string }): string {
+  if (error.code === "PGRST202" || error.code === "42883") {
+    return "Falta aplicar la actualización de la base para pausar pases (sql/33).";
+  }
+  return error.message;
+}
+
+/** Pausa el pase vigente hasta una fecha de vuelta. Los días de pausa se le
+ *  suman al vencimiento. Solo dueño o programador (lo controla la base). */
+export async function pauseMembership(_prev: unknown, formData: FormData): Promise<Result> {
+  const membership_id = String(formData.get("membership_id") ?? "");
+  const until = String(formData.get("until") ?? "").trim();
+  const reason = String(formData.get("reason") ?? "").trim();
+
+  if (!membership_id) return { error: "No se encontró el pase." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(until)) return { error: "Elegí la fecha de vuelta." };
+
+  const today = todayLocal();
+  if (until <= today) return { error: "La fecha de vuelta tiene que ser posterior a hoy." };
+  if (until > addDaysLocal(today, MAX_PAUSE_DAYS)) {
+    return { error: `La pausa puede durar como mucho ${MAX_PAUSE_DAYS} días.` };
+  }
+  if (reason.length > 300) {
+    return { error: "El motivo es demasiado largo (máximo 300 caracteres)." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("pause_membership", {
+    p_membership_id: membership_id,
+    p_until: until,
+    p_reason: reason || null,
+  });
+
+  // Cambia el estado del socio en Inicio, Socios y la ficha.
+  revalidatePath("/panel", "layout");
+  if (error) return { error: pauseRpcError(error) };
+  return {};
+}
+
+/** Reanuda un pase pausado antes de la fecha de vuelta: los días que no usó
+ *  se le restan del vencimiento. */
+export async function resumeMembership(_prev: unknown, formData: FormData): Promise<Result> {
+  const membership_id = String(formData.get("membership_id") ?? "");
+  if (!membership_id) return { error: "No se encontró el pase." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("resume_membership", {
+    p_membership_id: membership_id,
+  });
+
+  revalidatePath("/panel", "layout");
+  if (error) return { error: pauseRpcError(error) };
   return {};
 }
 

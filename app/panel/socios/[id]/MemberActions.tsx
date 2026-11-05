@@ -42,7 +42,9 @@ export function MemberActions({
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [archiveState, archiveAction] = useActionState(archiveMember, null);
   const [showMore, setShowMore] = useState(false);
-  const needsRenewal = member.effective_status !== "active";
+  // Un pase pausado sigue vigente: se renueva, no se "activa".
+  const needsRenewal =
+    member.effective_status !== "active" && member.effective_status !== "paused";
 
   const [state, action] = useActionState(sellMembership, null);
   const [statusState, statusAction] = useActionState(setMemberStatus, null);

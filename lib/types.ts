@@ -13,7 +13,10 @@ export type EffectiveStatus =
   | "expired"
   | "exhausted"
   | "suspended"
-  | "no_membership";
+  | "no_membership"
+  /** Pase vigente pero pausado (sql/33_pause_membership.sql): no puede entrar
+   *  hasta paused_until, y no cuenta como "por vencer" ni como "vencido". */
+  | "paused";
 
 export type Plan = {
   id: string;
@@ -85,6 +88,9 @@ export type MemberOverview = {
   /** Si no es null, el socio está dado de baja: fuera de las listas, sin pase. */
   archived_at: string | null;
   archived_by_name: string | null;
+  /** Pausa del pase (sql/33). Opcionales: la vista vieja no las tiene. */
+  paused_until?: string | null;
+  is_paused?: boolean;
 };
 
 export type Membership = {
@@ -97,6 +103,13 @@ export type Membership = {
   uses_remaining: number;
   status: MembershipStatus;
   created_at: string;
+  /** Última pausa del pase (sql/33). Opcionales: antes de aplicar el parche
+   *  las columnas no existen. Está pausado mientras paused_until > hoy. */
+  paused_at?: string | null;
+  paused_until?: string | null;
+  paused_by?: string | null;
+  paused_by_name?: string | null;
+  pause_reason?: string | null;
 };
 
 /** Resultado de perform_check_in_by_dni(). */
@@ -112,7 +125,8 @@ export type CheckInResult = {
     | "EXPIRED"
     | "NO_USES_LEFT"
     | "COOLDOWN"
-    | "RATE_LIMITED";
+    | "RATE_LIMITED"
+    | "PAUSED";
   message: string;
   member_name?: string;
   photo_url?: string | null;
@@ -123,6 +137,8 @@ export type CheckInResult = {
   visits_today?: number;
   checked_in_at?: string;
   is_birthday?: boolean;
+  /** Con PAUSED: fecha de vuelta ("YYYY-MM-DD"). */
+  paused_until?: string;
 };
 
 export type AccessMode = "off" | "pin" | "rotating";
