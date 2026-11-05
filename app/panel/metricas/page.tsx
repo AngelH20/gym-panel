@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
 import { IconPeople, IconCheck, IconAlert, IconPersonPlus, IconActivity, IconClock, IconCalendar } from "@/components/icons";
-import { todayLocal, daysAgoLocal, hourLocal, weekdayIndex, WEEKDAY_LABELS } from "@/lib/labels";
+import { todayLocal, daysAgoLocal, WEEKDAY_LABELS } from "@/lib/labels";
+import { fetchCheckInStats } from "@/lib/checkInStats";
 import { PeakBarChart, type Bin } from "./PeakBarChart";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -60,24 +61,20 @@ export default async function MetricasPage({
 
   const supabase = await createClient();
 
-  let checkInsQuery = supabase
-    .from("check_ins")
-    .select("member_id, checked_in_at, local_date")
-    .order("local_date", { ascending: true });
-  if (start) checkInsQuery = checkInsQuery.gte("local_date", start);
-
-  const [{ data: membersRaw }, { data: checkInsRaw }] = await Promise.all([
+  const [{ data: membersRaw }, stats] = await Promise.all([
     // Solo lo que se cuenta acá: con select("*") la vista calculaba por socio
     // entradas de hoy, última entrada y cumpleaños, que esta pantalla no usa.
     supabase
       .from("member_overview")
       .select("effective_status, joined_on")
       .is("archived_at", null),
-    checkInsQuery,
+    // Las entradas vienen ya contadas desde Postgres (sql/50). Antes se
+    // traían todas las del período (con "Todo", la historia entera) para
+    // contarlas acá. Ver lib/checkInStats.ts.
+    fetchCheckInStats(supabase, start),
   ]);
 
   const members = (membersRaw ?? []) as Pick<MemberOverview, "effective_status" | "joined_on">[];
-  const checkIns = checkInsRaw ?? [];
 
   const activos = members.filter((m) => m.effective_status === "active").length;
   const vencidos = members.filter(
@@ -86,20 +83,20 @@ export default async function MetricasPage({
   const sinPase = members.filter((m) => m.effective_status === "no_membership").length;
   const nuevos = members.filter((m) => start === null || m.joined_on >= start).length;
 
-  const totalVisitas = checkIns.length;
-  const visitantesUnicos = new Set(checkIns.map((c) => c.member_id)).size;
+  const totalVisitas = stats.total;
+  const visitantesUnicos = stats.uniqueMembers;
   const promPorVisitante = visitantesUnicos > 0 ? totalVisitas / visitantesUnicos : 0;
-  const earliest = checkIns[0]?.local_date ?? null;
-  const promedioDiario = totalVisitas / daySpan(start, earliest);
+  const promedioDiario = totalVisitas / daySpan(start, stats.earliest);
 
   const hourBins: Bin[] = Array.from({ length: 24 }, (_, h) => ({
     label: `${h}h`,
-    value: 0,
+    value: stats.byHour[h] ?? 0,
   }));
-  for (const c of checkIns) hourBins[hourLocal(c.checked_in_at)].value++;
 
-  const weekdayBins: Bin[] = WEEKDAY_LABELS.map((label) => ({ label, value: 0 }));
-  for (const c of checkIns) weekdayBins[weekdayIndex(c.local_date)].value++;
+  const weekdayBins: Bin[] = WEEKDAY_LABELS.map((label, i) => ({
+    label,
+    value: stats.byWeekday[i] ?? 0,
+  }));
 
   return (
     <div className="space-y-6">
