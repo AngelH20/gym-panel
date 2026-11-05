@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { Payment, CashClosing, CashOpening } from "@/lib/types";
 import { formatDate, formatDateTime, paymentMethodLabel, todayLocal } from "@/lib/labels";
+import { cashMovementKindLabel, fetchCashMovements, movementTotalsFor } from "@/lib/cashMovements";
 
 /** Envuelve en comillas si hace falta (coma, comilla o salto de línea adentro).
  *
@@ -40,8 +41,13 @@ export async function GET(request: Request) {
 
   const supabase = await createClient();
 
-  const [{ data: role }, { data: paymentsRaw }, { data: closingRaw }, { data: openingRaw }] =
-    await Promise.all([
+  const [
+    { data: role },
+    { data: paymentsRaw },
+    { data: closingRaw },
+    { data: openingRaw },
+    movements,
+  ] = await Promise.all([
       supabase.rpc("current_admin_role"),
       supabase
         .from("payments")
@@ -50,6 +56,8 @@ export async function GET(request: Request) {
         .order("paid_at", { ascending: true }),
       supabase.from("cash_closings").select("*").eq("closing_date", date).maybeSingle(),
       supabase.from("cash_openings").select("*").eq("opening_date", date).maybeSingle(),
+      // Gastos e ingresos (sql/32). Si la tabla no existe, vacío.
+      fetchCashMovements(supabase, date, true),
     ]);
 
   if (!role) return new NextResponse("No autorizado", { status: 403 });
@@ -99,11 +107,50 @@ export async function GET(request: Request) {
     ]);
   }
 
+  // Gastos e ingresos: monto con signo (− gasto, + ingreso).
+  const mov = movementTotalsFor(closing, movements);
+  if (movements.length > 0) {
+    csv += "\r\n";
+    csv += csvRow(["Gastos e ingresos"]);
+    csv += csvRow(["Hora", "Tipo", "Motivo", "Método", "Monto", "Cargó", "Anulado"]);
+    for (const m of movements) {
+      csv += csvRow([
+        formatDateTime(m.created_at),
+        cashMovementKindLabel[m.kind],
+        m.reason,
+        paymentMethodLabel[m.method],
+        (m.kind === "expense" ? -m.amount_cents : m.amount_cents) / 100,
+        m.created_by_name ?? "",
+        m.voided_at
+          ? `Sí, por ${m.voided_by_name ?? "un admin"} el ${formatDateTime(m.voided_at)}${
+              m.void_reason ? ` (${m.void_reason})` : ""
+            }`
+          : "",
+      ]);
+    }
+  }
+
   csv += "\r\n";
   if (opening) csv += csvRow(["Fondo inicial", opening.starting_cash_cents / 100]);
   csv += csvRow(["Efectivo", totals.cash / 100]);
   csv += csvRow(["Transferencia", totals.transfer / 100]);
   csv += csvRow(["Total", total / 100]);
+  if (movements.length > 0) {
+    csv += csvRow(["Ingresos en efectivo", mov.incomeCash / 100]);
+    csv += csvRow(["Ingresos por transferencia", mov.incomeTransfer / 100]);
+    csv += csvRow(["Gastos en efectivo", -mov.expenseCash / 100]);
+    csv += csvRow(["Gastos por transferencia", -mov.expenseTransfer / 100]);
+    csv += csvRow([
+      "Neto del día",
+      (total + mov.incomeCash + mov.incomeTransfer - mov.expenseCash - mov.expenseTransfer) / 100,
+    ]);
+    if (opening && !closing) {
+      csv += csvRow([
+        "Efectivo esperado",
+        (opening.starting_cash_cents + totals.cash + mov.incomeCash - mov.expenseCash) / 100,
+      ]);
+    }
+  }
 
   if (closing?.counted_cash_cents != null && closing.difference_cents != null) {
     csv += "\r\n";
