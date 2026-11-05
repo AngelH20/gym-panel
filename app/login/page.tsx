@@ -26,7 +26,10 @@ export default async function LoginPage({
 
   return (
     <main
-      className="min-h-dvh flex items-start sm:items-center justify-center bg-surface px-6 pt-16 pb-12 sm:py-12"
+      // text-txt acá y no solo en <body>: el color que hereda del body ya
+      // viene calculado con los tokens del modo oscuro, y sin esto lo que no
+      // tiene clase de color (el nombre "CAREF") quedaba gris claro sobre blanco.
+      className="min-h-dvh flex items-start sm:items-center justify-center bg-surface text-txt px-6 pt-16 pb-12 sm:py-12"
       style={LIGHT_TOKENS}
     >
       <div className="w-full max-w-sm">

@@ -37,7 +37,10 @@ export default async function CheckInPage({
 
   return (
     <main
-      className="min-h-dvh flex flex-col items-center bg-surface"
+      // text-txt acá y no solo en <body>: el color que hereda del body ya
+      // viene calculado con los tokens del modo oscuro, y sin esto el nombre
+      // del gimnasio y el mensaje del resultado quedaban gris claro sobre blanco.
+      className="min-h-dvh flex flex-col items-center bg-surface text-txt"
       style={
         {
           colorScheme: "light",
