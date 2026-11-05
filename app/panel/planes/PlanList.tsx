@@ -16,7 +16,7 @@ export function PlanList({
   const [editing, setEditing] = useState<string | "new" | null>(null);
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3 lg:items-start">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3 lg:items-start">
       {plans.length === 0 && editing !== "new" && (
         <div className="lg:col-span-2 2xl:col-span-3">
           <EmptyState
@@ -53,8 +53,8 @@ export function PlanList({
         plans.length > 0 && (
           <button
             onClick={() => setEditing("new")}
-            className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border border-dashed border-line-strong
-                       py-4 text-tiny font-medium text-txt-soft
+            className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border-2 border-dashed border-line-strong
+                       min-h-14 py-4 text-base font-semibold text-txt-soft
                        hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
                        transition-colors"
           >
@@ -95,21 +95,21 @@ function PlanRow({
       </div>
 
       {/* Los dos números que definen el plan, con peso propio */}
-      <div className="mt-4 flex gap-6">
+      <div className="mt-4 flex items-baseline gap-6">
         <div>
-          <span className="font-mono text-title font-semibold">
+          <span className="scoreboard text-huge">
             {plan.uses_per_period}
           </span>
-          <span className="ml-1.5 text-tiny text-txt-faint">entradas</span>
+          <span className="ml-1.5 text-tiny font-medium text-txt-soft">entradas</span>
         </div>
         <div>
-          <span className="font-mono text-title font-semibold">
+          <span className="scoreboard text-title text-txt-faint">
             {plan.period_days}
           </span>
           <span className="ml-1.5 text-tiny text-txt-faint">días (sin efecto)</span>
         </div>
       </div>
-      <p className="mt-1 text-[10px] text-txt-faint">
+      <p className="mt-2 text-micro text-txt-faint">
         No depende de este número: vence el mismo día del mes siguiente al que paga.
       </p>
 
@@ -148,7 +148,7 @@ function PlanRow({
         {soldCount === 0 && (
           <form action={deletePlan}>
             <input type="hidden" name="id" value={plan.id} />
-            <button className="btn-ghost btn-sm !text-plate-red">Borrar</button>
+            <button className="btn-danger btn-sm">Borrar</button>
           </form>
         )}
       </div>
@@ -167,7 +167,7 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
   );
 
   return (
-    <form action={action} className="card p-5 space-y-4 ring-2 ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-4 border-plate-blue ring-[3px] ring-plate-blue/20">
       <h2 className="h3">{plan ? "Editar plan" : "Nuevo plan"}</h2>
 
       {plan && <input type="hidden" name="id" value={plan.id} />}

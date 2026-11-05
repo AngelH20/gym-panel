@@ -9,33 +9,33 @@
  * que el cambio de pantalla se ve en el mismo momento del toque.
  */
 export default function PanelLoading() {
-  const block = "rounded-control bg-surface-sunk";
+  const block = "rounded-control bg-line/80";
 
   return (
-    <div className="space-y-5 motion-safe:animate-pulse" aria-busy="true" aria-live="polite">
+    <div className="space-y-6 motion-safe:animate-pulse" aria-busy="true" aria-live="polite">
       <span className="sr-only">Cargando…</span>
 
       <div className="space-y-2">
-        <div className={`${block} h-8 w-48`} />
+        <div className={`${block} h-9 w-44`} />
         <div className={`${block} h-4 w-72 max-w-full`} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="card p-4 space-y-3">
-            <div className={`${block} h-3 w-16`} />
-            <div className={`${block} h-6 w-20`} />
+          <div key={i} className="card p-4 space-y-4">
+            <div className={`${block} h-3.5 w-20`} />
+            <div className={`${block} h-9 w-14`} />
           </div>
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {[0, 1].map((i) => (
           <div key={i} className="card p-5 space-y-4">
             <div className={`${block} h-5 w-40`} />
             {[0, 1, 2, 3].map((j) => (
               <div key={j} className="flex items-center gap-3">
-                <div className="size-9 rounded-full bg-surface-sunk shrink-0" />
+                <div className="size-9 rounded-full bg-line/80 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className={`${block} h-3.5 w-3/5`} />
                   <div className={`${block} h-3 w-2/5`} />

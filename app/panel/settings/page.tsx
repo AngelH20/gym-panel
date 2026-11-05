@@ -60,7 +60,7 @@ export default function SettingsPage() {
       <section className="card p-5 space-y-4">
         <h2 className="h3">Colores</h2>
 
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {COLOR_TOKENS.map((token) => {
             const value = theme.colors[token.cssVar] ?? token.default;
             const [r, g, b] = value.split(/\s+/).map(Number);
@@ -77,7 +77,7 @@ export default function SettingsPage() {
                     type="color"
                     value={rgbStringToHex(value)}
                     onChange={(e) => setColor(token.cssVar, hexToRgbString(e.target.value))}
-                    className="size-9 shrink-0 rounded-control border border-line cursor-pointer"
+                    className="size-11 shrink-0 rounded-control border border-line-strong bg-surface p-0.5 cursor-pointer"
                     aria-label={`Elegir color para ${token.label}`}
                   />
                 </div>
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => resetColor(token.cssVar)}
                   disabled={!customized}
-                  className="text-tiny text-txt-faint hover:text-txt transition-colors disabled:opacity-0"
+                  className="min-h-8 text-tiny font-semibold text-txt-soft hover:text-txt underline-offset-4 hover:underline transition-colors disabled:opacity-0"
                 >
                   Restablecer
                 </button>
@@ -139,16 +139,16 @@ export default function SettingsPage() {
         <div className="card overflow-hidden">
           <div className="bg-ink text-txt-onDark px-4 py-3 flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-caref.svg" alt="" className="size-6 object-contain" />
-            <span className="font-display text-base font-semibold">CAREF</span>
-            <span className="ml-auto badge border-plate-blue/35 bg-plate-blue/15 text-plate-blue">
+            <img src="/logo-caref.svg" alt="" className="size-7 object-contain" />
+            <span className="font-display text-lg leading-none font-extrabold">CAREF</span>
+            <span className="ml-auto badge border-plate-green/50 bg-plate-green/20 text-txt-onDark">
               Al día
             </span>
           </div>
 
           <div className="p-5 space-y-4">
             <div>
-              <p className="text-base font-medium">Martina Gómez</p>
+              <p className="text-lg font-semibold">Martina Gómez</p>
               <p className="text-tiny text-txt-faint">Pase Libre · vence en 12 días</p>
             </div>
 

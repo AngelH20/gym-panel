@@ -6,7 +6,7 @@ export type Bin = { label: string; value: number };
 
 const W = 400;
 const PLOT_H = 110;
-const AXIS_H = 20;
+const AXIS_H = 22;
 const H = PLOT_H + AXIS_H;
 const GAP = 3;
 
@@ -39,11 +39,11 @@ export function PeakBarChart({
   return (
     <div>
       {hasData ? (
-        <p className="mb-3 text-tiny text-txt-soft">
+        <p className="mb-4 text-tiny text-txt-soft">
           Pico:{" "}
           <span className="font-medium text-txt">{data[peakIndex].label}</span>
           {" · "}
-          <span className="font-mono font-semibold text-plate-blue">
+          <span className="font-display text-lg leading-none font-extrabold text-plate-blue">
             {data[peakIndex].value}
           </span>{" "}
           {unit}
@@ -91,7 +91,7 @@ export function PeakBarChart({
                     height={Math.max(2, h)}
                     rx={Math.min(3, barW / 2)}
                     className="fill-plate-blue"
-                    opacity={isPeak ? 1 : isHover ? 0.9 : 0.45}
+                    opacity={isPeak ? 1 : isHover ? 0.85 : 0.4}
                   />
                 ) : (
                   <rect x={x} y={PLOT_H - 1.5} width={barW} height={1.5} fill="rgb(var(--color-line-strong))" />
@@ -100,9 +100,9 @@ export function PeakBarChart({
                 {showLabel && (
                   <text
                     x={x + barW / 2}
-                    y={PLOT_H + 14}
+                    y={PLOT_H + 16}
                     textAnchor="middle"
-                    className={`text-[8px] font-mono ${isPeak ? "fill-txt font-semibold" : "fill-txt-faint"}`}
+                    className={`text-[11px] font-sans ${isPeak ? "fill-txt font-bold" : "fill-txt-faint font-medium"}`}
                   >
                     {d.label}
                   </text>
@@ -115,13 +115,13 @@ export function PeakBarChart({
         {hover != null && (
           <div
             className="pointer-events-none absolute -translate-x-1/2 -translate-y-full
-                       rounded-control bg-ink px-2.5 py-1.5 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
+                       rounded-control bg-ink px-3 py-2 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
             style={{
               left: `${((hover * step + step / 2) / W) * 100}%`,
               top: `${(Math.max(0, PLOT_H - (data[hover].value / max) * (PLOT_H - 8)) / H) * 100}%`,
             }}
           >
-            <span className="font-mono font-semibold">{data[hover].value}</span> {unit}
+            <span className="font-display text-lg leading-none font-extrabold">{data[hover].value}</span> {unit}
             <div className="text-txt-onDarkSoft">{data[hover].label}</div>
           </div>
         )}

@@ -37,7 +37,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
   }
 
   return (
-    <form action={action} className="card p-5 space-y-4 ring-2 ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-4 border-plate-blue ring-[3px] ring-plate-blue/20">
       <h2 className="h3">Editar datos</h2>
       <input type="hidden" name="id" value={member.id} />
 
@@ -60,7 +60,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
         />
       </Field>
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Teléfono">
           <input name="phone" defaultValue={member.phone ?? ""} className="field font-mono" />
         </Field>
@@ -123,7 +123,7 @@ function Row({
 }) {
   return (
     <div className={`py-2.5 flex items-baseline gap-3 ${wide ? "sm:col-span-2" : ""}`}>
-      <dt className="text-tiny text-txt-faint w-24 shrink-0">{label}</dt>
+      <dt className="text-tiny font-medium text-txt-faint w-24 shrink-0">{label}</dt>
       <dd className={`text-base truncate ${mono ? "font-mono" : ""}`}>
         {value || <span className="text-txt-faint">—</span>}
       </dd>

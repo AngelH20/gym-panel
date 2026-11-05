@@ -23,10 +23,10 @@ export default function Error({
     <main className="min-h-dvh flex items-center justify-center px-6 bg-surface-sunk">
       <div className="w-full max-w-sm text-center space-y-5">
         <span
-          className="mx-auto flex size-12 items-center justify-center rounded-full bg-plate-red/12 text-plate-red"
+          className="mx-auto flex size-14 items-center justify-center rounded-full bg-plate-red text-txt-onAccent"
           aria-hidden="true"
         >
-          <IconAlert className="size-6" />
+          <IconAlert className="size-7" />
         </span>
 
         <div className="space-y-1.5">

@@ -17,37 +17,37 @@ export const COLOR_TOKENS: ColorToken[] = [
     cssVar: "--color-ink",
     label: "Barra lateral y menú",
     hint: "El cromo oscuro de la barra y la navegación.",
-    default: "21 32 54",
+    default: "19 38 74",
   },
   {
     cssVar: "--color-txt",
     label: "Texto principal",
     hint: "El color de las letras sobre fondos claros.",
-    default: "23 27 31",
+    default: "13 24 43",
   },
   {
     cssVar: "--color-surface",
     label: "Tarjetas y formularios",
     hint: "El fondo de las tarjetas y los campos de carga.",
-    default: "251 251 250",
+    default: "255 255 255",
   },
   {
     cssVar: "--color-surface-sunk",
     label: "Fondo de pantalla",
     hint: "El fondo general, detrás de las tarjetas.",
-    default: "241 242 240",
+    default: "233 237 242",
   },
   {
     cssVar: "--color-line",
     label: "Bordes",
     hint: "Separadores y contornos de los campos.",
-    default: "223 225 221",
+    default: "218 224 231",
   },
   {
     cssVar: "--color-plate-blue",
     label: "Color de acento",
     hint: "Botones principales, links y estados activos.",
-    default: "42 109 177",
+    default: "31 95 175",
   },
 ];
 

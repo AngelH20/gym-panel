@@ -22,7 +22,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
   const [hover, setHover] = useState<number | null>(null);
 
   const max = Math.max(1, ...data.map((d) => d.cash + d.transfer));
-  const barW = Math.min(24, W / data.length - GAP);
+  const barW = Math.min(32, W / data.length - GAP);
   const step = W / data.length;
   const scale = (PLOT_H - 10) / max;
 
@@ -43,7 +43,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
           const x = i * step + (step - barW) / 2;
           const isHover = hover === i;
           const isToday = i === data.length - 1;
-          const op = isHover ? 1 : isToday ? 0.95 : 0.75;
+          const op = isHover || isToday ? 1 : 0.6;
 
           return (
             <g
@@ -70,7 +70,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
                       y={PLOT_H - cashH - (d.cash > 0 ? SEGMENT_GAP : 0) - transferH}
                       width={barW}
                       height={transferH}
-                      rx={4}
+                      rx={3}
                       className="fill-chart-transfer"
                       opacity={op}
                     />
@@ -82,7 +82,7 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
                       y={PLOT_H - cashH}
                       width={barW}
                       height={cashH}
-                      rx={4}
+                      rx={3}
                       className="fill-chart-cash"
                       opacity={op}
                     />
@@ -94,9 +94,9 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
 
               <text
                 x={x + barW / 2}
-                y={PLOT_H + 16}
+                y={PLOT_H + 18}
                 textAnchor="middle"
-                className={`text-[9px] font-mono ${isToday ? "fill-txt font-semibold" : "fill-txt-faint"}`}
+                className={`text-[12px] font-sans ${isToday ? "fill-txt font-bold" : "fill-txt-faint font-medium"}`}
               >
                 {d.label}
               </text>
@@ -108,13 +108,13 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
       {hover != null && (
         <div
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-full
-                     rounded-control bg-ink px-2.5 py-1.5 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
+                     rounded-control bg-ink px-3 py-2 text-tiny text-txt-onDark shadow-lift z-10 whitespace-nowrap"
           style={{
             left: `${((hover * step + step / 2) / W) * 100}%`,
             top: `${(Math.max(0, PLOT_H - (data[hover].cash + data[hover].transfer) * scale) / H) * 100}%`,
           }}
         >
-          <div className="font-mono font-semibold">
+          <div className="font-display text-lg leading-none font-extrabold">
             {formatMoney((data[hover].cash + data[hover].transfer) * 100)}
           </div>
           <div className="flex items-center gap-1.5 text-txt-onDarkSoft">
@@ -129,13 +129,13 @@ export function WeeklyRevenueChart({ data }: { data: DayRevenue[] }) {
         </div>
       )}
 
-      <div className="mt-2 flex items-center justify-center gap-4 text-tiny text-txt-soft">
+      <div className="mt-3 flex items-center justify-center gap-5 text-tiny font-medium text-txt-soft">
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-sm bg-chart-cash shrink-0" aria-hidden="true" />
+          <span className="size-2.5 rounded-[3px] bg-chart-cash shrink-0" aria-hidden="true" />
           Efectivo
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-sm bg-chart-transfer shrink-0" aria-hidden="true" />
+          <span className="size-2.5 rounded-[3px] bg-chart-transfer shrink-0" aria-hidden="true" />
           Transferencia
         </span>
       </div>

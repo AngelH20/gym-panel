@@ -118,8 +118,8 @@ export function RotatingQR({
   const low = pct <= 20;
 
   return (
-    <div className="card p-6 sm:p-8 flex flex-col items-center gap-5 w-full max-w-2xl">
-      <div className="w-full bg-white p-4 rounded-control shadow-inner">
+    <div className="card p-4 sm:p-8 flex flex-col items-center gap-5 w-full max-w-2xl">
+      <div className="w-full bg-white p-3 sm:p-5 rounded-control ring-1 ring-line">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={dataUrl}
@@ -128,8 +128,8 @@ export function RotatingQR({
         />
       </div>
 
-      <div className="w-full space-y-2">
-        <div className="w-full h-1.5 rounded-full bg-line overflow-hidden">
+      <div className="w-full space-y-3">
+        <div className="w-full h-2.5 rounded-full bg-line overflow-hidden">
           <div
             className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${
               low ? "bg-plate-red" : "bg-plate-blue"
@@ -138,21 +138,21 @@ export function RotatingQR({
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-tiny text-txt-faint">
+        <div className="flex items-end justify-between gap-3">
+          <span className="flex items-center gap-2 text-tiny font-semibold text-txt-soft">
             <span
-              className={`size-1.5 rounded-full animate-pulse ${
+              className={`size-2 rounded-full motion-safe:animate-pulse ${
                 low ? "bg-plate-red" : "bg-plate-blue"
               }`}
             />
             Se renueva solo
           </span>
           <span
-            className={`font-mono text-tiny font-medium tabular-nums ${
-              low ? "text-plate-red" : "text-txt-soft"
-            }`}
+            className={`scoreboard text-display ${low ? "text-plate-red" : "text-txt"}`}
+            aria-live="off"
           >
-            {shown}s
+            {shown}
+            <span className="text-title text-txt-faint">s</span>
           </span>
         </div>
       </div>

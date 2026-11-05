@@ -47,20 +47,20 @@ export default async function CumpleañosPage() {
       <h1 className="h1">Cumpleaños</h1>
 
       {hoy.length > 0 && (
-        <section className="card p-5 border-2 border-plate-amber/40 bg-plate-amber/5">
+        <section className="card p-5 border-plate-amber/60 bg-plate-amber/10">
           <h2 className="h3 mb-3">🎂 Hoy cumplen años</h2>
-          <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
             {hoy.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2 flex items-center gap-3 group"
+                  className="py-2 min-h-14 flex items-center gap-3 group"
                 >
                   <Avatar name={m.full_name} url={m.photo_url} size={40} />
                   <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
-                  <span className="text-tiny text-plate-amberInk font-medium shrink-0">
+                  <span className="text-tiny text-plate-amberInk font-bold shrink-0">
                     Cumple {ageOnNextBirthday(m.birth_date, m.next_birthday)}
                   </span>
                 </Link>
@@ -84,13 +84,13 @@ export default async function CumpleañosPage() {
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2.5 flex items-center gap-3 group"
+                  className="py-2 min-h-14 flex items-center gap-3 group"
                 >
                   <Avatar name={m.full_name} url={m.photo_url} size={36} />
                   <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
-                  <span className="font-mono text-tiny text-txt-soft shrink-0">
+                  <span className="font-mono text-base font-semibold text-txt shrink-0">
                     {formatDayMonth(m.next_birthday)}
                   </span>
                   <span className="text-tiny text-txt-faint shrink-0 w-16 text-right">

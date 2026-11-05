@@ -112,7 +112,7 @@ export function MemberActions({
               </select>
 
               {familySize >= 3 && plans.some((p) => p.is_family) && (
-                <p className="rounded-control border border-plate-blue/30 bg-plate-blue/6 px-3.5 py-3 text-tiny text-txt-soft">
+                <p className="note border-plate-blue/35 bg-plate-blue/8">
                   Su familia tiene {familySize} integrantes: si es del tercero en adelante, le
                   corresponde el pack familiar.
                 </p>
@@ -134,7 +134,7 @@ export function MemberActions({
               </Field>
 
               {projectedEnd && (
-                <p className="rounded-control border border-line bg-surface-sunk px-3.5 py-3 text-tiny text-txt-soft">
+                <p className="note">
                   Con esta fecha, el pase va a valer hasta el{" "}
                   <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>.
                 </p>
@@ -163,8 +163,8 @@ export function MemberActions({
       <div className="border-t border-line">
         <button
           onClick={() => setShowMore(!showMore)}
-          className="w-full px-5 py-3 flex items-center justify-between
-                     text-tiny text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
+          className="w-full px-5 min-h-12 flex items-center justify-between
+                     text-tiny font-semibold text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
           aria-expanded={showMore}
         >
           Más acciones
@@ -305,7 +305,7 @@ export function MemberActions({
           ) : (
             <button
               onClick={() => setConfirmArchive(true)}
-              className="btn-ghost btn-sm !text-plate-red"
+              className="btn-danger btn-sm"
             >
               Dar de baja
             </button>
@@ -337,7 +337,7 @@ export function MemberActions({
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="text-tiny text-txt-faint hover:text-plate-red transition-colors"
+              className="min-h-9 text-tiny text-txt-faint underline-offset-4 hover:underline hover:text-plate-red transition-colors"
               title="Solo para errores de carga, como un socio duplicado"
             >
               Borrar definitivamente (error de carga)

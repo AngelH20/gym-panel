@@ -35,11 +35,11 @@ export default async function AccesoPage() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[70vh] gap-6">
       <div className="text-center space-y-2">
-        <span className="eyebrow inline-flex items-center gap-1.5 justify-center text-plate-blue">
-          <IconQr className="size-3.5" />
+        <span className="h1 inline-flex items-center gap-2 justify-center">
+          <IconQr className="size-7 text-plate-green" />
           Acceso
         </span>
-        <p className="text-base text-txt-soft whitespace-nowrap">
+        <p className="text-base sm:text-lg text-txt-soft text-balance">
           Escaneá este código para registrar tu entrada al gimnasio.
         </p>
       </div>
@@ -50,10 +50,10 @@ export default async function AccesoPage() {
         periodSeconds={periodSeconds}
       />
 
-      <section className="card p-5 w-full max-w-2xl space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="h3 flex items-center gap-1.5">
-            <IconShield className="size-4" />
+      <section className="card p-4 sm:p-5 w-full max-w-2xl space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="h3 flex items-center gap-2">
+            <IconShield className="size-[18px] text-plate-blue" />
             Seguridad
           </h2>
           <span

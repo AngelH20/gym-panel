@@ -24,24 +24,24 @@ export function ThemeToggle() {
   }
 
   // Evita parpadear al hidratar: no se sabe el tema real hasta el efecto.
-  if (isDark === null) return <span className="size-8" aria-hidden="true" />;
+  if (isDark === null) return <span className="size-10" aria-hidden="true" />;
 
   return (
     <button
       onClick={toggle}
       aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
       title={isDark ? "Modo claro" : "Modo oscuro"}
-      className="flex size-8 items-center justify-center rounded-control
+      className="flex size-10 items-center justify-center rounded-control
                  text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised
                  transition-colors"
     >
       {isDark ? (
-        <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4.5" />
           <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
         </svg>
       ) : (
-        <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11Z" />
         </svg>
       )}

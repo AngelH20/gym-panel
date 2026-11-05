@@ -38,16 +38,21 @@ export default async function PanelLayout({
   const gymName = (setting?.value as string) ?? "CAREF";
 
   const logo = (
-    <Link href="/panel" className="flex items-center gap-2.5 min-w-0">
+    <Link href="/panel" className="flex items-center gap-2.5 min-w-0 rounded-control">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-caref.svg" alt="" className="size-11 shrink-0 object-contain" />
-      <span className="font-display text-xl font-semibold truncate">{gymName}</span>
+      <img src="/logo-caref.svg" alt="" className="size-9 md:size-12 shrink-0 object-contain" />
+      <span className="font-display text-[1.375rem] md:text-[1.625rem] leading-none font-extrabold truncate">
+        {gymName}
+      </span>
     </Link>
   );
 
   const salir = (
     <form action={signOut}>
-      <button className="text-tiny text-txt-onDarkSoft hover:text-txt-onDark transition-colors">
+      <button
+        className="min-h-10 px-3 rounded-control text-tiny font-semibold text-txt-onDarkSoft
+                   hover:text-txt-onDark hover:bg-ink-raised transition-colors"
+      >
         Salir
       </button>
     </form>
@@ -57,32 +62,30 @@ export default async function PanelLayout({
     <div className="min-h-dvh md:flex">
       <DateRefresher />
       {/*
-        Sidebar fija a la izquierda en escritorio. Cromo oscuro contra
-        contenido claro, mismo criterio que antes tenía la barra de arriba:
-        el contraste ordena la jerarquía.
+        Barra lateral fija en escritorio: cromo marino del escudo. El link
+        activo se funde con el fondo de la página (ver PanelNav), por eso la
+        barra no lleva borde a la derecha.
       */}
       <aside
-        className="hidden md:flex md:flex-col md:w-60 md:shrink-0 md:sticky md:top-0 md:h-dvh
-                   bg-ink text-txt-onDark border-r border-ink-raised/50"
+        className="chrome hidden md:flex md:flex-col md:w-64 md:shrink-0 md:sticky md:top-0 md:h-dvh
+                   bg-ink text-txt-onDark"
       >
-        <div className="h-20 shrink-0 flex items-center px-4 border-b border-ink-raised/50">
-          {logo}
-        </div>
+        <div className="h-24 shrink-0 flex items-center px-5">{logo}</div>
 
         <PanelNav variant="sidebar" role={role} />
 
-        <div className="shrink-0 px-3 pt-3 border-t border-ink-raised/50">
+        <div className="shrink-0 mx-3 pt-3 border-t border-ink-line">
           <Link
             href="/panel/settings"
-            className="flex items-center gap-3 rounded-control px-3.5 py-2.5 text-base font-medium
-                       text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised/60 transition-colors"
+            className="flex items-center gap-3 min-h-11 rounded-control px-3.5 text-base font-medium
+                       text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised transition-colors"
           >
-            <IconSettings className="size-[18px] shrink-0" />
+            <IconSettings className="size-5 shrink-0" />
             Configuración
           </Link>
         </div>
 
-        <div className="shrink-0 p-4 flex items-center justify-between gap-3">
+        <div className="shrink-0 px-3 py-3 flex items-center justify-between gap-3">
           <ThemeToggle />
           {salir}
         </div>
@@ -90,31 +93,31 @@ export default async function PanelLayout({
 
       <div className="flex-1 min-w-0 flex flex-col">
         {/*
-          En el celular no hay lugar para una columna lateral: el header
-          queda arriba, con la navegación pegada abajo del todo, a mano del
-          pulgar sin competir con la barra de estado del teléfono.
+          En el celular: cabecera corta arriba (marca y cuenta) y la
+          navegación fija abajo, a mano del pulgar (ver PanelNav "mobile").
         */}
-        <header className="md:hidden bg-ink text-txt-onDark sticky top-0 z-30 shadow-chrome">
-          <div className="px-4 h-20 flex items-center justify-between gap-3">
+        <header className="chrome md:hidden bg-ink text-txt-onDark sticky top-0 z-30 shadow-chrome">
+          <div className="px-4 h-14 flex items-center justify-between gap-2">
             {logo}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               <Link
                 href="/panel/settings"
                 aria-label="Personalización"
                 title="Personalización"
-                className="flex size-8 items-center justify-center rounded-control
+                className="flex size-10 items-center justify-center rounded-control
                            text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised transition-colors"
               >
-                <IconSettings className="size-4.5" />
+                <IconSettings className="size-5" />
               </Link>
               <ThemeToggle />
               {salir}
             </div>
           </div>
-          <PanelNav variant="mobile" role={role} />
         </header>
 
-        <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-5">
+        <PanelNav variant="mobile" role={role} />
+
+        <main className="flex-1 w-full px-4 sm:px-6 lg:px-10 pt-5 pb-28 md:pt-8 md:pb-10">
           {children}
         </main>
       </div>

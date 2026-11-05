@@ -21,7 +21,7 @@ export function ArchivedBanner({
   const [state, action] = useActionState(unarchiveMember, null);
 
   return (
-    <section className="card p-5 space-y-3 border-plate-amber/40">
+    <section className="card p-5 space-y-3 border-t-4 border-t-plate-amber">
       <div>
         <h2 className="h3">Dado de baja</h2>
         <p className="mt-1 text-tiny text-txt-soft">

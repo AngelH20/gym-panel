@@ -185,7 +185,7 @@ export function NewMemberForm({
 
   return (
     <form action={action} onSubmit={() => clearDraft()} className="space-y-4">
-      <div className="grid lg:grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="card p-5 space-y-4">
           <Field label="Nombre y apellido">
             <input
@@ -215,7 +215,7 @@ export function NewMemberForm({
             />
           </Field>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Teléfono">
               <input
                 name="phone"
@@ -310,8 +310,8 @@ export function NewMemberForm({
             </div>
 
             {!cajaAbierta && (
-              <div className="rounded-control border border-plate-amber/35 bg-plate-amber/12 p-3.5 space-y-2">
-                <p className="text-tiny text-plate-amberInk">
+              <div className="rounded-control border border-plate-amber/60 bg-plate-amber/15 p-3.5 space-y-2.5">
+                <p className="text-tiny font-medium text-plate-amberInk">
                   La caja de hoy no está abierta. Abrila primero si querés cobrar y activar un pase
                   ahora — el socio se puede crear igual, y activás el pase después.
                 </p>
@@ -332,14 +332,15 @@ export function NewMemberForm({
                     key={p.id}
                     type="button"
                     onClick={() => choosePlan(p)}
-                    className={`text-left rounded-control border px-3.5 py-2.5 transition-colors ${
+                    aria-pressed={active}
+                    className={`text-left rounded-control border px-3.5 py-3 transition-colors ${
                       active
-                        ? "border-plate-blue bg-plate-blue/6"
-                        : "border-line bg-surface-sunk hover:border-line-strong"
+                        ? "border-plate-blue bg-plate-blue/8 ring-1 ring-plate-blue"
+                        : "border-line-strong bg-surface hover:border-txt-faint"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-base font-medium">{p.name}</span>
+                      <span className="text-base font-semibold">{p.name}</span>
                       <span className="text-tiny text-txt-faint shrink-0">
                         {p.uses_per_period} entradas
                       </span>
@@ -379,7 +380,7 @@ export function NewMemberForm({
                 </Field>
 
                 {projectedEnd && (
-                  <p className="rounded-control border border-line bg-surface px-3.5 py-3 text-tiny text-txt-soft">
+                  <p className="note bg-surface">
                     Con esta fecha, el pase va a valer hasta el{" "}
                     <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>.
                   </p>

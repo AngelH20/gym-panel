@@ -1,5 +1,22 @@
 import { LoginForm } from "./LoginForm";
 
+/** Los tokens del tema claro, fijos: el formulario de entrada se ve siempre
+ *  igual, tenga el dispositivo el modo oscuro o no. */
+const LIGHT_TOKENS = {
+  colorScheme: "light",
+  "--color-txt": "13 24 43",
+  "--color-txt-soft": "66 79 100",
+  "--color-txt-faint": "98 111 132",
+  "--color-txt-onAccent": "255 255 255",
+  "--color-surface": "255 255 255",
+  "--color-surface-sunk": "233 237 242",
+  "--color-surface-hover": "243 245 248",
+  "--color-line": "218 224 231",
+  "--color-line-strong": "168 179 194",
+  "--color-plate-red": "180 35 45",
+  "--color-plate-blue": "31 95 175",
+} as React.CSSProperties;
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -8,50 +25,36 @@ export default async function LoginPage({
   const { volver } = await searchParams;
 
   return (
-    <main className="min-h-dvh grid md:grid-cols-2">
-      {/* En celular: barra azul con el logo, angosta, arriba de todo. */}
-      <div className="md:hidden flex items-center gap-2.5 bg-plate-blue text-white px-6 py-5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-caref.svg" alt="" className="size-9 object-contain" />
-        <span className="font-display text-title font-semibold">CAREF</span>
-      </div>
-
+    <main className="min-h-dvh flex flex-col md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] bg-ink">
       {/*
-        Panel oscuro: el mismo cromo que la barra del panel, así el login no
-        parece de otra aplicación. En celular se oculta.
+        Cromo marino del escudo, el mismo de la barra del panel: el login no
+        parece de otra aplicación. En celular queda como una franja arriba;
+        en escritorio ocupa la mitad, con el escudo grande.
       */}
-      <div className="hidden md:flex flex-col bg-ink text-txt-onDark p-6">
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-caref.svg"
-            alt="CAREF"
-            className="w-full max-w-[640px] object-contain"
-          />
-        </div>
+      <div className="chrome text-txt-onDark flex md:flex-col items-center md:items-start md:justify-between gap-4 px-6 py-6 md:p-12">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-caref.svg"
+          alt=""
+          className="size-14 md:size-auto md:w-full md:max-w-[420px] md:mx-auto md:my-auto object-contain"
+        />
 
-        <p className="text-tiny text-txt-onDarkSoft text-center">Panel de gestión</p>
+        <div>
+          <p className="font-display text-[2.5rem] md:text-[5.5rem] leading-[0.9] font-black">
+            CAREF
+          </p>
+          <p className="mt-1 md:mt-3 text-tiny md:text-lg text-txt-onDarkSoft">Panel de gestión</p>
+        </div>
       </div>
 
       <div
-        className="flex items-center justify-center px-6 py-12 bg-surface"
-        style={
-          {
-            colorScheme: "light",
-            "--color-txt": "23 27 31",
-            "--color-txt-soft": "86 92 92",
-            "--color-txt-faint": "138 144 144",
-            "--color-surface": "251 251 250",
-            "--color-surface-sunk": "241 242 240",
-            "--color-surface-hover": "245 246 244",
-            "--color-line": "223 225 221",
-            "--color-line-strong": "200 204 199",
-          } as React.CSSProperties
-        }
+        className="flex-1 flex items-start md:items-center justify-center px-6 pt-10 pb-12 md:p-12
+                   bg-surface rounded-t-[20px] md:rounded-none"
+        style={LIGHT_TOKENS}
       >
-        <div className="w-full max-w-md">
-          <h1 className="h1 md:text-huge">Entrar al panel</h1>
-          <p className="mt-2 mb-8 text-base md:text-lg text-txt-soft">
+        <div className="w-full max-w-sm">
+          <h1 className="h1 md:text-[2.75rem] md:leading-[2.75rem]">Entrar al panel</h1>
+          <p className="mt-3 mb-8 text-base md:text-lg text-txt-soft">
             Usá el email con el que te dieron de alta.
           </p>
 

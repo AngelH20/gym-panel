@@ -96,23 +96,19 @@ export default async function MetricasPage({
   for (const c of checkIns) weekdayBins[weekdayIndex(c.local_date)].value++;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h1 className="h1">Métricas</h1>
-        <p className="mt-1 text-tiny text-txt-soft">Estadísticas de socios y asistencia.</p>
+        <p className="mt-2 text-base text-txt-soft">Estadísticas de socios y asistencia.</p>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-0.5 -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
         {PERIODS.map((x) => (
           <Link
             key={x.key}
             href={`/panel/metricas?p=${x.key}`}
-            className={[
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-tiny font-medium transition-colors",
-              period === x.key
-                ? "bg-ink text-txt-onDark border-ink"
-                : "bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt",
-            ].join(" ")}
+            aria-current={period === x.key ? "page" : undefined}
+            className={period === x.key ? "chip chip-on" : "chip"}
           >
             {x.label}
           </Link>
@@ -144,18 +140,18 @@ export default async function MetricasPage({
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-3">
-        <section className="card p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <section className="card p-4 sm:p-5">
           <h2 className="h3 mb-1 flex items-center gap-2">
-            <IconClock className="size-4 text-txt-faint" />
+            <IconClock className="size-[18px] text-plate-blue" />
             Asistencia por hora
           </h2>
           <PeakBarChart data={hourBins} labelEvery={3} />
         </section>
 
-        <section className="card p-5">
+        <section className="card p-4 sm:p-5">
           <h2 className="h3 mb-1 flex items-center gap-2">
-            <IconCalendar className="size-4 text-txt-faint" />
+            <IconCalendar className="size-[18px] text-plate-blue" />
             Asistencia por día
           </h2>
           <PeakBarChart data={weekdayBins} />

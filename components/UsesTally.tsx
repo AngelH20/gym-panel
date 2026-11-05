@@ -24,22 +24,22 @@ export function UsesTally({
   const numberColor = low ? "text-plate-red" : "text-txt";
 
   const dims = {
-    sm: { bar: "h-1.5", num: "text-tiny" },
-    md: { bar: "h-2", num: "text-base" },
-    lg: { bar: "h-2.5", num: "text-title" },
+    sm: { bar: "h-1.5", num: "font-mono text-tiny font-semibold", gap: "gap-2.5" },
+    md: { bar: "h-2.5", num: "font-mono text-lg font-semibold", gap: "gap-3" },
+    lg: { bar: "h-3.5", num: "scoreboard text-huge", gap: "gap-4" },
   }[size];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className={`flex items-center ${dims.gap}`}>
       <div className={`relative ${dims.bar} flex-1 min-w-14 rounded-full bg-line overflow-hidden`}>
         <div
-          className={`absolute inset-y-0 left-0 rounded-full ${color} transition-[width]`}
+          className={`absolute inset-y-0 left-0 rounded-full ${color} transition-[width] duration-500`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className={`font-mono ${dims.num} font-semibold ${numberColor}`}>
+      <span className={`${dims.num} ${numberColor} whitespace-nowrap`}>
         {remaining}
-        <span className="text-txt-faint font-normal">/{total}</span>
+        <span className="text-txt-faint font-medium">/{total}</span>
       </span>
       <span className="sr-only">Le quedan {remaining} de {total} entradas</span>
     </div>

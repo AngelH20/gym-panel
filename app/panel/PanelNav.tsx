@@ -85,8 +85,11 @@ function isActive(pathname: string, href: string) {
 }
 
 /**
- * "sidebar": columna vertical fija a la izquierda en desktop.
- * "mobile": franja horizontal arriba, debajo del header.
+ * "sidebar": columna vertical fija a la izquierda en desktop. El link activo
+ * se "despega" del cromo y se funde con el fondo de la página, como una
+ * solapa: se ve de un vistazo en qué pantalla estás.
+ * "mobile": barra fija abajo de todo, a mano del pulgar. Si no entran todos
+ * los links, se desliza de costado.
  * En los dos, cada pantalla es su propio link — "Socios" lleva directo a la
  * lista de socios, sin desplegables intermedios.
  */
@@ -101,7 +104,7 @@ export function PanelNav({
 
   if (variant === "sidebar") {
     return (
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto py-4 pl-3 space-y-1" aria-label="Secciones">
         {visibleLinks(role).map((item) => {
           const active = isActive(pathname, item.href);
           return (
@@ -110,30 +113,24 @@ export function PanelNav({
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={[
-                "flex items-center gap-3 rounded-control px-3.5 py-2.5 text-base font-medium",
+                "relative flex items-center gap-3 min-h-11 pl-3.5 pr-4 text-base",
                 "transition-colors duration-150",
                 active
-                  ? "bg-plate-blue/15 text-txt-onDark"
-                  : "text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised/60",
+                  ? "bg-surface-sunk text-txt font-semibold rounded-l-[10px]"
+                  : "mr-3 rounded-control font-medium text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised",
               ].join(" ")}
             >
               <svg
                 viewBox="0 0 24 24"
-                className={`size-[18px] shrink-0 ${active ? "text-plate-blue" : ""}`}
+                className={`size-5 shrink-0 ${active ? "text-plate-blue" : ""}`}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.8"
+                strokeWidth={active ? 2.1 : 1.8}
                 aria-hidden="true"
               >
                 {item.icon}
               </svg>
               {item.label}
-              {active && (
-                <span
-                  className="ml-auto size-1.5 rounded-full bg-plate-blue shrink-0"
-                  aria-hidden="true"
-                />
-              )}
             </Link>
           );
         })}
@@ -142,8 +139,12 @@ export function PanelNav({
   }
 
   return (
-    <nav className="md:hidden overflow-x-auto border-t border-ink-raised/60">
-      <div className="flex gap-1 px-2.5 py-1.5 min-w-max">
+    <nav
+      className="chrome md:hidden fixed inset-x-0 bottom-0 z-30 bg-ink border-t border-ink-line
+                 pb-[env(safe-area-inset-bottom)] overflow-x-auto no-scrollbar"
+      aria-label="Secciones"
+    >
+      <div className="flex min-w-max w-full">
         {visibleLinks(role).map((l) => {
           const active = isActive(pathname, l.href);
           return (
@@ -152,19 +153,25 @@ export function PanelNav({
               href={l.href}
               aria-current={active ? "page" : undefined}
               className={[
-                "flex items-center gap-1.5 shrink-0 rounded-control px-3 py-1.5",
-                "text-tiny font-medium transition-colors",
+                "relative flex-1 min-w-[4.5rem] flex flex-col items-center justify-center gap-1",
+                "h-16 px-1.5 text-[0.6875rem] leading-none transition-colors",
                 active
-                  ? "bg-ink-raised text-txt-onDark"
-                  : "text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised/60",
+                  ? "text-txt-onDark font-semibold"
+                  : "text-txt-onDarkSoft font-medium hover:text-txt-onDark",
               ].join(" ")}
             >
+              {active && (
+                <span
+                  className="absolute top-0 inset-x-3 h-[3px] rounded-b-full bg-plate-amber"
+                  aria-hidden="true"
+                />
+              )}
               <svg
                 viewBox="0 0 24 24"
-                className="size-4 shrink-0"
+                className="size-[22px] shrink-0"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.8"
+                strokeWidth={active ? 2.1 : 1.8}
                 aria-hidden="true"
               >
                 {l.icon}

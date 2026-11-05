@@ -120,25 +120,25 @@ export default async function CajaPage({
     <div className="space-y-5">
       <div>
         <h1 className="h1">Caja</h1>
-        <p className="mt-1.5 text-base text-txt-soft max-w-prose">
+        <p className="mt-2 text-base text-txt-soft max-w-prose">
           Caja y movimientos del día.
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <Link href={`/panel/caja?date=${shiftDate(date, -1)}`} className="btn-ghost btn-sm">
+      <div className="card p-1.5 flex items-center justify-between gap-2">
+        <Link href={`/panel/caja?date=${shiftDate(date, -1)}`} className="btn-ghost btn-sm border-transparent">
           ← Anterior
         </Link>
-        <span className="font-mono text-base font-medium">
+        <span className="font-display text-title leading-none font-extrabold text-center">
           {formatDate(date)}
-          {isToday && <span className="ml-1.5 text-txt-faint font-sans font-normal">(hoy)</span>}
+          {isToday && <span className="ml-1.5 text-tiny text-txt-faint font-sans font-medium">(hoy)</span>}
         </span>
         {!isToday ? (
-          <Link href={`/panel/caja?date=${shiftDate(date, 1)}`} className="btn-ghost btn-sm">
+          <Link href={`/panel/caja?date=${shiftDate(date, 1)}`} className="btn-ghost btn-sm border-transparent">
             Siguiente →
           </Link>
         ) : (
-          <span className="btn-ghost btn-sm invisible">Siguiente →</span>
+          <span className="btn-ghost btn-sm border-transparent invisible">Siguiente →</span>
         )}
       </div>
 
@@ -166,19 +166,19 @@ export default async function CajaPage({
         </div>
 
         {opening && !closing && (
-          <div className="mx-5 mb-5 rounded-control border border-plate-green/25 bg-plate-green/8 p-4 flex flex-wrap items-center justify-between gap-4">
-            <div>
+          <div className="mx-5 mb-5 rounded-control border border-plate-green/35 bg-plate-green/10 p-4 flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
               <p className="eyebrow text-plate-green">Efectivo en caja</p>
-              <p className="mt-1 font-mono text-huge font-semibold text-plate-green leading-none">
+              <p className="mt-2 scoreboard text-huge text-plate-green [overflow-wrap:anywhere]">
                 {formatMoney(expectedCashCents)}
               </p>
-              <p className="mt-1.5 text-tiny text-plate-green/80">
+              <p className="mt-2 text-tiny font-medium text-plate-green">
                 Apertura + ventas en efectivo
               </p>
             </div>
             <div className="text-right">
               <p className="text-tiny text-txt-soft">Monto de apertura</p>
-              <p className="mt-1 font-mono text-base font-medium">
+              <p className="mt-1 font-mono text-lg font-semibold">
                 {formatMoney(opening.starting_cash_cents)}
               </p>
             </div>
@@ -186,17 +186,17 @@ export default async function CajaPage({
         )}
 
         <div className="grid grid-cols-3 divide-x divide-line border-t border-line">
-          <div className="p-4 text-center">
-            <p className="eyebrow">Efectivo</p>
-            <p className="mt-1 font-mono text-lg font-semibold">{formatMoney(totals.cash)}</p>
+          <div className="px-2 py-4 text-center min-w-0">
+            <p className="eyebrow truncate">Efectivo</p>
+            <p className="mt-1 font-mono text-base sm:text-lg font-semibold [overflow-wrap:anywhere]">{formatMoney(totals.cash)}</p>
           </div>
-          <div className="p-4 text-center">
-            <p className="eyebrow">Transferencia</p>
-            <p className="mt-1 font-mono text-lg font-semibold">{formatMoney(totals.transfer)}</p>
+          <div className="px-2 py-4 text-center min-w-0">
+            <p className="eyebrow truncate">Transferencia</p>
+            <p className="mt-1 font-mono text-base sm:text-lg font-semibold [overflow-wrap:anywhere]">{formatMoney(totals.transfer)}</p>
           </div>
-          <div className="p-4 text-center bg-surface-sunk">
-            <p className="eyebrow">Total</p>
-            <p className="mt-1 font-mono text-lg font-semibold">{formatMoney(total)}</p>
+          <div className="px-2 py-4 text-center min-w-0 bg-ink text-txt-onDark">
+            <p className="eyebrow truncate text-txt-onDarkSoft">Total</p>
+            <p className="mt-1 font-mono text-base sm:text-lg font-bold [overflow-wrap:anywhere]">{formatMoney(total)}</p>
           </div>
         </div>
 
@@ -224,14 +224,14 @@ export default async function CajaPage({
       </section>
 
       {isToday && (
-        <div className="grid sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Reabrir una caja ya cerrada borra el cierre: solo dueño o programador. */}
           {(!closing || isManager) && <OpenRegisterForm />}
           <CloseRegisterForm expectedCashCents={expectedCashCents} />
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard label="Efectivo" value={formatMoney(totals.cash)} accent="green" icon={<IconCash />} />
         <StatCard
           label="Transferencia"
@@ -244,11 +244,11 @@ export default async function CajaPage({
 
       {/* Los dos listados, lado a lado en escritorio para no dejar media
           pantalla vacía */}
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
       <section className="card p-5">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="h3 flex items-center gap-2">
-            <IconActivity className="size-4 text-txt-faint" />
+            <IconActivity className="size-[18px] text-plate-blue" />
             Movimientos de esta caja ({active.length})
           </h2>
           {payments.length > 0 && (
@@ -270,7 +270,7 @@ export default async function CajaPage({
               return (
                 <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3">
                   <div className={`flex-1 min-w-0 ${p.voided_at ? "opacity-60" : ""}`}>
-                    <p className={`text-base font-medium truncate ${p.voided_at ? "line-through" : ""}`}>
+                    <p className={`text-base font-semibold truncate ${p.voided_at ? "line-through" : ""}`}>
                       {memberName(p)}
                     </p>
                     <p className="mt-0.5 text-tiny text-txt-faint">
@@ -292,7 +292,7 @@ export default async function CajaPage({
                     />
                   )}
                   <span
-                    className={`font-mono text-base font-medium shrink-0 ${
+                    className={`font-mono text-lg font-semibold shrink-0 ${
                       p.voided_at ? "line-through text-txt-faint" : ""
                     }`}
                   >
@@ -318,7 +318,7 @@ export default async function CajaPage({
                   href={`/panel/caja?date=${h.closing_date}`}
                   className="min-w-0 hover:text-plate-blue transition-colors"
                 >
-                  <p className="text-base font-medium">{formatDate(h.closing_date)}</p>
+                  <p className="text-base font-semibold">{formatDate(h.closing_date)}</p>
                   <p className="mt-0.5 text-tiny text-txt-faint">
                     Efvo. {formatMoney(h.total_cash_cents)} · Transf.{" "}
                     {formatMoney(h.total_transfer_cents)} · {h.payments_count}{" "}
@@ -327,13 +327,14 @@ export default async function CajaPage({
                 </Link>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-mono text-base font-medium">
+                  <span className="font-mono text-lg font-semibold">
                     {formatMoney(h.total_cash_cents + h.total_transfer_cents)}
                   </span>
                   <a
                     href={`/panel/caja/export?date=${h.closing_date}`}
                     title="Descargar CSV"
-                    className="text-txt-faint hover:text-plate-blue transition-colors"
+                    aria-label="Descargar CSV"
+                    className="flex size-10 items-center justify-center rounded-control text-txt-faint hover:text-plate-blue hover:bg-surface-hover transition-colors"
                   >
                     <svg
                       viewBox="0 0 24 24"

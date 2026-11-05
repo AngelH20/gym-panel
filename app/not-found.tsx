@@ -5,8 +5,7 @@ export default function NotFound() {
     <main className="min-h-dvh flex items-center justify-center px-6 bg-surface-sunk">
       <div className="w-full max-w-sm text-center space-y-5">
         <span
-          className="mx-auto flex size-12 items-center justify-center rounded-full
-                     bg-surface border border-line text-txt-faint font-display text-lg font-semibold"
+          className="block scoreboard text-[5rem] text-txt-faint"
           aria-hidden="true"
         >
           404
