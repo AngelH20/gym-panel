@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { AdminRole, Staff } from "@/lib/types";
+import { getCurrentAdminRole } from "@/lib/supabase/role";
+import type { Staff } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import { UsersList } from "./UsersList";
 
@@ -11,14 +12,19 @@ export default async function UsuariosPage() {
   // vuelta al panel: esta pantalla ni aparece en su nav (PanelNav.tsx), y la
   // RLS de admins tampoco le deja ver otras cuentas
   // (sql/28_roles_programador_dueno.sql).
-  const { data: role } = await supabase.rpc("current_admin_role");
-  const actorRole = (role as AdminRole | null) ?? null;
-  if (!isManagerRole(actorRole)) redirect("/panel");
-
-  const [{ data: staff }, { data: userData }] = await Promise.all([
-    supabase.from("admins").select("*").order("created_at"),
+  // Las tres consultas salen juntas: la lista ya la filtra la RLS, y si el rol
+  // no alcanza se descarta sin mostrarse. Antes la lista esperaba al rol.
+  const [role, { data: staff }, { data: userData }] = await Promise.all([
+    // Cacheado por request: el layout ya lo pidió, no es otro viaje.
+    getCurrentAdminRole(),
+    supabase
+      .from("admins")
+      .select("id, user_id, email, full_name, role, created_at")
+      .order("created_at"),
     supabase.auth.getUser(),
   ]);
+  const actorRole = role;
+  if (!isManagerRole(actorRole)) redirect("/panel");
 
   return (
     <div className="space-y-5 max-w-4xl">

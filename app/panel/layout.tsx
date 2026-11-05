@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAdminRole } from "@/lib/supabase/role";
 import { PanelNav } from "./PanelNav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { IconSettings } from "@/components/icons";
@@ -24,9 +25,10 @@ export default async function PanelLayout({
   // Los dos van juntos: son viajes independientes a Supabase y encadenarlos
   // le sumaba una ida y vuelta de red a CADA navegación del panel. El rol ya
   // dice si está en la allowlist (null = no es admin), así que no hace falta
-  // preguntar is_admin() aparte.
-  const [{ data: role }, { data: setting }] = await Promise.all([
-    supabase.rpc("current_admin_role"),
+  // preguntar is_admin() aparte. getCurrentAdminRole está cacheado por
+  // request: si la página también pide el rol, no hay un segundo viaje.
+  const [role, { data: setting }] = await Promise.all([
+    getCurrentAdminRole(),
     supabase.from("settings").select("value").eq("key", "gym_name").single(),
   ]);
 

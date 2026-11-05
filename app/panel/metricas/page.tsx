@@ -66,11 +66,16 @@ export default async function MetricasPage({
   if (start) checkInsQuery = checkInsQuery.gte("local_date", start);
 
   const [{ data: membersRaw }, { data: checkInsRaw }] = await Promise.all([
-    supabase.from("member_overview").select("*").is("archived_at", null),
+    // Solo lo que se cuenta acá: con select("*") la vista calculaba por socio
+    // entradas de hoy, última entrada y cumpleaños, que esta pantalla no usa.
+    supabase
+      .from("member_overview")
+      .select("effective_status, joined_on")
+      .is("archived_at", null),
     checkInsQuery,
   ]);
 
-  const members = (membersRaw ?? []) as MemberOverview[];
+  const members = (membersRaw ?? []) as Pick<MemberOverview, "effective_status" | "joined_on">[];
   const checkIns = checkInsRaw ?? [];
 
   const activos = members.filter((m) => m.effective_status === "active").length;

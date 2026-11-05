@@ -8,17 +8,14 @@ export default async function PlanesPage() {
 
   // Precios y planes son terreno de dueño y programador. Un profesor
   // que entre por URL directa se va de vuelta al panel, no solo se le oculta
-  // el link del nav.
-  const { data: isManager } = await supabase.rpc("is_manager");
+  // el link del nav. Las tres consultas salen juntas (antes iban de a una):
+  // si no es manager, los datos se descartan sin mostrarse.
+  const [{ data: isManager }, { data: plans }, { data: usage }] = await Promise.all([
+    supabase.rpc("is_manager"),
+    supabase.from("plans").select("*").order("sort_order").order("name"),
+    supabase.from("memberships").select("plan_id"),
+  ]);
   if (!isManager) redirect("/panel");
-
-  const { data: plans } = await supabase
-    .from("plans")
-    .select("*")
-    .order("sort_order")
-    .order("name");
-
-  const { data: usage } = await supabase.from("memberships").select("plan_id");
 
   const counts = new Map<string, number>();
   for (const row of usage ?? []) {
