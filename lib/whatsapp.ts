@@ -54,8 +54,9 @@ export function normalizeArgentinePhone(raw: string | null | undefined): string 
   }
 
   // En Argentina característica + número son siempre 10 dígitos, y las
-  // características empiezan con 1, 2 o 3.
-  if (digits.length !== 10 || !/^[1-3]/.test(digits)) return null;
+  // características empiezan con 2 o 3, salvo la de Buenos Aires (11): un
+  // "15 2345 6789" (el 15 sin la característica) no es un número válido.
+  if (digits.length !== 10 || !/^(11|[23])/.test(digits)) return null;
   return `549${digits}`;
 }
 
