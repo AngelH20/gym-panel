@@ -191,6 +191,33 @@ export type CashClosing = {
   difference_cents: number | null;
   payments_count: number;
   notes: string | null;
+  /** Gastos e ingresos de caja (sql/32). Opcionales: antes de aplicar ese
+   *  archivo la columna no existe y llega undefined. total_cash_cents y
+   *  total_transfer_cents son solo los cobros de pases. */
+  income_cash_cents?: number;
+  income_transfer_cents?: number;
+  expense_cash_cents?: number;
+  expense_transfer_cents?: number;
+};
+
+export type CashMovementKind = "expense" | "income";
+
+/** Un gasto o ingreso de caja que no es la venta de un pase (sql/32).
+ *  No se borra: se anula (voided_at), igual que los cobros. */
+export type CashMovement = {
+  id: string;
+  local_date: string;
+  kind: CashMovementKind;
+  amount_cents: number;
+  method: PaymentMethod;
+  reason: string;
+  created_at: string;
+  created_by: string | null;
+  created_by_name: string | null;
+  voided_at: string | null;
+  voided_by: string | null;
+  voided_by_name: string | null;
+  void_reason: string | null;
 };
 
 /** Una cuenta con acceso al panel (tabla admins). */

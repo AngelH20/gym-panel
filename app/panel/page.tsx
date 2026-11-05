@@ -24,6 +24,7 @@ import {
 } from "@/lib/labels";
 import { WeeklyAttendanceChart, type DayCount } from "./WeeklyAttendanceChart";
 import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
+import { UnclosedRegisterBanner } from "./UnclosedRegisterBanner";
 
 const WEEK_LENGTH = 7;
 
@@ -158,6 +159,8 @@ export default async function PanelHome() {
           </>
         }
       />
+
+      <UnclosedRegisterBanner />
 
       {/* El día de hoy, de un vistazo */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

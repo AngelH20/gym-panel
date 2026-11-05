@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
-import type { Payment, CashClosing, CashOpening } from "@/lib/types";
+import type { Payment, CashClosing, CashOpening, CashMovement } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import {
   formatMoney,
@@ -17,6 +17,15 @@ import { CloseRegisterForm } from "./CloseRegisterForm";
 import { OpenRegisterForm } from "./OpenRegisterForm";
 import { VoidSaleButton } from "./VoidSaleButton";
 import { MoreOptions } from "./MoreOptions";
+import { CashMovementForm } from "./CashMovementForm";
+import { VoidMovementButton } from "./VoidMovementButton";
+import { UnclosedRegisterBanner } from "../UnclosedRegisterBanner";
+import {
+  cashMovementKindLabel,
+  fetchCashMovements,
+  fetchVoidedCashMovements,
+  movementTotalsFor,
+} from "@/lib/cashMovements";
 
 type PaymentRow = Payment & { members: { full_name: string } | null };
 
@@ -59,6 +68,8 @@ export default async function CajaPage({
     { data: historyRaw },
     role,
     { data: voidsRaw },
+    movements,
+    voidedMovements,
   ] = await Promise.all([
       supabase
         .from("payments")
@@ -83,6 +94,9 @@ export default async function CajaPage({
             .order("voided_at", { ascending: false })
             .limit(100)
         : Promise.resolve({ data: [] as PaymentRow[] }),
+      // Gastos e ingresos del día. Si la tabla todavía no existe, vienen vacíos.
+      fetchCashMovements(supabase, date),
+      showVoids ? fetchVoidedCashMovements(supabase) : Promise.resolve([] as CashMovement[]),
     ]);
 
   const payments = (paymentsRaw ?? []) as PaymentRow[];
@@ -111,7 +125,7 @@ export default async function CajaPage({
   }
   const voids = [...voidsBySale.values()];
 
-  if (showVoids) return <VoidsView voids={voids} />;
+  if (showVoids) return <VoidsView voids={voids} voidedMovements={voidedMovements} />;
 
   // Anular es solo de dueño o programador (la base igual lo exige).
   if (showManage && isManager) {
@@ -127,6 +141,7 @@ export default async function CajaPage({
         saleTotals={saleTotals}
         activeCents={activeCents}
         voidedCents={voidedCents}
+        movements={movements.filter((m) => !m.voided_at)}
       />
     );
   }
@@ -142,7 +157,16 @@ export default async function CajaPage({
           .reduce((s, p) => s + p.amount_cents, 0),
       };
   const total = totals.cash + totals.transfer;
-  const expectedCashCents = (opening?.starting_cash_cents ?? 0) + totals.cash;
+  // Gastos e ingresos (sql/32). Con la caja cerrada, manda lo que fijó el cierre.
+  const mov = movementTotalsFor(closing, movements);
+  const incomeCents = mov.incomeCash + mov.incomeTransfer;
+  const expenseCents = mov.expenseCash + mov.expenseTransfer;
+  const hasMovements = movements.length > 0 || incomeCents > 0 || expenseCents > 0;
+  // Apertura + cobros en efectivo + ingresos en efectivo − gastos en efectivo.
+  const expectedCashCents =
+    (opening?.starting_cash_cents ?? 0) + totals.cash + mov.incomeCash - mov.expenseCash;
+  // Un día anterior que quedó abierto: se ofrece cerrarlo desde acá.
+  const isPastUnclosed = !isToday && date < today && !!opening && !closing;
 
   return (
     <div className="space-y-6">
@@ -184,7 +208,7 @@ export default async function CajaPage({
                         {
                           href: `/panel/caja?ver=anular&date=${date}`,
                           label: isToday ? "Anular movimientos de hoy" : "Anular movimientos de este día",
-                          hint: "Sacar un cobro de la caja (queda registrado)",
+                          hint: "Sacar un cobro, gasto o ingreso de la caja (queda registrado)",
                         },
                       ]
                     : []),
@@ -193,7 +217,7 @@ export default async function CajaPage({
                   label: "Cobros anulados",
                   hint: "Quién anuló cada venta, cuándo y por qué",
                 },
-                ...(payments.length > 0
+                ...(payments.length > 0 || movements.length > 0
                   ? [
                       {
                         href: `/panel/caja/export?date=${date}`,
@@ -208,6 +232,8 @@ export default async function CajaPage({
           </div>
         }
       />
+
+      <UnclosedRegisterBanner exclude={date} />
 
       <section className="card">
         <div className="px-5 pt-5 flex items-center justify-between gap-3">
@@ -231,7 +257,9 @@ export default async function CajaPage({
                 {formatMoney(expectedCashCents)}
               </p>
               <p className="mt-0.5 text-tiny text-txt-faint">
-                Apertura + ventas en efectivo
+                {mov.incomeCash > 0 || mov.expenseCash > 0
+                  ? "Apertura + ventas en efectivo + ingresos − gastos"
+                  : "Apertura + ventas en efectivo"}
               </p>
             </div>
             <div className="text-right">
@@ -260,6 +288,40 @@ export default async function CajaPage({
           </div>
         </dl>
 
+        {hasMovements && (
+          <dl className="grid grid-cols-3 divide-x divide-line border-t border-line">
+            <div className="px-3 sm:px-5 py-4 min-w-0">
+              <dt className="eyebrow truncate">Ingresos</dt>
+              <dd className="mt-0.5 num text-base font-medium [overflow-wrap:anywhere]">
+                {incomeCents > 0 ? `+ ${formatMoney(incomeCents)}` : formatMoney(0)}
+              </dd>
+              {mov.incomeTransfer > 0 && (
+                <p className="mt-0.5 text-tiny text-txt-faint truncate">
+                  {formatMoney(mov.incomeTransfer)} por transf.
+                </p>
+              )}
+            </div>
+            <div className="px-3 sm:px-5 py-4 min-w-0">
+              <dt className="eyebrow truncate">Gastos</dt>
+              <dd className="mt-0.5 num text-base font-medium [overflow-wrap:anywhere]">
+                {expenseCents > 0 ? `− ${formatMoney(expenseCents)}` : formatMoney(0)}
+              </dd>
+              {mov.expenseTransfer > 0 && (
+                <p className="mt-0.5 text-tiny text-txt-faint truncate">
+                  {formatMoney(mov.expenseTransfer)} por transf.
+                </p>
+              )}
+            </div>
+            <div className="px-3 sm:px-5 py-4 min-w-0">
+              <dt className="eyebrow truncate text-txt">Neto</dt>
+              <dd className="mt-0.5 num text-base font-semibold [overflow-wrap:anywhere]">
+                {formatMoney(total + incomeCents - expenseCents)}
+              </dd>
+              <p className="mt-0.5 text-tiny text-txt-faint truncate">Ventas + ingresos − gastos</p>
+            </div>
+          </dl>
+        )}
+
         {closing && (
           <div className="px-5 py-3 border-t border-line text-tiny text-txt-soft space-y-1">
             <p>
@@ -284,10 +346,22 @@ export default async function CajaPage({
       </section>
 
       {isToday && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${
+            opening && !closing ? "lg:grid-cols-3" : ""
+          }`}
+        >
           {/* Reabrir una caja ya cerrada borra el cierre: solo dueño o programador. */}
           {(!closing || isManager) && <OpenRegisterForm />}
           <CloseRegisterForm expectedCashCents={expectedCashCents} />
+          {/* Gastos e ingresos: solo con la caja de hoy abierta (la base igual lo exige). */}
+          {opening && !closing && <CashMovementForm />}
+        </div>
+      )}
+
+      {isPastUnclosed && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <CloseRegisterForm expectedCashCents={expectedCashCents} pastDate={date} />
         </div>
       )}
 
@@ -301,11 +375,17 @@ export default async function CajaPage({
           Movimientos de esta caja <span className="num font-normal text-txt-faint">{active.length}</span>
         </h2>
 
+        <MovementsBlock movements={movements} />
+
         {payments.length === 0 ? (
+          movements.length > 0 ? (
+            <p className="text-tiny text-txt-faint">Todavía no se registró ninguna venta este día.</p>
+          ) : (
           <EmptyState
             title="Sin ventas"
             description="Todavía no se registró ninguna venta este día."
           />
+          )
         ) : (
           <ul className={`datalist ${LIST_SCROLL}`}>
             {payments.map((p) => {
@@ -401,8 +481,60 @@ export default async function CajaPage({
 const LIST_CARD = "card p-5 flex flex-col h-[26rem] lg:h-[34rem]";
 const LIST_SCROLL = "flex-1 min-h-0 overflow-y-auto -mr-3 pr-3 [scrollbar-gutter:stable]";
 
+/** Gastos e ingresos del día, arriba de los cobros en "Movimientos de esta
+ *  caja". Con signo: + ingreso, − gasto. Los anulados quedan tachados. */
+function MovementsBlock({ movements }: { movements: CashMovement[] }) {
+  if (movements.length === 0) return null;
+  return (
+    <div className="shrink-0 mb-3 pb-1 border-b border-line">
+      <p className="eyebrow">Gastos e ingresos</p>
+      <ul className="datalist max-h-44 overflow-y-auto -mr-3 pr-3 [scrollbar-gutter:stable]">
+        {movements.map((m) => (
+          <MovementRow key={m.id} m={m} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MovementRow({ m, action }: { m: CashMovement; action?: React.ReactNode }) {
+  const voided = !!m.voided_at;
+  const sign = m.kind === "expense" ? "−" : "+";
+  return (
+    <li className="py-2.5 flex flex-wrap items-center gap-x-3">
+      <div className={`flex-1 min-w-0 ${voided ? "opacity-60" : ""}`}>
+        <p className={`text-base truncate ${voided ? "line-through" : ""}`}>{m.reason}</p>
+        <p className="mt-0.5 text-tiny text-txt-faint">
+          {cashMovementKindLabel[m.kind]} · {paymentMethodLabel[m.method]} · {formatTime(m.created_at)}
+          {m.created_by_name ? ` · Cargó: ${m.created_by_name}` : ""}
+        </p>
+        {voided && (
+          <p className="mt-0.5 text-tiny text-plate-red">
+            Anulado por {m.voided_by_name ?? "un admin"} el {formatDateTime(m.voided_at)}
+            {m.void_reason ? ` — "${m.void_reason}"` : ""}
+          </p>
+        )}
+      </div>
+      {action}
+      <span
+        className={`num text-base font-medium shrink-0 ${
+          voided ? "line-through text-txt-faint" : m.kind === "expense" ? "text-txt-soft" : ""
+        }`}
+      >
+        {sign} {formatMoney(m.amount_cents)}
+      </span>
+    </li>
+  );
+}
+
 /** Caja → Más opciones → Cobros anulados. */
-function VoidsView({ voids }: { voids: PaymentRow[] }) {
+function VoidsView({
+  voids,
+  voidedMovements,
+}: {
+  voids: PaymentRow[];
+  voidedMovements: CashMovement[];
+}) {
   return (
     <div className="space-y-6">
       <PageHeader
@@ -448,6 +580,44 @@ function VoidsView({ voids }: { voids: PaymentRow[] }) {
           </ul>
         )}
       </section>
+
+      {voidedMovements.length > 0 && (
+        <section className="card p-5">
+          <h2 className="h3 mb-3">Gastos e ingresos anulados</h2>
+          <ul className="datalist">
+            {voidedMovements.map((m) => (
+              <li key={m.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-base font-medium truncate">
+                    {m.reason}
+                    <span className="font-normal text-txt-faint">
+                      {" "}
+                      · {cashMovementKindLabel[m.kind]} · {paymentMethodLabel[m.method]}
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-tiny text-txt-faint">
+                    Anulado por{" "}
+                    <span className="font-medium text-txt-soft">{m.voided_by_name ?? "un admin"}</span>{" "}
+                    el {formatDateTime(m.voided_at)} · caja del{" "}
+                    <Link
+                      href={`/panel/caja?date=${m.local_date}`}
+                      className="underline-offset-2 hover:underline hover:text-plate-blue transition-colors"
+                    >
+                      {formatDate(m.local_date)}
+                    </Link>
+                  </p>
+                  {m.void_reason && (
+                    <p className="mt-0.5 text-tiny text-txt-soft">“{m.void_reason}”</p>
+                  )}
+                </div>
+                <span className="num text-base font-medium shrink-0 line-through text-txt-faint">
+                  {m.kind === "expense" ? "−" : "+"} {formatMoney(m.amount_cents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
@@ -461,6 +631,7 @@ function ManageView({
   saleTotals,
   activeCents,
   voidedCents,
+  movements,
 }: {
   date: string;
   isToday: boolean;
@@ -468,6 +639,8 @@ function ManageView({
   saleTotals: Map<string, { cents: number; rows: number }>;
   activeCents: number;
   voidedCents: number;
+  /** Gastos e ingresos vigentes del día (sin los ya anulados). */
+  movements: CashMovement[];
 }) {
   const seen = new Set<string>();
   const sales = payments.filter((p) => {
@@ -523,6 +696,30 @@ function ManageView({
           </ul>
         )}
       </section>
+
+      {movements.length > 0 && (
+        <section className="card p-5">
+          <h2 className="h3 mb-1">Gastos e ingresos</h2>
+          <p className="mb-2 text-tiny text-txt-faint">
+            Al anular uno, deja de contar en el efectivo esperado y queda registrado quién lo anuló.
+          </p>
+          <ul className="datalist">
+            {movements.map((m) => (
+              <MovementRow
+                key={m.id}
+                m={m}
+                action={
+                  <VoidMovementButton
+                    movementId={m.id}
+                    amountCents={m.amount_cents}
+                    isExpense={m.kind === "expense"}
+                  />
+                }
+              />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
