@@ -108,7 +108,7 @@ export default async function PanelLayout({
 
         <PanelNav variant="mobile" role={role} footer={account} />
 
-        <main className="flex-1 w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-5 pb-24 md:pt-10 md:pb-12">
+        <main className="flex-1 w-full px-4 sm:px-6 lg:px-10 pt-5 pb-24 md:pt-10 md:pb-12">
           {children}
         </main>
       </div>

@@ -49,7 +49,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       <PageHeader
         title="Ajustes"
         description="Colores y tamaño de letra del panel. Se ven al toque y quedan guardados en este navegador."

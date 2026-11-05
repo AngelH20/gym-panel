@@ -46,7 +46,7 @@ export default async function CumpleañosPage() {
   const proximos = all.filter((m) => !m.is_birthday_today);
 
   return (
-    <div className="w-full max-w-3xl space-y-8">
+    <div className="w-full space-y-8">
       <PageHeader
         title="Cumpleaños"
         description="De más cercano a más lejano. El saludo sale solo, el día que escanean."
@@ -55,7 +55,7 @@ export default async function CumpleañosPage() {
       {hoy.length > 0 && (
         <section>
           <h2 className="h3 pb-3 border-b border-line">Hoy cumplen años 🎂</h2>
-          <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {hoy.map((m) => (
               <li key={m.id}>
                 <Link

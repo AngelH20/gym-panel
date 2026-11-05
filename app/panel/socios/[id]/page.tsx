@@ -90,7 +90,7 @@ export default async function SocioPage({
   );
 
   return (
-    <div className="w-full max-w-[1400px] space-y-6">
+    <div className="w-full space-y-6">
       {/* Quién es y si puede entrar */}
       <div className="space-y-3">
         <BackLink href="/panel/socios" label="Socios" />
