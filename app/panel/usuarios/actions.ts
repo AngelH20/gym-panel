@@ -46,8 +46,15 @@ export async function createStaffAccount(_prev: unknown, formData: FormData): Pr
   if (!canManageRole(await currentRole(), role)) {
     return { error: "No tenés permiso para crear una cuenta con ese rol." };
   }
-  if (!email) return { error: "Completá el email." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return { error: "Completá un email válido." };
+  }
   if (password.length < 8) return { error: "La contraseña tiene que tener al menos 8 caracteres." };
+  // Supabase Auth (bcrypt) ignora todo lo que pase de 72 bytes.
+  if (new TextEncoder().encode(password).length > 72) {
+    return { error: "La contraseña no puede pasar de 72 caracteres." };
+  }
+  if (full_name && full_name.length > 120) return { error: "El nombre es demasiado largo." };
 
   // Crear el login de verdad (Supabase Auth) requiere la service_role key:
   // el alta pública está apagada a propósito, así que no hay otra forma de

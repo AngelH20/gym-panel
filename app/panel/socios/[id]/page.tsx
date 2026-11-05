@@ -13,6 +13,12 @@ import { ArchivedBanner } from "./ArchivedBanner";
 import { EditMemberForm } from "./EditMemberForm";
 import { FamilyCard, type FamilyCandidate, type FamilyMember } from "./FamilyCard";
 
+/** Columnas explícitas, sin qr_token: la fila termina serializada en
+ *  componentes cliente (MemberActions, EditMemberForm) y ese token viejo
+ *  por socio no tiene por qué llegar al navegador. */
+const MEMBER_DETAIL_COLUMNS =
+  "id, full_name, phone, email, dni, photo_url, joined_on, member_status, membership_id, plan_id, plan_name, period_start, period_end, uses_total, uses_remaining, effective_status, days_left, checked_in_today, visits_today, last_check_in_at, welcome_message, birth_date, next_birthday, days_to_birthday, is_birthday_today, archived_at, archived_by_name";
+
 export default async function SocioPage({
   params,
 }: {
@@ -56,7 +62,7 @@ export default async function SocioPage({
     role,
     { members, familyId, familyIds, family },
   ] = await Promise.all([
-      supabase.from("member_overview").select("*").eq("id", id).maybeSingle(),
+      supabase.from("member_overview").select(MEMBER_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
       supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
       supabase
         .from("memberships")

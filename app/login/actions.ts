@@ -32,6 +32,16 @@ function describeAuthError(message: string, status?: number): string {
   return `Supabase respondió: ${message}`;
 }
 
+/** Adónde volver después de entrar. Viene de la URL (?volver=), así que se
+ *  acepta solo una ruta interna del panel o el kiosco del QR: nada de
+ *  "//otro-sitio.com", "/\\otro-sitio.com" ni URLs absolutas, que el
+ *  navegador interpretaría como otro dominio (open redirect). */
+function safeReturnPath(raw: string): string {
+  if (raw === "/qr-movil") return raw;
+  if (/^\/panel(?:[/?#][^\\]*)?$/.test(raw) && !raw.startsWith("/panel//")) return raw;
+  return "/panel";
+}
+
 export async function signIn(_prev: unknown, formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -61,9 +71,7 @@ export async function signIn(_prev: unknown, formData: FormData) {
   if (rpcError) {
     console.error("[login] Error al verificar admin:", rpcError);
     await supabase.auth.signOut();
-    return {
-      error: `No se pudo verificar si sos admin: ${rpcError.message}. ¿Corriste 01_schema.sql completo?`,
-    };
+    return { error: "No se pudo verificar tu acceso al panel. Probá de nuevo en un momento." };
   }
 
   if (!isAdmin) {
@@ -75,7 +83,7 @@ export async function signIn(_prev: unknown, formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(volver.startsWith("/panel") ? volver : "/panel");
+  redirect(safeReturnPath(volver));
 }
 
 export async function signOut() {
