@@ -112,9 +112,23 @@ export default async function CajaPage({
   const voids = [...voidsBySale.values()];
 
   if (showVoids) return <VoidsView voids={voids} />;
+
   // Anular es solo de dueño o programador (la base igual lo exige).
   if (showManage && isManager) {
-    return <ManageView date={date} isToday={isToday} payments={active} saleTotals={saleTotals} />;
+    const voidedCents = payments
+      .filter((p) => p.voided_at)
+      .reduce((sum, p) => sum + p.amount_cents, 0);
+    const activeCents = active.reduce((sum, p) => sum + p.amount_cents, 0);
+    return (
+      <ManageView
+        date={date}
+        isToday={isToday}
+        payments={active}
+        saleTotals={saleTotals}
+        activeCents={activeCents}
+        voidedCents={voidedCents}
+      />
+    );
   }
 
   const totals = closing
@@ -392,9 +406,9 @@ function VoidsView({ voids }: { voids: PaymentRow[] }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        back={{ href: "/panel/caja", label: "Caja" }}
         title="Cobros anulados"
         description="Quién anuló cada venta, cuándo y por qué. Las más recientes primero."
+        actions={<BackToCaja href="/panel/caja" />}
       />
 
       <section className="card p-5">
@@ -445,11 +459,15 @@ function ManageView({
   isToday,
   payments,
   saleTotals,
+  activeCents,
+  voidedCents,
 }: {
   date: string;
   isToday: boolean;
   payments: PaymentRow[];
   saleTotals: Map<string, { cents: number; rows: number }>;
+  activeCents: number;
+  voidedCents: number;
 }) {
   const seen = new Set<string>();
   const sales = payments.filter((p) => {
@@ -462,10 +480,23 @@ function ManageView({
   return (
     <div className="space-y-6">
       <PageHeader
-        back={{ href: `/panel/caja?date=${date}`, label: "Caja" }}
         title={isToday ? "Anular movimientos de hoy" : `Anular movimientos del ${formatDate(date)}`}
-        description="El cobro sale de los totales de la caja y queda en Cobros anulados con quién lo anuló y por qué. No se borra del todo."
+        description="El cobro sale del total de la caja y queda registrado en Cobros anulados: quién lo anuló, cuándo y por qué."
+        actions={<BackToCaja href={`/panel/caja?date=${date}`} />}
       />
+
+      <dl className="card grid grid-cols-2 divide-x divide-line">
+        <div className="px-5 py-4 min-w-0">
+          <dt className="eyebrow">Total de la caja</dt>
+          <dd className="mt-0.5 num text-lg font-semibold">{formatMoney(activeCents)}</dd>
+        </div>
+        <div className="px-5 py-4 min-w-0">
+          <dt className="eyebrow">Anulado {isToday ? "hoy" : "ese día"}</dt>
+          <dd className="mt-0.5 num text-lg font-medium text-txt-soft">
+            {voidedCents > 0 ? `− ${formatMoney(voidedCents)}` : formatMoney(0)}
+          </dd>
+        </div>
+      </dl>
 
       <section className="card p-5">
         {sales.length === 0 ? (
@@ -493,5 +524,18 @@ function ManageView({
         )}
       </section>
     </div>
+  );
+}
+
+/** Volver a la pantalla principal de Caja. Es un <a> común (recarga la
+ *  página) a propósito: vuelve siempre, con los totales recién calculados. */
+function BackToCaja({ href }: { href: string }) {
+  return (
+    <a href={href} className="btn-ghost btn-sm gap-1.5 border border-line">
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M19 12H5m6-6-6 6 6 6" />
+      </svg>
+      Volver a la caja
+    </a>
   );
 }
