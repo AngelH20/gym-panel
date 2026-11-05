@@ -4,6 +4,9 @@ import type { MemberOverview } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { formatDayMonth, ageOnNextBirthday } from "@/lib/labels";
 import { PageHeader } from "@/components/PageHeader";
+import { WhatsAppLink } from "@/components/WhatsAppLink";
+import { getGymName } from "@/lib/gym";
+import { birthdayMessage } from "@/lib/whatsapp";
 
 /**
  * Listado de cumpleaños ordenado por el más cercano. La idea es que
@@ -14,12 +17,12 @@ import { PageHeader } from "@/components/PageHeader";
 export default async function CumpleañosPage() {
   const supabase = await createClient();
 
-  // Las dos consultas son independientes: salen juntas.
-  const [{ data }, { count: sinFecha }] = await Promise.all([
+  // Las consultas son independientes: salen juntas.
+  const [{ data }, { count: sinFecha }, gymName] = await Promise.all([
     supabase
       .from("member_overview")
       .select(
-        "id, full_name, photo_url, birth_date, next_birthday, days_to_birthday, is_birthday_today"
+        "id, full_name, phone, photo_url, birth_date, next_birthday, days_to_birthday, is_birthday_today"
       )
       .not("birth_date", "is", null)
       .is("archived_at", null)
@@ -29,12 +32,15 @@ export default async function CumpleañosPage() {
       .select("id", { count: "exact", head: true })
       .is("birth_date", null)
       .is("archived_at", null),
+    // Para el saludo por WhatsApp. Cacheado: el layout ya lo pidió.
+    getGymName(),
   ]);
 
   const all = (data ?? []) as Pick<
     MemberOverview,
     | "id"
     | "full_name"
+    | "phone"
     | "photo_url"
     | "birth_date"
     | "next_birthday"
@@ -57,10 +63,10 @@ export default async function CumpleañosPage() {
           <h2 className="h3 pb-3 border-b border-line">Hoy cumplen años 🎂</h2>
           <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {hoy.map((m) => (
-              <li key={m.id}>
+              <li key={m.id} className="flex items-center gap-1 border-b border-line">
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-2.5 flex items-center gap-3 border-b border-line group"
+                  className="flex-1 min-w-0 py-2.5 flex items-center gap-3 group"
                 >
                   <Avatar name={m.full_name} url={m.photo_url} size={36} />
                   <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
@@ -70,6 +76,11 @@ export default async function CumpleañosPage() {
                     Cumple {ageOnNextBirthday(m.birth_date, m.next_birthday)}
                   </span>
                 </Link>
+                <WhatsAppLink
+                  phone={m.phone}
+                  name={m.full_name}
+                  message={birthdayMessage({ fullName: m.full_name, gymName })}
+                />
               </li>
             ))}
           </ul>

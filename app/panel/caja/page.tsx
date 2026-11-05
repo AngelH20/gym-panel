@@ -397,6 +397,7 @@ export default async function CajaPage({
                     </p>
                     <p className="mt-0.5 text-tiny text-txt-faint">
                       {p.plan_name} · {paymentMethodLabel[p.method]} · {formatTime(p.paid_at)}
+                      {p.created_by_name && <> · Cobró: {p.created_by_name}</>}
                     </p>
                     {p.voided_at && (
                       <p className="mt-0.5 text-tiny text-plate-red">

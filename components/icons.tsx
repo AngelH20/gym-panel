@@ -178,3 +178,14 @@ export function IconFlag({ className = base }: IconProps) {
     </svg>
   );
 }
+
+/** Globito de chat con un teléfono: WhatsApp, en el mismo trazo que el resto
+ *  (no el logo de la marca, para que no grite en las listas). */
+export function IconWhatsApp({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8.2 19.5l-4.7 1Z" />
+      <path d="M9 8.6c0 3.5 2.9 6.4 6.4 6.4l.9-1.5-2-1-.9.8a4.4 4.4 0 0 1-2.3-2.3l.8-.9-1-2L9 8.6Z" />
+    </svg>
+  );
+}

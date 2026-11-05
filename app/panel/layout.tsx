@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
+import { getGymName } from "@/lib/gym";
 import { PanelNav, PanelTitle } from "./PanelNav";
 import { ROLE_LABEL } from "@/lib/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -33,9 +34,11 @@ export default async function PanelLayout({
   const userId = (claimsData?.claims?.sub as string | undefined) ?? "";
   const userEmail = (claimsData?.claims?.email as string | undefined) ?? "";
 
-  const [role, { data: setting }, { data: me }] = await Promise.all([
+  const [role, gymName, { data: me }] = await Promise.all([
     getCurrentAdminRole(),
-    supabase.from("settings").select("value").eq("key", "gym_name").single(),
+    // Cacheado por request: Inicio, Cumpleaños y la ficha lo usan para los
+    // mensajes de WhatsApp sin pagar otro viaje.
+    getGymName(),
     supabase.from("admins").select("full_name, email").eq("user_id", userId).maybeSingle(),
   ]);
 
@@ -43,8 +46,6 @@ export default async function PanelLayout({
     await supabase.auth.signOut();
     redirect("/login");
   }
-
-  const gymName = (setting?.value as string) ?? "CAREF";
 
   const roleLabel = ROLE_LABEL[role];
   const displayName = staffDisplayName(me?.full_name, me?.email ?? userEmail);
