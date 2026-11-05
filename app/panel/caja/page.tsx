@@ -39,6 +39,14 @@ function memberName(p: PaymentRow) {
   return p.members?.full_name ?? p.member_name ?? "Socio eliminado";
 }
 
+/** "AAAA-MM-DD" que existe en el calendario (no "2026-02-31"). */
+function isValidIsoDate(value: string | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
 /** "YYYY-MM-DD" + N días, sin pasar por Date/huso horario. */
 function shiftDate(date: string, days: number) {
   const [y, m, d] = date.split("-").map(Number);
@@ -56,7 +64,10 @@ export default async function CajaPage({
   const showVoids = ver === "anulados";
   const showManage = ver === "anular";
   const today = todayLocal();
-  const date = dateParam ?? today;
+  // Viene de la URL: solo AAAA-MM-DD de un día real. Cualquier otra cosa
+  // ("?date=x") rompía shiftDate (RangeError, pantalla de error) y se
+  // copiaba tal cual en los links de la página.
+  const date = isValidIsoDate(dateParam) ? dateParam : today;
   const isToday = date === today;
 
   const supabase = await createClient();
