@@ -1,3 +1,7 @@
+// Si algún día un componente "use client" importa este archivo (directa o
+// indirectamente), el build falla en vez de mandar el código que lee la
+// service_role al navegador.
+import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 /**

@@ -33,6 +33,8 @@ export async function savePlan(_prev: unknown, formData: FormData): Promise<Resu
   const days = parseUses(formData.get("period_days"));
 
   if (!name) return { error: "El plan necesita un nombre." };
+  if (name.length > 80) return { error: "El nombre del plan no puede pasar de 80 caracteres." };
+  if (description.length > 500) return { error: "La descripción no puede pasar de 500 caracteres." };
   if (!uses) return { error: "La cantidad de entradas tiene que ser un número mayor a 0." };
   if (!days) return { error: "La duración en días tiene que ser un número mayor a 0." };
 

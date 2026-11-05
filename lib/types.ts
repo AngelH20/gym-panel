@@ -62,7 +62,9 @@ export type MemberOverview = {
   photo_url: string | null;
   joined_on: string;
   member_status: MemberStatus;
-  qr_token: string;
+  /** Token viejo por socio (ya no se usa para entrar). El detalle del socio
+   *  no lo pide para no mandarlo al navegador. */
+  qr_token?: string;
   membership_id: string | null;
   plan_id: string | null;
   plan_name: string | null;

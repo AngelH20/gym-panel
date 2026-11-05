@@ -61,6 +61,55 @@ function parseBirthDate(raw: FormDataEntryValue | null): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
+/** Topes de largo de los campos de texto libre del socio. No hay nada en la
+ *  base que los limite, y el mensaje de bienvenida y la foto se muestran en
+ *  la pantalla pública del check-in. */
+const MAX_LEN = {
+  full_name: 120,
+  phone: 40,
+  email: 254,
+  photo_url: 500,
+  notes: 2000,
+  welcome_message: 300,
+} as const;
+
+type MemberTextField = keyof typeof MAX_LEN;
+
+const FIELD_LABEL: Record<MemberTextField, string> = {
+  full_name: "nombre",
+  phone: "teléfono",
+  email: "email",
+  photo_url: "foto",
+  notes: "notas",
+  welcome_message: "mensaje de bienvenida",
+};
+
+function readText(formData: FormData, field: MemberTextField): string | null {
+  return String(formData.get(field) ?? "").trim() || null;
+}
+
+/** Valida los textos del socio: largos y que la foto sea una URL https
+ *  (no "javascript:", "data:" ni http plano, que el navegador además
+ *  bloquearía por el CSP y dejaría la foto rota). */
+function memberTextError(values: Partial<Record<MemberTextField, string | null>>): string | null {
+  for (const [field, value] of Object.entries(values) as [MemberTextField, string | null][]) {
+    if (value && value.length > MAX_LEN[field]) {
+      return `El campo ${FIELD_LABEL[field]} es demasiado largo (máximo ${MAX_LEN[field]} caracteres).`;
+    }
+  }
+  const photo = values.photo_url;
+  if (photo) {
+    let ok = false;
+    try {
+      ok = new URL(photo).protocol === "https:";
+    } catch {
+      ok = false;
+    }
+    if (!ok) return "La foto tiene que ser un link que empiece con https://";
+  }
+  return null;
+}
+
 export async function createMember(_prev: unknown, formData: FormData): Promise<Result> {
   const full_name = String(formData.get("full_name") ?? "").trim();
   if (!full_name) return { error: "El socio necesita un nombre." };
@@ -68,17 +117,23 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
   const dni = parseDni(formData.get("dni"));
   if (!dni) return { error: "El DNI tiene que tener 8 dígitos numéricos." };
 
+  const texts = {
+    full_name,
+    phone: readText(formData, "phone"),
+    email: readText(formData, "email"),
+    photo_url: readText(formData, "photo_url"),
+    notes: readText(formData, "notes"),
+  };
+  const textError = memberTextError(texts);
+  if (textError) return { error: textError };
+
   const supabase = await createClient();
 
   const { data: member, error } = await supabase
     .from("members")
     .insert({
-      full_name,
+      ...texts,
       dni,
-      phone: String(formData.get("phone") ?? "").trim() || null,
-      email: String(formData.get("email") ?? "").trim() || null,
-      photo_url: String(formData.get("photo_url") ?? "").trim() || null,
-      notes: String(formData.get("notes") ?? "").trim() || null,
       birth_date: parseBirthDate(formData.get("birth_date")),
     })
     .select("id")
@@ -138,18 +193,24 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
   const dni = parseDni(formData.get("dni"));
   if (!dni) return { error: "El DNI tiene que tener 8 dígitos numéricos." };
 
+  const texts = {
+    full_name,
+    phone: readText(formData, "phone"),
+    email: readText(formData, "email"),
+    photo_url: readText(formData, "photo_url"),
+    notes: readText(formData, "notes"),
+    welcome_message: readText(formData, "welcome_message"),
+  };
+  const textError = memberTextError(texts);
+  if (textError) return { error: textError };
+
   const supabase = await createClient();
 
   const { error } = await supabase
     .from("members")
     .update({
-      full_name,
+      ...texts,
       dni,
-      phone: String(formData.get("phone") ?? "").trim() || null,
-      email: String(formData.get("email") ?? "").trim() || null,
-      photo_url: String(formData.get("photo_url") ?? "").trim() || null,
-      notes: String(formData.get("notes") ?? "").trim() || null,
-      welcome_message: String(formData.get("welcome_message") ?? "").trim() || null,
       birth_date: parseBirthDate(formData.get("birth_date")),
     })
     .eq("id", id);
@@ -170,7 +231,8 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
 /** Suspender / reactivar. Es el único estado que se toca a mano. */
 export async function setMemberStatus(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
-  const status = String(formData.get("status")) as "active" | "suspended";
+  const status = String(formData.get("status"));
+  if (status !== "active" && status !== "suspended") return { error: "Estado inválido." };
 
   const supabase = await createClient();
   const { error, count } = await supabase

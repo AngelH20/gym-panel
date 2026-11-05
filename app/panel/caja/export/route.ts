@@ -3,10 +3,17 @@ import { createClient } from "@/lib/supabase/server";
 import type { Payment, CashClosing, CashOpening } from "@/lib/types";
 import { formatDate, formatDateTime, paymentMethodLabel, todayLocal } from "@/lib/labels";
 
-/** Envuelve en comillas si hace falta (coma, comilla o salto de línea adentro). */
+/** Envuelve en comillas si hace falta (coma, comilla o salto de línea adentro).
+ *
+ *  Los textos que empiezan con = + - @ (o tab / retorno de carro) Excel los
+ *  toma como fórmula al abrir el CSV: un socio cargado con nombre
+ *  `=HYPERLINK("http://...")` ejecutaría eso en la compu del que exporta la
+ *  caja. Se les antepone una comilla simple para que queden como texto. Los
+ *  números (montos, que pueden ser negativos) no pasan por acá. */
 function csvField(value: string | number): string {
-  const s = String(value);
-  if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  let s = String(value);
+  if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
 
@@ -16,23 +23,36 @@ function csvRow(fields: (string | number)[]): string {
 
 /**
  * CSV del día: detalle de cada pago + resumen de efectivo/transferencia/total.
- * Protegida por el middleware de auth igual que el resto de /panel/*.
+ *
+ * El middleware solo exige sesión y el layout de /panel no corre para los
+ * route handlers, así que el rol se chequea acá (en paralelo con las
+ * consultas, que igual pasan por la RLS).
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const date = searchParams.get("date") ?? todayLocal();
+  const rawDate = searchParams.get("date");
+  // La fecha termina en el nombre del archivo (Content-Disposition): solo
+  // se acepta AAAA-MM-DD, nada de comillas ni saltos de línea.
+  if (rawDate != null && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    return new NextResponse("Fecha inválida", { status: 400 });
+  }
+  const date = rawDate ?? todayLocal();
 
   const supabase = await createClient();
 
-  const [{ data: paymentsRaw }, { data: closingRaw }, { data: openingRaw }] = await Promise.all([
-    supabase
-      .from("payments")
-      .select("*, members(full_name)")
-      .eq("local_date", date)
-      .order("paid_at", { ascending: true }),
-    supabase.from("cash_closings").select("*").eq("closing_date", date).maybeSingle(),
-    supabase.from("cash_openings").select("*").eq("opening_date", date).maybeSingle(),
-  ]);
+  const [{ data: role }, { data: paymentsRaw }, { data: closingRaw }, { data: openingRaw }] =
+    await Promise.all([
+      supabase.rpc("current_admin_role"),
+      supabase
+        .from("payments")
+        .select("*, members(full_name)")
+        .eq("local_date", date)
+        .order("paid_at", { ascending: true }),
+      supabase.from("cash_closings").select("*").eq("closing_date", date).maybeSingle(),
+      supabase.from("cash_openings").select("*").eq("opening_date", date).maybeSingle(),
+    ]);
+
+  if (!role) return new NextResponse("No autorizado", { status: 403 });
 
   const payments = (paymentsRaw ?? []) as (Payment & {
     members: { full_name: string } | null;
@@ -96,6 +116,8 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="caja-${date}.csv"`,
+      // Tiene cobros con nombres de socios: que no quede en ningún caché.
+      "Cache-Control": "private, no-store",
     },
   });
 }

@@ -1,5 +1,6 @@
 import { createServerClient, type SetAllCookies } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { HSTS_HEADER, STATIC_SECURITY_HEADERS } from "@/lib/securityHeaders";
 
 /** Nonce nuevo en cada request, para el CSP de abajo. Se genera con la Web
  *  Crypto API (no Buffer/Node): el middleware corre en el runtime Edge. */
@@ -35,21 +36,14 @@ function applySecurityHeaders(response: NextResponse, nonce: string): NextRespon
   ].join("; ");
 
   response.headers.set("Content-Security-Policy", csp);
-  response.headers.set("X-Content-Type-Options", "nosniff");
-  response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-  );
-
-  // HSTS solo en producción: en dev, mandarlo sobre HTTP puede hacer que el
-  // navegador recuerde forzar HTTPS para localhost y rompa el servidor local.
+  // Las mismas que pone next.config.ts para todo el sitio (ver
+  // lib/securityHeaders.ts); acá se repiten con .set (pisa, no duplica)
+  // para que también las lleven los redirects que arma el middleware.
+  for (const { key, value } of STATIC_SECURITY_HEADERS) {
+    response.headers.set(key, value);
+  }
   if (process.env.NODE_ENV === "production") {
-    response.headers.set(
-      "Strict-Transport-Security",
-      "max-age=63072000; includeSubDomains"
-    );
+    response.headers.set(HSTS_HEADER.key, HSTS_HEADER.value);
   }
 
   return response;

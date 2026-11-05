@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 
 type Result = { error?: string; ok?: boolean };
 
+/** Tope para notas y motivos: texto libre que queda guardado en la caja. */
+const MAX_TEXT = 500;
+
 /** Precio en pesos (input del form) -> centavos. */
 function parseAmountCents(raw: FormDataEntryValue | null): number | null {
   const n = Number(String(raw ?? "").trim());
@@ -16,6 +19,7 @@ export async function openCashRegister(_prev: unknown, formData: FormData): Prom
   if (startingCashCents == null) return { error: "Ingresá el fondo inicial en pesos." };
 
   const notes = String(formData.get("notes") ?? "").trim();
+  if (notes.length > MAX_TEXT) return { error: `Las notas no pueden pasar de ${MAX_TEXT} caracteres.` };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("open_cash_register", {
@@ -38,6 +42,7 @@ export async function voidSale(_prev: unknown, formData: FormData): Promise<Resu
   const paymentId = String(formData.get("payment_id") ?? "");
   const reason = String(formData.get("reason") ?? "").trim();
   if (!reason) return { error: "Escribí el motivo de la anulación." };
+  if (reason.length > MAX_TEXT) return { error: `El motivo no puede pasar de ${MAX_TEXT} caracteres.` };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("void_sale", {
@@ -58,6 +63,7 @@ export async function closeCashRegister(_prev: unknown, formData: FormData): Pro
   if (countedCashCents == null) return { error: "Ingresá el efectivo contado en pesos." };
 
   const notes = String(formData.get("notes") ?? "").trim();
+  if (notes.length > MAX_TEXT) return { error: `Las notas no pueden pasar de ${MAX_TEXT} caracteres.` };
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("close_cash_register", {
