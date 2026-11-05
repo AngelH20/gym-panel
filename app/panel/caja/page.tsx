@@ -46,6 +46,11 @@ function shiftDate(date: string, days: number) {
   return dt.toISOString().slice(0, 10);
 }
 
+/** "2026-11-05" sí; "2026-02-31", "ayer" o "2026-1-5" no. */
+function isValidIsoDate(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && shiftDate(value, 0) === value;
+}
+
 export default async function CajaPage({
   searchParams,
 }: {
@@ -56,7 +61,10 @@ export default async function CajaPage({
   const showVoids = ver === "anulados";
   const showManage = ver === "anular";
   const today = todayLocal();
-  const date = dateParam ?? today;
+  // Solo una fecha real AAAA-MM-DD: con cualquier otra cosa (un link mal
+  // copiado, "?date=ayer") shiftDate tiraba RangeError y la pantalla entera
+  // de Caja caía en el error genérico. En ese caso se muestra hoy.
+  const date = dateParam && isValidIsoDate(dateParam) ? dateParam : today;
   const isToday = date === today;
 
   const supabase = await createClient();
