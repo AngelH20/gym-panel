@@ -28,6 +28,29 @@ import { WeeklyRevenueChart, type DayRevenue } from "./WeeklyRevenueChart";
 
 const WEEK_LENGTH = 7;
 
+// Solo las columnas que usa el panel. member_overview calcula cada columna
+// por socio (cumpleaños, entradas de hoy, última entrada...) y con select("*")
+// se calculaban y viajaban todas, incluidas las que acá no se muestran.
+const DASHBOARD_COLUMNS =
+  "id, full_name, photo_url, effective_status, uses_total, uses_remaining, days_left, " +
+  "period_end, checked_in_today, visits_today, last_check_in_at, is_birthday_today";
+
+type DashboardMember = Pick<
+  MemberOverview,
+  | "id"
+  | "full_name"
+  | "photo_url"
+  | "effective_status"
+  | "uses_total"
+  | "uses_remaining"
+  | "days_left"
+  | "period_end"
+  | "checked_in_today"
+  | "visits_today"
+  | "last_check_in_at"
+  | "is_birthday_today"
+>;
+
 // Cuánto tiempo sigue en "Vencidos sin renovar" alguien que no volvió. Pasado
 // esto se asume que dejó el gimnasio y deja de ocupar el panel (sigue en
 // Socios, con su estado).
@@ -48,7 +71,7 @@ export default async function PanelHome() {
 
   const [{ data }, { data: paymentsToday }, { data: weekCheckIns }, { data: weekPayments }] =
     await Promise.all([
-      supabase.from("member_overview").select("*").is("archived_at", null),
+      supabase.from("member_overview").select(DASHBOARD_COLUMNS).is("archived_at", null),
       supabase
         .from("payments")
         .select("amount_cents, method")
@@ -61,7 +84,7 @@ export default async function PanelHome() {
         .gte("local_date", weekStart)
         .is("voided_at", null),
     ]);
-  const all = (data ?? []) as MemberOverview[];
+  const all = (data ?? []) as unknown as DashboardMember[];
   const pagos = paymentsToday ?? [];
 
   // Los últimos 7 días, más viejo primero, con la etiqueta del eje ya lista.
@@ -323,7 +346,7 @@ function ListRow({
   subtitle,
   children,
 }: {
-  member: MemberOverview;
+  member: DashboardMember;
   subtitle?: React.ReactNode;
   children?: React.ReactNode;
 }) {

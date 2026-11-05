@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAdminRole } from "@/lib/supabase/role";
 import type { MemberOverview, Membership, Plan } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import { formatDate, formatDateTime, todayLocal } from "@/lib/labels";
@@ -20,6 +21,31 @@ export default async function SocioPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  // Para el pack familiar: quién es familia de quién, y a quién se lo puede
+  // vincular. La consulta de la familia depende de esta lista, así que se
+  // encadena SOLO a ella: arranca apenas vuelve la lista, sin esperar al
+  // resto de las consultas de abajo.
+  const familyPromise = supabase
+    .from("members")
+    .select("id, full_name, family_id")
+    .is("archived_at", null)
+    .order("full_name")
+    .then(async ({ data: allMembers }) => {
+      const members = (allMembers ?? []) as FamilyCandidate[];
+      const familyId = members.find((x) => x.id === id)?.family_id ?? null;
+      const familyIds = familyId
+        ? members.filter((x) => x.family_id === familyId && x.id !== id).map((x) => x.id)
+        : [];
+      const { data: family } = familyIds.length
+        ? await supabase
+            .from("member_overview")
+            .select("id, full_name, plan_name, effective_status")
+            .in("id", familyIds)
+            .order("full_name")
+        : { data: [] };
+      return { members, familyId, familyIds, family };
+    });
+
   // Todo junto, el socio incluido: son viajes independientes a Supabase.
   // Antes el socio iba primero y el resto esperaba a que volviera.
   const [
@@ -27,8 +53,8 @@ export default async function SocioPage({
     { data: plans },
     { data: history },
     { data: checkIns },
-    { data: role },
-    { data: allMembers },
+    role,
+    { members, familyId, familyIds, family },
   ] = await Promise.all([
       supabase.from("member_overview").select("*").eq("id", id).maybeSingle(),
       supabase.from("plans").select("*").eq("is_active", true).order("sort_order"),
@@ -43,31 +69,14 @@ export default async function SocioPage({
         .eq("member_id", id)
         .order("checked_in_at", { ascending: false })
         .limit(10),
-      supabase.rpc("current_admin_role"),
-      // Para el pack familiar: quién es familia de quién, y a quién se lo
-      // puede vincular.
-      supabase
-        .from("members")
-        .select("id, full_name, family_id")
-        .is("archived_at", null)
-        .order("full_name"),
+      // Cacheado por request: el layout ya lo pidió, no es otro viaje.
+      getCurrentAdminRole(),
+      familyPromise,
     ]);
 
   if (!member) notFound();
   const m = member as MemberOverview;
 
-  const members = (allMembers ?? []) as FamilyCandidate[];
-  const familyId = members.find((x) => x.id === id)?.family_id ?? null;
-  const familyIds = familyId
-    ? members.filter((x) => x.family_id === familyId && x.id !== id).map((x) => x.id)
-    : [];
-  const { data: family } = familyIds.length
-    ? await supabase
-        .from("member_overview")
-        .select("id, full_name, plan_name, effective_status")
-        .in("id", familyIds)
-        .order("full_name")
-    : { data: [] };
   // El socio cuenta: una familia de 2 más él son 3, y ahí ya va el pack.
   const familySize = familyId ? familyIds.length + 1 : 1;
   const sellablePlans = ((plans ?? []) as Plan[]).filter(

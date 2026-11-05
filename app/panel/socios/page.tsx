@@ -11,6 +11,27 @@ import { SearchBox } from "./SearchBox";
 import { ViewToggle, type SociosView } from "./ViewToggle";
 import { formatDate } from "@/lib/labels";
 
+// Solo las columnas que usa la lista. member_overview calcula cada columna
+// por socio (cumpleaños, última entrada, entradas de hoy...) y con select("*")
+// se calculaban y viajaban todas, incluidas las que acá no se muestran.
+const LIST_COLUMNS =
+  "id, full_name, photo_url, effective_status, plan_name, uses_total, uses_remaining, " +
+  "days_left, period_end, checked_in_today";
+
+type ListMember = Pick<
+  MemberOverview,
+  | "id"
+  | "full_name"
+  | "photo_url"
+  | "effective_status"
+  | "plan_name"
+  | "uses_total"
+  | "uses_remaining"
+  | "days_left"
+  | "period_end"
+  | "checked_in_today"
+>;
+
 const FILTERS = [
   { key: "todos", label: "Todos" },
   { key: "al-dia", label: "Al día" },
@@ -31,7 +52,7 @@ export default async function SociosPage({
   // Los dados de baja no cuentan en nada (totales, vencidos, entraron hoy):
   // solo aparecen en su propio filtro.
   const showArchived = f === "baja";
-  let query = supabase.from("member_overview").select("*").order("full_name");
+  let query = supabase.from("member_overview").select(LIST_COLUMNS).order("full_name");
   query = showArchived
     ? query.not("archived_at", "is", null)
     : query.is("archived_at", null);
@@ -50,7 +71,7 @@ export default async function SociosPage({
       .select("id", { count: "exact", head: true })
       .not("archived_at", "is", null),
   ]);
-  const all = (data ?? []) as MemberOverview[];
+  const all = (data ?? []) as unknown as ListMember[];
 
   const porVencer = all.filter(
     (m) =>

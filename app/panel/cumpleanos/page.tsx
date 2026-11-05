@@ -13,14 +13,22 @@ import { formatDayMonth, ageOnNextBirthday } from "@/lib/labels";
 export default async function CumpleañosPage() {
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("member_overview")
-    .select(
-      "id, full_name, photo_url, birth_date, next_birthday, days_to_birthday, is_birthday_today"
-    )
-    .not("birth_date", "is", null)
-    .is("archived_at", null)
-    .order("days_to_birthday", { ascending: true });
+  // Las dos consultas son independientes: salen juntas.
+  const [{ data }, { count: sinFecha }] = await Promise.all([
+    supabase
+      .from("member_overview")
+      .select(
+        "id, full_name, photo_url, birth_date, next_birthday, days_to_birthday, is_birthday_today"
+      )
+      .not("birth_date", "is", null)
+      .is("archived_at", null)
+      .order("days_to_birthday", { ascending: true }),
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .is("birth_date", null)
+      .is("archived_at", null),
+  ]);
 
   const all = (data ?? []) as Pick<
     MemberOverview,
@@ -35,12 +43,6 @@ export default async function CumpleañosPage() {
 
   const hoy = all.filter((m) => m.is_birthday_today);
   const proximos = all.filter((m) => !m.is_birthday_today);
-
-  const { count: sinFecha } = await supabase
-    .from("members")
-    .select("id", { count: "exact", head: true })
-    .is("birth_date", null)
-    .is("archived_at", null);
 
   return (
     <div className="mx-auto w-full max-w-[900px] space-y-5">

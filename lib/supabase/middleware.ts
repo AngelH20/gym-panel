@@ -97,9 +97,15 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() en vez de getUser(): el proyecto firma los JWT con una clave
+  // asimétrica (ES256), así que la firma se verifica acá mismo con la clave
+  // pública (JWKS, que auth-js cachea 10 minutos) en lugar de ir hasta
+  // Supabase Auth en CADA request del panel. Si la sesión venció, igual la
+  // refresca y reescribe las cookies como antes. Con un token HS256 viejo
+  // cae solo a getUser(). Esto es solo el portón de redirección: los datos
+  // los sigue cuidando la RLS, que valida el mismo JWT en cada consulta.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ?? null;
 
   if (!user && path.startsWith("/panel")) {
     const url = request.nextUrl.clone();

@@ -35,6 +35,10 @@ export function Avatar({
       <img
         src={url}
         alt=""
+        // Las listas de socios pueden traer decenas de fotos: que el
+        // navegador baje solo las que están a la vista y no frene el render.
+        loading="lazy"
+        decoding="async"
         className="rounded-full object-cover shrink-0 ring-1 ring-line"
         style={{ width: size, height: size }}
       />

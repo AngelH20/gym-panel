@@ -1,5 +1,27 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckInPanel } from "./CheckInPanel";
+
+/**
+ * El nombre del gimnasio es igual para todos y casi nunca cambia (no hay
+ * pantalla para editarlo), pero esta es la ruta más transitada: la abre cada
+ * socio que escanea el QR. Se guarda en la caché de datos de Next unos
+ * minutos, así la página no espera un viaje a Supabase en cada entrada. No es
+ * un dato por usuario ni por rol: cachearlo no filtra nada.
+ */
+const getGymName = unstable_cache(
+  async () => {
+    const supabase = createAdminClient();
+    const { data: gymRow } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "gym_name")
+      .maybeSingle();
+    return (gymRow?.value as string) ?? "CAREF";
+  },
+  ["checkin-gym-name"],
+  { revalidate: 300 }
+);
 
 /**
  * Kiosco fijo de check-in. Ruta pública, sin sesión. El QR de /panel/acceso
@@ -11,16 +33,7 @@ export default async function CheckInPage({
 }: {
   searchParams: Promise<{ t?: string }>;
 }) {
-  const { t } = await searchParams;
-  const supabase = createAdminClient();
-
-  const { data: gymRow } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "gym_name")
-    .maybeSingle();
-
-  const gymName = (gymRow?.value as string) ?? "CAREF";
+  const [{ t }, gymName] = await Promise.all([searchParams, getGymName()]);
 
   return (
     <main

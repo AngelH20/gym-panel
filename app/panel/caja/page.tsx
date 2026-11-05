@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentAdminRole } from "@/lib/supabase/role";
 import type { Payment, CashClosing, CashOpening } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import {
@@ -53,7 +54,7 @@ export default async function CajaPage({
     { data: closingRaw },
     { data: openingRaw },
     { data: historyRaw },
-    { data: role },
+    role,
     { data: voidsRaw },
   ] = await Promise.all([
       supabase
@@ -68,7 +69,8 @@ export default async function CajaPage({
         .select("*")
         .order("closing_date", { ascending: false })
         .limit(30),
-      supabase.rpc("current_admin_role"),
+      // Cacheado por request: el layout ya lo pidió, no es otro viaje.
+      getCurrentAdminRole(),
       supabase
         .from("payments")
         .select("*, members(full_name)")
