@@ -43,8 +43,9 @@ export default async function CajaPage({
   searchParams: Promise<{ date?: string; ver?: string }>;
 }) {
   const { date: dateParam, ver } = await searchParams;
-  // "Más opciones" → Cobros anulados: otra vista de la misma pantalla.
+  // "Más opciones": otras vistas de la misma pantalla.
   const showVoids = ver === "anulados";
+  const showManage = ver === "anular";
   const today = todayLocal();
   const date = dateParam ?? today;
   const isToday = date === today;
@@ -111,6 +112,10 @@ export default async function CajaPage({
   const voids = [...voidsBySale.values()];
 
   if (showVoids) return <VoidsView voids={voids} />;
+  // Anular es solo de dueño o programador (la base igual lo exige).
+  if (showManage && isManager) {
+    return <ManageView date={date} isToday={isToday} payments={active} saleTotals={saleTotals} />;
+  }
 
   const totals = closing
     ? { cash: closing.total_cash_cents, transfer: closing.total_transfer_cents }
@@ -160,6 +165,15 @@ export default async function CajaPage({
             )}
             <MoreOptions
               items={[
+                  ...(isManager
+                    ? [
+                        {
+                          href: `/panel/caja?ver=anular&date=${date}`,
+                          label: isToday ? "Anular movimientos de hoy" : "Anular movimientos de este día",
+                          hint: "Sacar un cobro de la caja (queda registrado)",
+                        },
+                      ]
+                    : []),
                 {
                   href: "/panel/caja?ver=anulados",
                   label: "Cobros anulados",
@@ -281,7 +295,6 @@ export default async function CajaPage({
         ) : (
           <ul className={`datalist ${LIST_SCROLL}`}>
             {payments.map((p) => {
-              const sale = saleTotals.get(saleKey(p));
               return (
                 <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3">
                   <div className={`flex-1 min-w-0 ${p.voided_at ? "opacity-60" : ""}`}>
@@ -299,13 +312,6 @@ export default async function CajaPage({
                       </p>
                     )}
                   </div>
-                  {isManager && !p.voided_at && sale && (
-                    <VoidSaleButton
-                      paymentId={p.id}
-                      saleTotalCents={sale.cents}
-                      isSplit={sale.rows > 1}
-                    />
-                  )}
                   <span
                     className={`num text-base font-medium shrink-0 ${
                       p.voided_at ? "line-through text-txt-faint" : ""
@@ -425,6 +431,64 @@ function VoidsView({ voids }: { voids: PaymentRow[] }) {
                 </span>
               </li>
             ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/** Caja → Más opciones → Anular movimientos (dueño o programador). Una fila
+ *  por venta: un pago mixto son dos movimientos y se anulan juntos. */
+function ManageView({
+  date,
+  isToday,
+  payments,
+  saleTotals,
+}: {
+  date: string;
+  isToday: boolean;
+  payments: PaymentRow[];
+  saleTotals: Map<string, { cents: number; rows: number }>;
+}) {
+  const seen = new Set<string>();
+  const sales = payments.filter((p) => {
+    const k = saleKey(p);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        back={{ href: `/panel/caja?date=${date}`, label: "Caja" }}
+        title={isToday ? "Anular movimientos de hoy" : `Anular movimientos del ${formatDate(date)}`}
+        description="El cobro sale de los totales de la caja y queda en Cobros anulados con quién lo anuló y por qué. No se borra del todo."
+      />
+
+      <section className="card p-5">
+        {sales.length === 0 ? (
+          <EmptyState title="Nada para anular" description="No hay cobros vigentes en este día." />
+        ) : (
+          <ul className="datalist">
+            {sales.map((p) => {
+              const sale = saleTotals.get(saleKey(p)) ?? { cents: p.amount_cents, rows: 1 };
+              return (
+                <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base truncate">{memberName(p)}</p>
+                    <p className="mt-0.5 text-tiny text-txt-faint">
+                      {p.plan_name} ·{" "}
+                      {sale.rows > 1 ? "Efectivo + transferencia" : paymentMethodLabel[p.method]} ·{" "}
+                      {formatTime(p.paid_at)}
+                    </p>
+                  </div>
+                  <VoidSaleButton paymentId={p.id} saleTotalCents={sale.cents} isSplit={sale.rows > 1} />
+                  <span className="num text-base font-medium shrink-0">{formatMoney(sale.cents)}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
