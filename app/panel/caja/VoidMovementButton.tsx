@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { voidCashMovement } from "./actions";
-import { FormError, SubmitButton } from "@/components/Form";
+import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney } from "@/lib/labels";
 
 /**
@@ -43,14 +43,15 @@ export function VoidMovementButton({
         Se anula {isExpense ? "el gasto" : "el ingreso"} de {formatMoney(amountCents)}. Sale de los
         totales de esa caja y queda registrado quién lo anuló.
       </p>
-      <input
-        name="reason"
-        required
-        autoFocus
-        maxLength={500}
-        className="field text-tiny"
-        placeholder="Motivo (ej: se cargó dos veces)"
-      />
+      <Field label="Motivo">
+        <input
+          name="reason"
+          required
+          autoFocus
+          maxLength={500}
+          className="field text-tiny"
+        />
+      </Field>
       <FormError message={state?.error} />
       <div className="flex gap-2">
         <SubmitButton className="btn-danger btn-sm" pendingLabel="Anulando…">

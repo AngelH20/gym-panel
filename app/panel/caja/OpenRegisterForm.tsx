@@ -43,12 +43,13 @@ export function OpenRegisterForm() {
             step="1"
             required
             className="field font-mono"
-            placeholder="10000"
             autoFocus
           />
         </Field>
 
-        <input name="notes" className="field text-tiny" placeholder="Notas (opcional)" />
+        <Field label="Notas (opcional)">
+          <input name="notes" className="field text-tiny" />
+        </Field>
 
         <FormError message={state?.error} />
 

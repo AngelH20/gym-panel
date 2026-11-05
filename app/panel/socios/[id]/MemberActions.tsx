@@ -242,7 +242,6 @@ export function MemberActions({
                           min={1}
                           step="1"
                           inputMode="numeric"
-                          placeholder={String(latestMembership.uses_total)}
                           className="field font-mono w-28"
                         />
                       </Field>

@@ -134,7 +134,6 @@ export function PaymentFields({
                 value={value.cash}
                 onChange={(e) => onChange({ ...value, cash: e.target.value })}
                 className={inputClass}
-                placeholder="40000"
               />
             </Field>
             <Field label="Por transferencia">
@@ -147,7 +146,6 @@ export function PaymentFields({
                 value={value.transfer}
                 onChange={(e) => onChange({ ...value, transfer: e.target.value })}
                 className={inputClass}
-                placeholder="60000"
               />
             </Field>
           </div>
@@ -173,7 +171,6 @@ export function PaymentFields({
             value={value.amount}
             onChange={(e) => onChange({ ...value, amount: e.target.value })}
             className={inputClass}
-            placeholder="80000"
           />
         </Field>
       )}

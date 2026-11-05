@@ -130,7 +130,6 @@ export function PausePass({
               name="reason"
               type="text"
               maxLength={300}
-              placeholder="Vacaciones, lesión…"
               className="field"
             />
           </Field>

@@ -56,7 +56,6 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           title="8 dígitos numéricos"
           defaultValue={member.dni ?? ""}
           className="field font-mono"
-          placeholder="30111222"
         />
       </Field>
 
@@ -93,7 +92,6 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           name="welcome_message"
           rows={2}
           className="field resize-y"
-          placeholder="Bienvenido a CAREF, wachín"
           defaultValue={member.welcome_message ?? ""}
         />
       </Field>

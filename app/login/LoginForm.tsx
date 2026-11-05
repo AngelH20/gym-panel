@@ -18,7 +18,6 @@ export function LoginForm({ volver }: { volver: string }) {
           autoComplete="email"
           required
           className="field"
-          placeholder="vos@gimnasio.com"
           autoFocus
         />
       </Field>

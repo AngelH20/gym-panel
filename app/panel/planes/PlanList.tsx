@@ -173,7 +173,7 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
       {plan && <input type="hidden" name="id" value={plan.id} />}
 
       <Field label="Nombre">
-        <input name="name" required defaultValue={plan?.name} className="field" placeholder="Pase Libre" />
+        <input name="name" required defaultValue={plan?.name} className="field" />
       </Field>
 
       <Field label="Descripción" hint="Opcional. Es lo que ve el socio.">
@@ -181,7 +181,6 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
           name="description"
           defaultValue={plan?.description ?? ""}
           className="field"
-          placeholder="Acceso todos los días del mes."
         />
       </Field>
 
@@ -223,7 +222,6 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
               plan?.price_cash_cents != null ? plan.price_cash_cents / 100 : ""
             }
             className="field font-mono"
-            placeholder="80000"
           />
         </Field>
 
@@ -237,7 +235,6 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
               plan?.price_transfer_cents != null ? plan.price_transfer_cents / 100 : ""
             }
             className="field font-mono"
-            placeholder="85000"
           />
         </Field>
       </div>

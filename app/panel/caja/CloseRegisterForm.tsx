@@ -72,7 +72,6 @@ export function CloseRegisterForm({
             value={counted}
             onChange={(e) => setCounted(e.target.value)}
             className="field font-mono"
-            placeholder="45000"
             autoFocus
           />
         </Field>
@@ -85,7 +84,9 @@ export function CloseRegisterForm({
           </p>
         )}
 
-        <input name="notes" className="field text-tiny" placeholder="Notas (opcional)" />
+        <Field label="Notas (opcional)">
+          <input name="notes" className="field text-tiny" />
+        </Field>
 
         <p className="text-tiny text-txt-faint">
           {pastDate

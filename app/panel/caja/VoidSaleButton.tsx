@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { voidSale } from "./actions";
-import { FormError, SubmitButton } from "@/components/Form";
+import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney } from "@/lib/labels";
 
 /**
@@ -45,13 +45,14 @@ export function VoidSaleButton({
         {isSplit ? ", efectivo y transferencia" : ""}). Sale de los totales de esa caja y
         queda registrado quién la anuló.
       </p>
-      <input
-        name="reason"
-        required
-        autoFocus
-        className="field text-tiny"
-        placeholder="Motivo (ej: se cargó por adelantado y no pagó)"
-      />
+      <Field label="Motivo">
+        <input
+          name="reason"
+          required
+          autoFocus
+          className="field text-tiny"
+        />
+      </Field>
       <label className="flex items-center gap-2.5 min-h-9 text-tiny text-txt-soft cursor-pointer">
         <input type="checkbox" name="cancel_membership" defaultChecked className="size-4" />
         Dar de baja también el pase

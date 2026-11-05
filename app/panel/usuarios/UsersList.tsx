@@ -164,12 +164,12 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
     <form action={action} className="card p-5 space-y-3 border-line-strong">
       <h2 className="h3">Nueva cuenta</h2>
 
-      <Field label="Nombre">
-        <input name="full_name" className="field" placeholder="Opcional" />
+      <Field label="Nombre (opcional)">
+        <input name="full_name" className="field" />
       </Field>
 
       <Field label="Email">
-        <input name="email" type="email" required className="field" placeholder="nombre@mail.com" />
+        <input name="email" type="email" required className="field" />
       </Field>
 
       <Field label="Contraseña" hint="Al menos 8 caracteres. Se la pasás vos a esa persona.">

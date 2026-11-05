@@ -135,7 +135,6 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
             maxLength={8}
             title="8 dígitos numéricos"
             className="field min-h-14 text-center num text-[1.5rem] font-medium tracking-[0.12em]"
-            placeholder="30111222"
             autoFocus
           />
         </Field>

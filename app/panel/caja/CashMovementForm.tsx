@@ -78,7 +78,6 @@ export function CashMovementForm() {
             step="1"
             required
             className="field font-mono"
-            placeholder="5000"
             autoFocus
           />
         </Field>
@@ -96,7 +95,6 @@ export function CashMovementForm() {
             required
             maxLength={MAX_MOVEMENT_REASON}
             className="field"
-            placeholder={kind === "expense" ? "Ej: pago de la limpieza" : "Ej: venta de agua"}
           />
         </Field>
 

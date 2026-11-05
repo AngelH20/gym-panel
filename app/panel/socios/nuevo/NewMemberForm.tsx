@@ -13,66 +13,14 @@ import { Field, FormError, SubmitButton } from "@/components/Form";
 import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
 import type { Plan } from "@/lib/types";
 
-const DRAFT_KEY = "caref:nuevo-socio:draft";
-
 /** Un socio existente al que se puede vincular como familiar. */
 export type Relative = { id: string; full_name: string; family_id: string | null };
 
-type Draft = {
-  relative_id: string;
-  full_name: string;
-  dni: string;
-  phone: string;
-  email: string;
-  photo_url: string;
-  notes: string;
-  birth_date: string;
-  plan_id: string;
-  payment: PaymentDraft;
-};
-
-const EMPTY_DRAFT: Draft = {
-  relative_id: "",
-  full_name: "",
-  dni: "",
-  phone: "",
-  email: "",
-  photo_url: "",
-  notes: "",
-  birth_date: "",
-  plan_id: "",
-  payment: EMPTY_PAYMENT,
-};
-
-function loadDraft(): Draft {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return EMPTY_DRAFT;
-    const saved = JSON.parse(raw);
-    // Un borrador guardado antes del pago mixto no trae "payment": los
-    // defaults lo cubren en vez de romper el formulario.
-    return { ...EMPTY_DRAFT, ...saved, payment: { ...EMPTY_PAYMENT, ...saved.payment } };
-  } catch {
-    return EMPTY_DRAFT;
-  }
-}
-
-function saveDraft(draft: Draft) {
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  } catch {
-    // localStorage puede fallar en privado/incógnito; no es crítico.
-  }
-}
-
-function clearDraft() {
-  try {
-    localStorage.removeItem(DRAFT_KEY);
-  } catch {
-    // idem
-  }
-}
-
+// El formulario arranca siempre vacío. Antes guardaba un borrador en
+// localStorage y, si alguien dejaba un alta a medias, el próximo "Nuevo
+// socio" aparecía con los datos de esa otra persona. Tampoco usa el
+// autocompletado del navegador (autoComplete="off"): cada alta es alguien
+// distinto.
 export function NewMemberForm({
   plans: allPlans,
   members,
@@ -97,44 +45,6 @@ export function NewMemberForm({
   const [planId, setPlanId] = useState("");
   const [payment, setPayment] = useState<PaymentDraft>(EMPTY_PAYMENT);
   const [startDate, setStartDate] = useState(today);
-  const [hydrated, setHydrated] = useState(false);
-
-  // Restaura lo que había quedado sin enviar (p. ej. si te fuiste a abrir
-  // la caja y volviste). Recién después de hidratar corre el efecto que
-  // guarda, para no pisar el borrador con el estado vacío del primer render.
-  useEffect(() => {
-    const d = loadDraft();
-    setFullName(d.full_name);
-    setDni(d.dni);
-    setPhone(d.phone);
-    setEmail(d.email);
-    setPhotoUrl(d.photo_url);
-    setNotes(d.notes);
-    setBirthDate(d.birth_date);
-    if (members.some((x) => x.id === d.relative_id)) setRelativeId(d.relative_id);
-    if (cajaAbierta) {
-      setPlanId(d.plan_id);
-      setPayment(d.payment);
-    }
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    saveDraft({
-      relative_id: relativeId,
-      full_name: fullName,
-      dni,
-      phone,
-      email,
-      photo_url: photoUrl,
-      notes,
-      birth_date: birthDate,
-      plan_id: planId,
-      payment,
-    });
-  }, [hydrated, relativeId, fullName, dni, phone, email, photoUrl, notes, birthDate, planId, payment]);
 
   // Pack familiar: con el nuevo socio, ¿cuántos quedan en la familia? Si el
   // familiar elegido no tenía familia, son 2; si no, los que ya había más él.
@@ -184,7 +94,7 @@ export function NewMemberForm({
   }
 
   return (
-    <form action={action} onSubmit={() => clearDraft()} className="space-y-4">
+    <form action={action} autoComplete="off" className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <div className="card p-5 space-y-4">
           <Field label="Nombre y apellido">
@@ -192,7 +102,6 @@ export function NewMemberForm({
               name="full_name"
               required
               className="field"
-              placeholder="Martina Gómez"
               autoFocus
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -209,7 +118,6 @@ export function NewMemberForm({
               maxLength={8}
               title="8 dígitos numéricos"
               className="field font-mono"
-              placeholder="30111222"
               value={dni}
               onChange={(e) => setDni(e.target.value)}
             />
@@ -220,18 +128,16 @@ export function NewMemberForm({
               <input
                 name="phone"
                 className="field font-mono"
-                placeholder="11 5555-0101"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
             </Field>
 
-            <Field label="Email">
+            <Field label="Email (opcional)">
               <input
                 name="email"
                 type="email"
                 className="field"
-                placeholder="Opcional"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -242,7 +148,6 @@ export function NewMemberForm({
             <input
               name="photo_url"
               className="field"
-              placeholder="https://…"
               value={photoUrl}
               onChange={(e) => setPhotoUrl(e.target.value)}
             />
@@ -287,12 +192,11 @@ export function NewMemberForm({
             </Field>
           )}
 
-          <Field label="Notas">
+          <Field label="Notas (opcional)">
             <textarea
               name="notes"
               rows={3}
               className="field resize-y"
-              placeholder="Opcional"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
