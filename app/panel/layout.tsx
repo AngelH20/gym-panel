@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
-import { PanelNav } from "./PanelNav";
+import { PanelNav, PanelTitle } from "./PanelNav";
+import { ROLE_LABEL } from "@/lib/roles";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { IconSettings } from "@/components/icons";
 import { DateRefresher } from "./DateRefresher";
 
 export default async function PanelLayout({
@@ -39,87 +39,76 @@ export default async function PanelLayout({
 
   const gymName = (setting?.value as string) ?? "CAREF";
 
-  const logo = (
-    <Link href="/panel" className="flex items-center gap-2.5 min-w-0 rounded-control">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-caref.svg" alt="" className="size-9 md:size-12 shrink-0 object-contain" />
-      <span className="font-display text-[1.375rem] md:text-[1.625rem] leading-none font-extrabold truncate">
-        {gymName}
-      </span>
-    </Link>
-  );
+  const roleLabel = ROLE_LABEL[role];
 
   const salir = (
     <form action={signOut}>
       <button
-        className="min-h-10 px-3 rounded-control text-tiny font-semibold text-txt-onDarkSoft
-                   hover:text-txt-onDark hover:bg-ink-raised transition-colors"
+        title="Salir"
+        className="inline-flex items-center gap-2 min-h-9 px-2.5 rounded-control text-tiny font-medium
+                   text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
       >
+        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11" />
+        </svg>
         Salir
       </button>
     </form>
   );
 
+  // Cuenta, tema y salir: abajo de la barra lateral en escritorio, y al
+  // final del menú "Más" en el celular.
+  const account = (
+    <div className="flex items-center justify-between gap-2 px-1">
+      <div className="min-w-0 px-2">
+        <p className="text-tiny font-medium text-txt truncate">{roleLabel}</p>
+        <p className="text-micro text-txt-faint truncate">{gymName}</p>
+      </div>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <ThemeToggle />
+        {salir}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-dvh md:flex">
       <DateRefresher />
-      {/*
-        Barra lateral fija en escritorio: cromo marino del escudo. El link
-        activo se funde con el fondo de la página (ver PanelNav), por eso la
-        barra no lleva borde a la derecha.
-      */}
+
       <aside
-        className="chrome hidden md:flex md:flex-col md:w-64 md:shrink-0 md:sticky md:top-0 md:h-dvh
-                   bg-ink text-txt-onDark"
+        className="hidden md:flex md:flex-col md:w-60 md:shrink-0 md:sticky md:top-0 md:h-dvh
+                   border-r border-line bg-surface"
       >
-        <div className="h-24 shrink-0 flex items-center px-5">{logo}</div>
+        <Link
+          href="/panel"
+          className="mx-3 mt-4 mb-4 flex items-center gap-2.5 min-h-10 px-2 rounded-control"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-caref.svg" alt="" className="size-8 shrink-0 object-contain" />
+          <span className="text-base font-semibold truncate">{gymName}</span>
+        </Link>
 
         <PanelNav variant="sidebar" role={role} />
 
-        <div className="shrink-0 mx-3 pt-3 border-t border-ink-line">
-          <Link
-            href="/panel/settings"
-            className="flex items-center gap-3 min-h-11 rounded-control px-3.5 text-base font-medium
-                       text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised transition-colors"
-          >
-            <IconSettings className="size-5 shrink-0" />
-            Configuración
-          </Link>
-        </div>
-
-        <div className="shrink-0 px-3 py-3 flex items-center justify-between gap-3">
-          <ThemeToggle />
-          {salir}
-        </div>
+        <div className="shrink-0 border-t border-line px-2 py-3">{account}</div>
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        {/*
-          En el celular: cabecera corta arriba (marca y cuenta) y la
-          navegación fija abajo, a mano del pulgar (ver PanelNav "mobile").
-        */}
-        <header className="chrome md:hidden bg-ink text-txt-onDark sticky top-0 z-30 shadow-chrome">
-          <div className="px-4 h-14 flex items-center justify-between gap-2">
-            {logo}
-            <div className="flex items-center gap-1 shrink-0">
-              <Link
-                href="/panel/settings"
-                aria-label="Personalización"
-                title="Personalización"
-                className="flex size-10 items-center justify-center rounded-control
-                           text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised transition-colors"
-              >
-                <IconSettings className="size-5" />
-              </Link>
-              <ThemeToggle />
-              {salir}
-            </div>
+        {/* Celular: cabecera mínima con el título de la pantalla. La
+            navegación va abajo, a mano del pulgar (ver PanelNav "mobile"). */}
+        <header className="md:hidden sticky top-0 z-30 border-b border-line bg-surface">
+          <div className="px-4 h-14 flex items-center gap-3">
+            <Link href="/panel" aria-label={`${gymName}, inicio`} className="shrink-0 rounded-control">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-caref.svg" alt="" className="size-7 object-contain" />
+            </Link>
+            <PanelTitle />
           </div>
         </header>
 
-        <PanelNav variant="mobile" role={role} />
+        <PanelNav variant="mobile" role={role} footer={account} />
 
-        <main className="flex-1 w-full px-4 sm:px-6 lg:px-10 pt-5 pb-28 md:pt-8 md:pb-10">
+        <main className="flex-1 w-full max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-5 pb-24 md:pt-10 md:pb-12">
           {children}
         </main>
       </div>

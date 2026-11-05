@@ -63,8 +63,7 @@ export function WeeklyAttendanceChart({ data }: { data: DayCount[] }) {
                   width={barW}
                   height={Math.max(3, h)}
                   rx={3}
-                  className="fill-plate-blue"
-                  opacity={isHover || isToday ? 1 : 0.6}
+                  className={isToday ? "fill-plate-blue" : isHover ? "fill-txt-faint" : "fill-line-strong"}
                 />
               ) : (
                 <rect x={x} y={PLOT_H - 2} width={barW} height={2} rx={1} fill="rgb(var(--color-line-strong))" />
@@ -74,7 +73,7 @@ export function WeeklyAttendanceChart({ data }: { data: DayCount[] }) {
                 x={x + barW / 2}
                 y={PLOT_H + 18}
                 textAnchor="middle"
-                className={`text-[12px] font-sans ${isToday ? "fill-txt font-bold" : "fill-txt-faint font-medium"}`}
+                className={`text-[12px] ${isToday ? "fill-txt font-semibold" : "fill-txt-faint"}`}
               >
                 {d.label}
               </text>
@@ -86,13 +85,13 @@ export function WeeklyAttendanceChart({ data }: { data: DayCount[] }) {
       {hover != null && (
         <div
           className="pointer-events-none absolute -translate-x-1/2 -translate-y-full
-                     rounded-control bg-ink px-3 py-2 text-tiny text-txt-onDark shadow-lift z-10"
+                     rounded-control bg-ink px-2.5 py-1.5 text-tiny text-txt-onDark shadow-lift z-10"
           style={{
             left: `${((hover * step + step / 2) / W) * 100}%`,
             top: `${(Math.max(0, PLOT_H - (data[hover].count / max) * (PLOT_H - 10)) / H) * 100}%`,
           }}
         >
-          <span className="font-display text-lg leading-none font-extrabold">{data[hover].count}</span>{" "}
+          <span className="num font-semibold">{data[hover].count}</span>{" "}
           {data[hover].count === 1 ? "entrada" : "entradas"}
           <div className="text-txt-onDarkSoft">{formatDate(data[hover].date)}</div>
         </div>

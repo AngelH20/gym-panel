@@ -21,9 +21,12 @@ export function ArchivedBanner({
   const [state, action] = useActionState(unarchiveMember, null);
 
   return (
-    <section className="card p-5 space-y-3 border-t-4 border-t-plate-amber">
+    <section className="card p-5 space-y-3">
       <div>
-        <h2 className="h3">Dado de baja</h2>
+        <h2 className="h3 flex items-center gap-2">
+          <span className="size-2 rounded-full bg-plate-amber" aria-hidden="true" />
+          Dado de baja
+        </h2>
         <p className="mt-1 text-tiny text-txt-soft">
           Por {archivedByName ?? "un admin"} el {formatDateTime(archivedAt)}. No aparece en las
           listas y no tiene pase vigente. Sus pagos y entradas se conservan.

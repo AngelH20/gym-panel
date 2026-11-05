@@ -8,100 +8,109 @@
    * opacidad con /NN. El claro es el default; el oscuro pisa los mismos
    * nombres, así que ninguna clase de componente sabe en qué tema está.
    *
-   * Claro: tarjetas blancas sobre un gris pizarra frío, como tiza sobre el
-   * piso de goma de la sala. "ink" es el azul marino del escudo y NO cambia
-   * entre temas.
+   * Neutro: blanco, grises fríos y texto casi negro. Un solo acento
+   * (--color-plate-blue). Verde/ámbar/rojo son estado y se usan chicos:
+   * puntos, rótulos, la barra de entradas cuando quedan pocas.
    */
   :root {
-    --color-ink: 19 38 74; /* #13264A */
-    --color-ink-raised: 30 54 99; /* #1E3663 */
-    --color-ink-line: 46 72 120; /* #2E4878 */
+    --color-ink: 22 24 29; /* #16181D */
+    --color-ink-raised: 48 51 59;
+    --color-ink-line: 64 68 77;
 
-    --color-txt: 13 24 43; /* #0D182B */
-    --color-txt-soft: 66 79 100; /* #424F64 */
-    --color-txt-faint: 98 111 132; /* #626F84 — 4.9:1 sobre blanco */
-    --color-txt-onDark: 238 242 248;
-    --color-txt-onDarkSoft: 166 180 204;
+    --color-txt: 22 24 29; /* #16181D */
+    --color-txt-soft: 86 91 103; /* #565B67 */
+    --color-txt-faint: 112 117 129; /* #707581 — 4.7:1 sobre blanco */
+    --color-txt-onDark: 255 255 255;
+    --color-txt-onDarkSoft: 176 181 192;
     --color-txt-onAccent: 255 255 255;
 
     --color-surface: 255 255 255;
-    --color-surface-sunk: 233 237 242; /* #E9EDF2 */
-    --color-surface-hover: 243 245 248;
+    --color-surface-sunk: 245 246 248; /* #F5F6F8 */
+    --color-surface-hover: 246 247 249;
 
-    --color-line: 218 224 231;
-    --color-line-strong: 168 179 194;
+    --color-line: 232 234 238; /* #E8EAEE */
+    --color-line-strong: 211 214 221; /* #D3D6DD */
 
-    --color-plate-red: 180 35 45; /* #B4232D — disco de 25 kg */
-    --color-plate-blue: 31 95 175; /* #1F5FAF — disco de 20 kg */
-    --color-plate-amber: 232 170 20; /* #E8AA14 — disco de 15 kg (solo relleno) */
-    --color-plate-amber-ink: 122 88 0; /* #7A5800 — texto sobre fondos ámbar */
-    --color-plate-green: 22 122 72; /* #167A48 — disco de 10 kg */
+    --color-plate-blue: 36 82 194; /* #2452C2 — el acento */
+    --color-plate-green: 26 128 80; /* #1A8050 */
+    --color-plate-amber: 214 146 20; /* #D69214 — solo puntos y barras */
+    --color-plate-amber-ink: 150 98 0; /* #966200 — texto de "por vencer" */
+    --color-plate-red: 200 42 42; /* #C82A2A */
 
-    /* Par categórico para los gráficos de caja (efectivo/transferencia).
-       Conviven en la misma barra apilada, así que tienen que pasar el
-       chequeo de par adyacente para CVD — validado con
-       scripts/validate_palette.js de la skill de dataviz (los dos modos).
-       No se tocaron en el rediseño para no perder esa validación. */
-    --color-chart-cash: 42 109 177; /* #2A6DB1 */
-    --color-chart-transfer: 46 125 79; /* #2E7D4F */
+    /* Gráfico de caja (efectivo/transferencia en una misma barra): acento
+       contra gris medio. Se separan por luminancia además de por tono, así
+       que se leen igual con daltonismo. */
+    --color-chart-cash: 36 82 194;
+    --color-chart-transfer: 168 174 186;
   }
 
   /* Sigue al sistema operativo salvo que el usuario haya tocado el switch
-     (ThemeToggle, que graba data-theme y gana siempre). Oscuro: azul
-     noche, no gris neutro — sigue siendo CAREF de noche. */
+     (ThemeToggle, que graba data-theme y gana siempre). */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --color-txt: 232 237 245;
-      --color-txt-soft: 165 177 196;
-      --color-txt-faint: 122 136 158;
-      --color-txt-onAccent: 8 14 26;
+      --color-ink: 236 237 240;
+      --color-ink-raised: 214 216 222;
+      --color-ink-line: 190 193 201;
 
-      --color-surface: 18 27 46; /* #121B2E */
-      --color-surface-sunk: 10 16 29; /* #0A101D */
-      --color-surface-hover: 26 37 60;
+      --color-txt: 236 237 240;
+      --color-txt-soft: 165 170 180;
+      --color-txt-faint: 130 135 147;
+      --color-txt-onDark: 22 24 29;
+      --color-txt-onDarkSoft: 86 91 103;
+      --color-txt-onAccent: 14 16 20;
 
-      --color-line: 36 49 74;
-      --color-line-strong: 62 79 110;
+      --color-surface: 17 18 21; /* #111215 */
+      --color-surface-sunk: 25 27 31;
+      --color-surface-hover: 27 29 33;
 
-      --color-plate-red: 240 110 110;
-      --color-plate-blue: 110 165 240;
-      --color-plate-amber: 240 192 64;
-      --color-plate-amber-ink: 245 217 140;
-      --color-plate-green: 80 194 135;
+      --color-line: 37 40 46;
+      --color-line-strong: 56 60 68;
 
-      --color-chart-cash: 74 133 201; /* #4A85C9 */
-      --color-chart-transfer: 61 151 100; /* #3D9764 */
+      --color-plate-blue: 138 166 246;
+      --color-plate-green: 90 196 140;
+      --color-plate-amber: 232 182 72;
+      --color-plate-amber-ink: 236 196 110;
+      --color-plate-red: 240 116 116;
+
+      --color-chart-cash: 138 166 246;
+      --color-chart-transfer: 92 98 110;
     }
   }
 
   :root[data-theme="dark"] {
-    --color-txt: 232 237 245;
-    --color-txt-soft: 165 177 196;
-    --color-txt-faint: 122 136 158;
-    --color-txt-onAccent: 8 14 26;
+    --color-ink: 236 237 240;
+    --color-ink-raised: 214 216 222;
+    --color-ink-line: 190 193 201;
 
-    --color-surface: 18 27 46;
-    --color-surface-sunk: 10 16 29;
-    --color-surface-hover: 26 37 60;
+    --color-txt: 236 237 240;
+    --color-txt-soft: 165 170 180;
+    --color-txt-faint: 130 135 147;
+    --color-txt-onDark: 22 24 29;
+    --color-txt-onDarkSoft: 86 91 103;
+    --color-txt-onAccent: 14 16 20;
 
-    --color-line: 36 49 74;
-    --color-line-strong: 62 79 110;
+    --color-surface: 17 18 21;
+    --color-surface-sunk: 25 27 31;
+    --color-surface-hover: 27 29 33;
 
-    --color-plate-red: 240 110 110;
-    --color-plate-blue: 110 165 240;
-    --color-plate-amber: 240 192 64;
-    --color-plate-amber-ink: 245 217 140;
-    --color-plate-green: 80 194 135;
+    --color-line: 37 40 46;
+    --color-line-strong: 56 60 68;
 
-    --color-chart-cash: 74 133 201;
-    --color-chart-transfer: 61 151 100;
+    --color-plate-blue: 138 166 246;
+    --color-plate-green: 90 196 140;
+    --color-plate-amber: 232 182 72;
+    --color-plate-amber-ink: 236 196 110;
+    --color-plate-red: 240 116 116;
+
+    --color-chart-cash: 138 166 246;
+    --color-chart-transfer: 92 98 110;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     color-scheme: light;
-    /* Escala global de fuente: la toca el panel de Personalización. */
+    /* Escala global de fuente: la toca la pantalla de Ajustes. */
     font-size: var(--app-font-scale, 100%);
     -webkit-tap-highlight-color: transparent;
   }
@@ -117,33 +126,25 @@
   }
 
   body {
-    @apply bg-surface-sunk text-txt font-sans text-base antialiased;
+    @apply bg-surface text-txt font-sans text-base antialiased;
     transition: background-color 150ms, color 150ms;
   }
 
-  /* Números tabulares en todo: las columnas no deben bailar al cambiar. */
+  /* Cifras tabulares en todo lo numérico: las columnas no bailan. */
   .font-mono,
-  .font-display,
+  .num,
   [data-num] {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Foco visible siempre. El panel se opera rápido, a veces con teclado.
-     Doble anillo (color de superficie + azul) para que se vea sobre
-     cualquier fondo, también sobre un botón azul. */
+  /* Foco visible siempre: el panel se opera rápido, a veces con teclado. */
   :focus-visible {
     outline: 2px solid rgb(var(--color-plate-blue));
     outline-offset: 2px;
   }
 
-  /* Sobre el cromo marino el azul se pierde: ahí el foco va en ámbar. */
-  .chrome :focus-visible {
-    outline-color: rgb(var(--color-plate-amber));
-  }
-
   ::selection {
-    background: rgb(var(--color-plate-amber));
-    color: rgb(19 38 74);
+    background: rgb(var(--color-plate-blue) / 0.2);
   }
 
   input[type="checkbox"],
@@ -155,81 +156,65 @@
 
 @layer components {
   /* --- Tipografía ----------------------------------------------------------
-     Títulos condensados y pesados (ancho 70 del eje de Archivo): se leen de
-     lejos, en el celular, con la mano ocupada. Sin mayúsculas forzadas.   */
+     Jerarquía por tamaño y peso, nada más. */
 
-  /* Etiqueta chica arriba de un dato ("Vence", "Efectivo"). En minúscula y
-     sin tracking: es un rótulo, no un grito. */
   .eyebrow {
-    @apply font-sans text-tiny font-semibold text-txt-soft;
+    @apply text-tiny text-txt-faint;
   }
 
   .h1 {
-    @apply font-display text-display font-extrabold text-txt;
+    @apply text-display font-semibold text-txt;
   }
 
   .h2 {
-    @apply font-display text-title font-bold text-txt;
+    @apply text-title font-semibold text-txt;
   }
 
   .h3 {
-    @apply font-display text-[1.1875rem] leading-6 font-bold text-txt;
-    font-variation-settings: "wdth" 82;
-  }
-
-  /* Número de marcador: los conteos y montos que se vienen a mirar. */
-  .scoreboard {
-    @apply font-display font-extrabold leading-none text-txt;
-    font-variation-settings: "wdth" 66;
+    @apply text-base font-semibold text-txt;
   }
 
   /* --- Superficies -------------------------------------------------------- */
 
   .card {
-    @apply bg-surface border border-line rounded-card shadow-card;
+    @apply bg-surface border border-line rounded-card;
   }
 
   .card-link {
-    @apply card block transition-[border-color,box-shadow]
-           hover:border-line-strong hover:shadow-lift;
+    @apply card block transition-colors hover:border-line-strong hover:bg-surface-hover;
   }
 
-  /* Bloque de aviso dentro de una tarjeta (nota, advertencia). */
+  /* Aviso suave dentro de una sección. */
   .note {
-    @apply rounded-control border border-line bg-surface-sunk px-3.5 py-3 text-tiny text-txt-soft;
+    @apply rounded-control bg-surface-sunk px-3.5 py-3 text-tiny text-txt-soft;
   }
 
   /* --- Controles ---------------------------------------------------------- */
 
   .field {
-    @apply w-full min-h-11 bg-surface border border-line-strong rounded-control
-           px-3.5 py-2.5 text-base text-txt
+    @apply w-full min-h-10 bg-surface border border-line-strong rounded-control
+           px-3 py-2 text-base text-txt
            placeholder:text-txt-faint
            transition-[border-color,box-shadow]
-           hover:border-txt-faint
-           focus:border-plate-blue focus:outline-none
-           focus:ring-[3px] focus:ring-plate-blue/25;
+           focus:border-plate-blue focus:outline-none focus:shadow-glow;
   }
 
   select.field {
     @apply pr-9 appearance-none bg-no-repeat;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23626F84' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23707581' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-position: right 0.75rem center;
   }
 
   /* --- Botones ---------------------------------------------------------------
-     Un solo sistema: mismo alto mínimo (44px, tocable con el pulgar), mismo
-     radio, borde de 1px siempre (transparente en los llenos) para que
-     alineen igual. La diferencia es semántica: azul = acción principal,
-     marino = confirmar algo serio, verde = acceso/QR, ghost = secundaria,
-     rojo = destructivo. Al apretar, baja un pixel: confirma el toque.     */
+     Mismo alto, mismo radio, borde de 1px siempre (transparente en los
+     llenos) para que alineen igual. Acento = acción principal; oscuro =
+     confirmar algo importante; ghost = secundaria; rojo = destructivo.   */
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 min-h-11
-           rounded-control border border-transparent px-4 py-2
-           font-sans text-[0.875rem] leading-5 font-semibold
-           transition-[background-color,border-color,color,transform]
-           active:translate-y-px
+    @apply inline-flex items-center justify-center gap-2 min-h-10
+           rounded-control border border-transparent px-3.5 py-2
+           text-tiny font-medium whitespace-nowrap
+           transition-colors
            disabled:opacity-40 disabled:pointer-events-none;
   }
 
@@ -238,44 +223,44 @@
   }
 
   .btn-dark {
-    @apply btn bg-ink text-txt-onDark hover:bg-ink-raised;
+    @apply btn bg-ink text-txt-onDark hover:bg-ink/85;
   }
 
+  /* Antes verde; ahora el único acento, para no sumar colores. */
   .btn-success {
-    @apply btn bg-plate-green text-txt-onAccent hover:bg-plate-green/90;
+    @apply btn-primary;
   }
 
   .btn-ghost {
-    @apply btn border-line-strong bg-surface text-txt
-           hover:border-txt-faint hover:bg-surface-hover;
+    @apply btn border-line-strong bg-surface text-txt hover:bg-surface-hover;
   }
 
   .btn-danger {
-    @apply btn border-plate-red/50 bg-surface text-plate-red
-           hover:border-plate-red hover:bg-plate-red/10;
+    @apply btn border-line-strong bg-surface text-plate-red
+           hover:border-plate-red/50 hover:bg-plate-red/6;
   }
 
   .btn-sm {
-    @apply min-h-9 px-3 py-1.5 text-tiny tracking-normal normal-case;
+    @apply min-h-8 px-2.5 py-1 text-tiny;
   }
 
-  /* --- Filtros (chips) ----------------------------------------------------- */
+  /* --- Filtros ------------------------------------------------------------- */
 
   .chip {
-    @apply shrink-0 inline-flex items-center gap-1.5 min-h-9 rounded-full border px-3.5
-           text-tiny font-semibold transition-colors
-           bg-surface border-line text-txt-soft hover:border-line-strong hover:text-txt;
+    @apply shrink-0 inline-flex items-center gap-1.5 min-h-8 rounded-full border px-3
+           text-tiny font-medium transition-colors
+           border-line text-txt-soft hover:border-line-strong hover:text-txt;
   }
 
   .chip-on {
-    @apply bg-ink border-ink text-txt-onDark hover:border-ink hover:text-txt-onDark;
+    @apply border-ink bg-ink text-txt-onDark hover:border-ink hover:text-txt-onDark;
   }
 
   /* --- Insignias ---------------------------------------------------------- */
 
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full
-           border px-2.5 py-0.5 text-micro font-semibold whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line
+           px-2 py-0.5 text-micro font-medium text-txt-soft whitespace-nowrap;
   }
 
   /* --- Listas de datos ---------------------------------------------------- */
@@ -286,8 +271,7 @@
 }
 
 @layer utilities {
-  /* Tiras que se deslizan de costado (filtros, barra de abajo): se
-     deslizan con el dedo, la barra de scroll solo ensucia. */
+  /* Tiras que se deslizan de costado (filtros): la barra de scroll sobra. */
   .no-scrollbar {
     scrollbar-width: none;
   }

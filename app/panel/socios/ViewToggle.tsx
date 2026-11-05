@@ -29,7 +29,7 @@ export function ViewToggle({ value }: { value: SociosView }) {
   ];
 
   return (
-    <div className="inline-flex shrink-0 rounded-control border border-line-strong bg-surface p-0.5">
+    <div className="inline-flex shrink-0 rounded-control border border-line p-0.5">
       {options.map(([v, Icon, label]) => (
         <button
           key={v}
@@ -38,9 +38,9 @@ export function ViewToggle({ value }: { value: SociosView }) {
           aria-pressed={value === v}
           aria-label={label}
           title={label}
-          className={`flex size-9 items-center justify-center rounded-[5px] transition-colors ${
+          className={`flex size-8 items-center justify-center rounded-[6px] transition-colors ${
             value === v
-              ? "bg-ink text-txt-onDark"
+              ? "bg-surface-sunk text-txt"
               : "text-txt-faint hover:text-txt"
           }`}
         >

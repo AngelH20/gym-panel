@@ -5,11 +5,9 @@ import { initials } from "@/lib/labels";
  * en una lista larga, el color ayuda a reencontrar a la misma persona.
  */
 const palettes = [
-  "bg-plate-blue/12 text-plate-blue",
-  "bg-plate-green/12 text-plate-green",
-  "bg-plate-amber/25 text-plate-amberInk",
-  "bg-plate-red/12 text-plate-red",
-  "bg-ink/10 text-txt-soft",
+  "bg-surface-sunk text-txt-soft",
+  "bg-plate-blue/8 text-plate-blue",
+  "bg-surface-sunk text-txt",
 ];
 
 function paletteFor(name: string) {
@@ -47,8 +45,8 @@ export function Avatar({
 
   return (
     <div
-      className={`rounded-full shrink-0 flex items-center justify-center font-display font-extrabold ${paletteFor(name)}`}
-      style={{ width: size, height: size, fontSize: size * 0.42 }}
+      className={`rounded-full shrink-0 flex items-center justify-center font-medium ${paletteFor(name)}`}
+      style={{ width: size, height: size, fontSize: size * 0.36 }}
       aria-hidden="true"
     >
       {initials(name)}

@@ -37,37 +37,37 @@ export default async function CheckInPage({
 
   return (
     <main
-      className="min-h-dvh flex flex-col items-center bg-surface-sunk"
+      className="min-h-dvh flex flex-col items-center bg-surface"
       style={
         {
           colorScheme: "light",
-          "--color-txt": "13 24 43",
-          "--color-txt-soft": "66 79 100",
-          "--color-txt-faint": "98 111 132",
+          "--color-txt": "22 24 29",
+          "--color-txt-soft": "86 91 103",
+          "--color-txt-faint": "112 117 129",
           "--color-txt-onAccent": "255 255 255",
           "--color-surface": "255 255 255",
-          "--color-surface-sunk": "233 237 242",
-          "--color-surface-hover": "243 245 248",
-          "--color-line": "218 224 231",
-          "--color-line-strong": "168 179 194",
-          "--color-plate-red": "180 35 45",
-          "--color-plate-blue": "31 95 175",
-          "--color-plate-amber": "232 170 20",
-          "--color-plate-amber-ink": "122 88 0",
-          "--color-plate-green": "22 122 72",
+          "--color-surface-sunk": "245 246 248",
+          "--color-surface-hover": "246 247 249",
+          "--color-line": "232 234 238",
+          "--color-line-strong": "211 214 221",
+          "--color-plate-red": "200 42 42",
+          "--color-plate-blue": "36 82 194",
+          "--color-plate-amber": "214 146 20",
+          "--color-plate-amber-ink": "150 98 0",
+          "--color-plate-green": "26 128 80",
         } as React.CSSProperties
       }
     >
-      <div className="chrome w-full bg-ink text-txt-onDark px-5 pt-8 pb-14 flex flex-col items-center gap-3 text-center">
+      <div className="w-full max-w-sm px-5 pt-14 pb-8 flex flex-col items-center gap-3 text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-caref.svg" alt="" className="size-16 shrink-0 object-contain" />
-        <span className="font-display text-[2rem] leading-none font-black">{gymName}</span>
-        <p className="text-base text-txt-onDarkSoft text-balance">
+        <img src="/logo-caref.svg" alt="" className="size-14 shrink-0 object-contain" />
+        <span className="text-title font-semibold">{gymName}</span>
+        <p className="text-base text-txt-soft text-balance">
           Ingresá tu DNI para registrar la entrada.
         </p>
       </div>
 
-      <div className="w-full max-w-sm px-4 -mt-8 pb-10 space-y-5">
+      <div className="w-full max-w-sm px-5 pb-10 space-y-5">
 
         <CheckInPanel qrToken={t ?? ""} />
       </div>

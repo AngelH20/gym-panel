@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { qrDataUrl } from "@/lib/qr";
 import { IconQr, IconShield } from "@/components/icons";
@@ -34,11 +35,8 @@ export default async function AccesoPage() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[70vh] gap-6">
-      <div className="text-center space-y-2">
-        <span className="h1 inline-flex items-center gap-2 justify-center">
-          <IconQr className="size-7 text-plate-green" />
-          Acceso
-        </span>
+      <div className="text-center space-y-1">
+        <h1 className="h1 sr-only md:not-sr-only">Acceso</h1>
         <p className="text-base sm:text-lg text-txt-soft text-balance">
           Escaneá este código para registrar tu entrada al gimnasio.
         </p>
@@ -50,19 +48,40 @@ export default async function AccesoPage() {
         periodSeconds={periodSeconds}
       />
 
-      <section className="card p-4 sm:p-5 w-full max-w-2xl space-y-4">
+      {/*
+        Solo en celular: para dejar el teléfono apoyado en el mostrador
+        mostrando nada más que el QR (ver app/qr-movil/page.tsx). En
+        escritorio no tiene sentido, por eso md:hidden.
+      */}
+      <Link
+        href="/qr-movil"
+        className="md:hidden card w-full max-w-xl px-4 py-3 flex items-center gap-3 text-base font-medium
+                   hover:bg-surface-hover transition-colors"
+      >
+        <IconQr className="size-5 text-txt-faint shrink-0" />
+        <span className="flex-1 min-w-0">
+          QR vista móvil
+          <span className="block text-tiny font-normal text-txt-faint">
+            Deja el celular mostrando solo el código para que la gente entre
+          </span>
+        </span>
+      </Link>
+
+      <section className="card p-4 sm:p-5 w-full max-w-xl space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="h3 flex items-center gap-2">
-            <IconShield className="size-[18px] text-plate-blue" />
+            <IconShield className="size-4 text-txt-faint" />
             Seguridad
           </h2>
           <span
-            className={
-              protectionOn
-                ? "badge border-plate-green/35 bg-plate-green/12 text-plate-green"
-                : "badge border-plate-red/35 bg-plate-red/12 text-plate-red"
-            }
+            className={`inline-flex items-center gap-1.5 text-tiny font-medium ${
+              protectionOn ? "text-txt-soft" : "text-plate-red"
+            }`}
           >
+            <span
+              className={`size-1.5 rounded-full ${protectionOn ? "bg-plate-green" : "bg-plate-red"}`}
+              aria-hidden="true"
+            />
             {protectionOn ? "QR rotativo activo" : "Validación de QR apagada"}
           </span>
         </div>
@@ -70,7 +89,7 @@ export default async function AccesoPage() {
         <dl className="datalist">
           <div className="py-2 flex items-baseline justify-between gap-3">
             <dt className="text-tiny text-txt-faint">Rotación</dt>
-            <dd className="text-tiny font-mono text-right">
+            <dd className="text-tiny num text-right">
               cada {periodSeconds}s
               <span className="block text-micro text-txt-faint font-sans">
                 (tiempo de espera aumentado si justo se está escaneando)

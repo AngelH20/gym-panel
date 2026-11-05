@@ -2,23 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { AdminRole } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 
-const usuariosIcon = (
-  <>
-    <circle cx="9" cy="8" r="3.5" />
-    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" strokeLinecap="round" />
-    <path d="M17 8v6M14 11h6" strokeLinecap="round" />
-  </>
-);
+/* --- Íconos (trazo 1.8, 24x24, sin relleno) ------------------------------ */
 
-const panelIcon = (
+const inicioIcon = (
   <>
-    <rect x="3" y="3" width="7" height="9" rx="1.5" />
-    <rect x="14" y="3" width="7" height="5" rx="1.5" />
-    <rect x="14" y="12" width="7" height="9" rx="1.5" />
-    <rect x="3" y="16" width="7" height="5" rx="1.5" />
+    <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1v-8.5Z" strokeLinejoin="round" />
   </>
 );
 const sociosIcon = (
@@ -28,8 +20,30 @@ const sociosIcon = (
     <path d="M16 5.5a3.5 3.5 0 0 1 0 6.5M17.5 20a6.4 6.4 0 0 0-2-4.7" strokeLinecap="round" />
   </>
 );
+const cajaIcon = (
+  <>
+    <rect x="3" y="6" width="18" height="13" rx="2" />
+    <path d="M3 10h18" strokeLinecap="round" />
+    <path d="M7 15h3" strokeLinecap="round" />
+  </>
+);
+const qrIcon = (
+  <>
+    <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2" />
+    <rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2" />
+    <rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2" />
+    <path d="M14 14h3v3M20.5 17v3.5H14" strokeLinecap="round" />
+  </>
+);
 const metricasIcon = (
   <path d="M4 20V10M11 20V4M18 20v-7" strokeLinecap="round" strokeLinejoin="round" />
+);
+const cumpleañosIcon = (
+  <>
+    <path d="M4 21v-8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8" strokeLinecap="round" />
+    <path d="M3 21h18M4 15.5c1.3 0 1.3 1 2.7 1s1.3-1 2.6-1 1.4 1 2.7 1 1.3-1 2.6-1 1.4 1 2.7 1 1.3-1 2.7-1" strokeLinecap="round" />
+    <path d="M12 11V7.5M12 4.5v.01" strokeLinecap="round" />
+  </>
 );
 const planesIcon = (
   <>
@@ -37,46 +51,56 @@ const planesIcon = (
     <path d="M3 10h18M8 15h4" strokeLinecap="round" />
   </>
 );
-const cajaIcon = (
+const usuariosIcon = (
   <>
-    <rect x="3" y="7" width="18" height="13" rx="2" />
-    <path d="M3 11h18M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeLinecap="round" />
-    <circle cx="12" cy="15" r="1.8" />
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" strokeLinecap="round" />
+    <path d="M17 8v6M14 11h6" strokeLinecap="round" />
   </>
 );
-const qrIcon = (
+const ajustesIcon = (
   <>
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <path d="M14 14h3v3M20 17v4h-6" strokeLinecap="round" />
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" strokeLinecap="round" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
   </>
 );
-const cumpleañosIcon = (
+const masIcon = (
   <>
-    <path d="M12 2.5c-1 1.3-1 2.2 0 3.2M8.5 3.5c-.8 1-.8 1.8 0 2.6M15.5 3.5c-.8 1-.8 1.8 0 2.6" strokeLinecap="round" />
-    <path d="M5 11a2 2 0 0 1 2-2c.6 0 1 .3 1.5.8.5-.5.9-.8 1.5-.8s1 .3 1.5.8c.5-.5.9-.8 1.5-.8s1 .3 1.5.8c.5-.5.9-.8 1.5-.8a2 2 0 0 1 2 2v3H5v-3Z" />
-    <path d="M4 21v-5.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2V21M4 18h16" strokeLinecap="round" />
+    <circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    <circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" />
   </>
 );
 
-type NavLink = { href: string; label: string; icon: React.ReactNode };
+/* --- Estructura ------------------------------------------------------------
+   Dos grupos según el uso real:
+   - "Día a día": lo que el profesor usa todo el tiempo en la sala. En el
+     celular son las 4 pestañas fijas de abajo.
+   - "Gestión": lo que se consulta de vez en cuando. En el celular vive
+     detrás de "Más".
+   La visibilidad por rol es la misma de antes: Planes queda afuera para el
+   profesor y Usuarios es solo para dueño y programador.                     */
 
-/** Planes (precios) y Usuarios quedan afuera para profesor. El resto es
- *  igual para los tres roles. */
-function visibleLinks(role: AdminRole | null | undefined): NavLink[] {
+type NavLink = { href: string; label: string; short?: string; icon: React.ReactNode };
+
+const DAILY: NavLink[] = [
+  { href: "/panel", label: "Inicio", icon: inicioIcon },
+  { href: "/panel/socios", label: "Socios", icon: sociosIcon },
+  { href: "/panel/caja", label: "Caja", icon: cajaIcon },
+  { href: "/panel/acceso", label: "QR de acceso", short: "QR", icon: qrIcon },
+];
+
+function managementLinks(role: AdminRole | null | undefined): NavLink[] {
   const links: NavLink[] = [
-    { href: "/panel", label: "Panel", icon: panelIcon },
-    { href: "/panel/socios", label: "Socios", icon: sociosIcon },
-    { href: "/panel/cumpleanos", label: "Cumpleaños", icon: cumpleañosIcon },
     { href: "/panel/metricas", label: "Métricas", icon: metricasIcon },
+    { href: "/panel/cumpleanos", label: "Cumpleaños", icon: cumpleañosIcon },
   ];
   if (role !== "profesor") links.push({ href: "/panel/planes", label: "Planes", icon: planesIcon });
-  links.push({ href: "/panel/caja", label: "Caja", icon: cajaIcon });
-  links.push({ href: "/panel/acceso", label: "QR", icon: qrIcon });
   if (isManagerRole(role)) {
     links.push({ href: "/panel/usuarios", label: "Usuarios", icon: usuariosIcon });
   }
+  links.push({ href: "/panel/settings", label: "Ajustes", icon: ajustesIcon });
   return links;
 }
 
@@ -84,102 +108,219 @@ function isActive(pathname: string, href: string) {
   return href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
 }
 
+/** Título de la pantalla actual, para la cabecera del celular. */
+const TITLES: [string, string][] = [
+  ["/panel/socios/nuevo", "Nuevo socio"],
+  ["/panel/socios/", "Ficha del socio"],
+  ["/panel/socios", "Socios"],
+  ["/panel/caja", "Caja"],
+  ["/panel/acceso", "QR de acceso"],
+  ["/panel/metricas", "Métricas"],
+  ["/panel/cumpleanos", "Cumpleaños"],
+  ["/panel/planes", "Planes"],
+  ["/panel/usuarios", "Usuarios"],
+  ["/panel/settings", "Ajustes"],
+];
+
+export function PanelTitle() {
+  const pathname = usePathname();
+  const title = TITLES.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Inicio";
+  return <span className="text-lg font-semibold truncate">{title}</span>;
+}
+
+function Icon({ children, className = "size-[18px]" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`${className} shrink-0`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+/* --- Barra lateral (escritorio) ----------------------------------------- */
+
+function SidebarGroup({ title, links, pathname }: { title: string; links: NavLink[]; pathname: string }) {
+  return (
+    <div>
+      <p className="px-3 pb-1.5 text-micro font-medium text-txt-faint">{title}</p>
+      <ul className="space-y-0.5">
+        {links.map((item) => {
+          const active = isActive(pathname, item.href);
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={[
+                  "flex items-center gap-3 min-h-9 rounded-control px-3 text-[0.875rem] transition-colors",
+                  active
+                    ? "bg-surface-sunk text-txt font-medium"
+                    : "text-txt-soft hover:text-txt hover:bg-surface-hover",
+                ].join(" ")}
+              >
+                <span className={active ? "text-plate-blue" : "text-txt-faint"}>
+                  <Icon>{item.icon}</Icon>
+                </span>
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/* --- Menú "Más" (celular) ------------------------------------------------- */
+
+function MoreSheet({
+  links,
+  pathname,
+  footer,
+}: {
+  links: NavLink[];
+  pathname: string;
+  footer?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const active = links.some((l) => isActive(pathname, l.href));
+
+  // Se cierra al navegar, con Escape y tocando afuera.
+  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    panelRef.current?.querySelector<HTMLElement>("a, button")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="panel-mas"
+        className={tabClass(active || open)}
+      >
+        <Icon className="size-[22px]">{masIcon}</Icon>
+        Más
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Más secciones">
+          <button
+            type="button"
+            aria-label="Cerrar"
+            onClick={() => setOpen(false)}
+            className="absolute inset-0 bg-black/30"
+          />
+          <div
+            id="panel-mas"
+            ref={panelRef}
+            className="absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-line bg-surface shadow-lift
+                       px-3 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-strong" aria-hidden="true" />
+            <p className="px-3 pb-1.5 text-micro font-medium text-txt-faint">Gestión</p>
+            <ul>
+              {links.map((l) => {
+                const on = isActive(pathname, l.href);
+                return (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      onClick={() => setOpen(false)}
+                      aria-current={on ? "page" : undefined}
+                      className={`flex items-center gap-3 min-h-12 rounded-control px-3 text-base ${
+                        on ? "bg-surface-sunk font-medium text-txt" : "text-txt hover:bg-surface-hover"
+                      }`}
+                    >
+                      <span className={on ? "text-plate-blue" : "text-txt-faint"}>
+                        <Icon className="size-5">{l.icon}</Icon>
+                      </span>
+                      {l.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            {footer && <div className="mt-2 pt-2 border-t border-line">{footer}</div>}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function tabClass(active: boolean) {
+  return [
+    "flex-1 flex flex-col items-center justify-center gap-1 h-14 text-[0.6875rem] leading-none transition-colors",
+    active ? "text-txt font-semibold" : "text-txt-faint font-medium hover:text-txt",
+  ].join(" ");
+}
+
 /**
- * "sidebar": columna vertical fija a la izquierda en desktop. El link activo
- * se "despega" del cromo y se funde con el fondo de la página, como una
- * solapa: se ve de un vistazo en qué pantalla estás.
- * "mobile": barra fija abajo de todo, a mano del pulgar. Si no entran todos
- * los links, se desliza de costado.
- * En los dos, cada pantalla es su propio link — "Socios" lleva directo a la
- * lista de socios, sin desplegables intermedios.
+ * "sidebar": columna fija a la izquierda en escritorio, en dos grupos.
+ * "mobile": barra fija abajo con las 4 pantallas del día a día y "Más",
+ * que abre una hoja con el resto (y lo que se le pase como footer: cuenta,
+ * tema, salir).
  */
 export function PanelNav({
   variant,
   role,
+  footer,
 }: {
   variant: "sidebar" | "mobile";
   role?: AdminRole | null;
+  footer?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const management = managementLinks(role);
 
   if (variant === "sidebar") {
     return (
-      <nav className="flex-1 overflow-y-auto py-4 pl-3 space-y-1" aria-label="Secciones">
-        {visibleLinks(role).map((item) => {
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={[
-                "relative flex items-center gap-3 min-h-11 pl-3.5 pr-4 text-base",
-                "transition-colors duration-150",
-                active
-                  ? "bg-surface-sunk text-txt font-semibold rounded-l-[10px]"
-                  : "mr-3 rounded-control font-medium text-txt-onDarkSoft hover:text-txt-onDark hover:bg-ink-raised",
-              ].join(" ")}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className={`size-5 shrink-0 ${active ? "text-plate-blue" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={active ? 2.1 : 1.8}
-                aria-hidden="true"
-              >
-                {item.icon}
-              </svg>
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-6" aria-label="Secciones">
+        <SidebarGroup title="Día a día" links={DAILY} pathname={pathname} />
+        <SidebarGroup title="Gestión" links={management} pathname={pathname} />
       </nav>
     );
   }
 
   return (
     <nav
-      className="chrome md:hidden fixed inset-x-0 bottom-0 z-30 bg-ink border-t border-ink-line
-                 pb-[env(safe-area-inset-bottom)] overflow-x-auto no-scrollbar"
+      className="md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface
+                 pb-[env(safe-area-inset-bottom)]"
       aria-label="Secciones"
     >
-      <div className="flex min-w-max w-full">
-        {visibleLinks(role).map((l) => {
+      <div className="flex">
+        {DAILY.map((l) => {
           const active = isActive(pathname, l.href);
           return (
             <Link
               key={l.href}
               href={l.href}
               aria-current={active ? "page" : undefined}
-              className={[
-                "relative flex-1 min-w-[4.5rem] flex flex-col items-center justify-center gap-1",
-                "h-16 px-1.5 text-[0.6875rem] leading-none transition-colors",
-                active
-                  ? "text-txt-onDark font-semibold"
-                  : "text-txt-onDarkSoft font-medium hover:text-txt-onDark",
-              ].join(" ")}
+              className={tabClass(active)}
             >
-              {active && (
-                <span
-                  className="absolute top-0 inset-x-3 h-[3px] rounded-b-full bg-plate-amber"
-                  aria-hidden="true"
-                />
-              )}
-              <svg
-                viewBox="0 0 24 24"
-                className="size-[22px] shrink-0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={active ? 2.1 : 1.8}
-                aria-hidden="true"
-              >
-                {l.icon}
-              </svg>
-              {l.label}
+              <span className={active ? "text-plate-blue" : ""}>
+                <Icon className="size-[22px]">{l.icon}</Icon>
+              </span>
+              {l.short ?? l.label}
             </Link>
           );
         })}
+        <MoreSheet links={management} pathname={pathname} footer={footer} />
       </div>
     </nav>
   );

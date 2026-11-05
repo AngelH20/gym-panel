@@ -4,6 +4,7 @@ import type { MemberOverview } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { UsesTally } from "@/components/UsesTally";
 import { StatCard } from "@/components/StatCard";
+import { PageHeader } from "@/components/PageHeader";
 import {
   IconPeople,
   IconPersonPlus,
@@ -12,8 +13,6 @@ import {
   IconActivity,
   IconCash,
   IconSearch,
-  IconQr,
-  IconFlag,
 } from "@/components/icons";
 import {
   formatTime,
@@ -143,36 +142,24 @@ export default async function PanelHome() {
     .sort((a, b) => (a.period_end ?? "").localeCompare(b.period_end ?? ""));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <h1 className="h1">Panel</h1>
-        <Link href="/panel/acceso" className="btn-success shrink-0">
-          <IconQr />
-          Código QR
-        </Link>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Inicio"
+        actions={
+          <>
+            <Link href="/panel/socios" className="btn-ghost" aria-label="Buscar socio">
+              <IconSearch className="size-4" />
+              <span className="hidden sm:inline">Buscar socio</span>
+            </Link>
+            <Link href="/panel/socios/nuevo" className="btn-primary">
+              <IconPersonPlus className="size-4" />
+              Nuevo socio
+            </Link>
+          </>
+        }
+      />
 
-      {/*
-        Solo en celular: para dejar el teléfono apoyado en el mostrador
-        mostrando nada más que el QR (ver app/qr-movil/page.tsx). En
-        escritorio no tiene sentido, por eso md:hidden.
-      */}
-      <Link
-        href="/qr-movil"
-        className="md:hidden card p-4 flex items-center gap-3.5 text-base font-semibold
-                   text-txt hover:bg-surface-hover transition-colors"
-      >
-        <span className="flex size-11 items-center justify-center rounded-control bg-plate-green text-txt-onAccent shrink-0">
-          <IconQr className="size-5" />
-        </span>
-        <span className="flex-1 min-w-0">
-          QR vista móvil
-          <span className="block text-tiny font-normal text-txt-faint">
-            Deja el celular mostrando solo el código para que la gente entre
-          </span>
-        </span>
-      </Link>
-
+      {/* El día de hoy, de un vistazo */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard
           label="Entraron hoy"
@@ -199,45 +186,10 @@ export default async function PanelHome() {
         />
       </div>
 
-      <section className="card p-1.5 grid grid-cols-3 gap-1.5">
-        <QuickAction href="/panel/socios/nuevo" icon={<IconPersonPlus />} label="Nuevo socio" />
-        <QuickAction href="/panel/caja" icon={<IconCash />} label="Ir a caja" />
-        <QuickAction href="/panel/socios" icon={<IconSearch />} label="Buscar socio" />
-      </section>
-
-      {cumpleañosHoy.length > 0 && (
-        <section className="card p-5 border-plate-amber/60 bg-plate-amber/10">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="h3">🎂 Hoy cumplen años</h2>
-            <Link href="/panel/cumpleanos" className="text-tiny font-semibold text-plate-blue hover:underline underline-offset-4 shrink-0">
-              Ver todos
-            </Link>
-          </div>
-          <p className="mt-1 mb-3 text-tiny text-txt-soft">
-            Saludalos vos — el kiosco también se lo va a decir cuando entren.
-          </p>
-
-          <ul className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {cumpleañosHoy.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/panel/socios/${m.id}`}
-                  className="py-3 flex items-center gap-3 group"
-                >
-                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
-                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
-                    {m.full_name}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
+      {/* Lo que hay que resolver: a quién cobrarle */}
       {(porVencer.length > 0 || vencidosSinRenovar.length > 0) && (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <section className="card p-4 sm:p-5 flex flex-col border-t-4 border-t-plate-amber">
+        <div className="grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-2">
+          <section className="flex flex-col min-w-0">
             <ListHeader
               title="Hay que cobrarles"
               count={porVencer.length}
@@ -245,7 +197,7 @@ export default async function PanelHome() {
               tone="amber"
             />
             {porVencer.length === 0 ? (
-              <p className="text-base text-txt-soft">Nadie por ahora.</p>
+              <p className="py-3 text-tiny text-txt-faint">Nadie por ahora.</p>
             ) : (
               <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(22rem,100%),1fr))]`}>
                 {porVencer.map((m) => (
@@ -261,16 +213,15 @@ export default async function PanelHome() {
             )}
           </section>
 
-          <section className="card p-4 sm:p-5 flex flex-col border-t-4 border-t-plate-red">
+          <section className="flex flex-col min-w-0">
             <ListHeader
               title="Vencidos sin renovar"
               count={vencidosSinRenovar.length}
               hint="Se les venció el pase en el último mes y no pueden entrar hasta que paguen."
               tone="red"
-              icon={<IconFlag />}
             />
             {vencidosSinRenovar.length === 0 ? (
-              <p className="text-base text-txt-soft">Nadie por ahora.</p>
+              <p className="py-3 text-tiny text-txt-faint">Nadie por ahora.</p>
             ) : (
               <ul className={`${SCROLL_LIST} grid-cols-[repeat(auto-fill,minmax(min(14rem,100%),1fr))]`}>
                 {vencidosSinRenovar.map((m) => (
@@ -292,26 +243,59 @@ export default async function PanelHome() {
         </div>
       )}
 
-      <section className="card p-4 sm:p-5">
-        <h2 className="h3 mb-2">Entradas de hoy</h2>
-
-        {entraronHoy.length === 0 ? (
-          <p className="text-base text-txt-soft">
-            Todavía no entró nadie hoy.
+      {cumpleañosHoy.length > 0 && (
+        <section>
+          <div className="flex items-baseline justify-between gap-3 pb-3 border-b border-line">
+            <h2 className="h3">Hoy cumplen años 🎂</h2>
+            <Link href="/panel/cumpleanos" className="text-tiny font-medium text-plate-blue hover:underline underline-offset-4 shrink-0">
+              Ver todos
+            </Link>
+          </div>
+          <p className="mt-2 text-tiny text-txt-faint">
+            Saludalos vos — el kiosco también se lo va a decir cuando entren.
           </p>
-        ) : (
-          <ul className="grid grid-cols-1 gap-x-6 gap-y-0.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {entraronHoy.map((m) => (
+
+          <ul className="mt-1 grid grid-cols-1 gap-x-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {cumpleañosHoy.map((m) => (
               <li key={m.id}>
                 <Link
                   href={`/panel/socios/${m.id}`}
-                  className="py-3 flex items-center gap-3 group"
+                  className="py-2.5 flex items-center gap-3 group"
                 >
-                  <Avatar name={m.full_name} url={m.photo_url} size={34} />
-                  <span className="flex-1 min-w-0 truncate text-base font-medium group-hover:text-plate-blue transition-colors">
+                  <Avatar name={m.full_name} url={m.photo_url} size={32} />
+                  <span className="flex-1 min-w-0 truncate text-base group-hover:text-plate-blue transition-colors">
                     {m.full_name}
                   </span>
-                  <span className="font-mono text-tiny text-txt-faint shrink-0">
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section>
+        <div className="flex items-baseline justify-between gap-3 pb-3 border-b border-line">
+          <h2 className="h3">Entradas de hoy</h2>
+          <span className="num text-tiny text-txt-faint">{entraronHoy.length}</span>
+        </div>
+
+        {entraronHoy.length === 0 ? (
+          <p className="py-4 text-tiny text-txt-faint">
+            Todavía no entró nadie hoy.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-x-8 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            {entraronHoy.map((m) => (
+              <li key={m.id} className="border-b border-line">
+                <Link
+                  href={`/panel/socios/${m.id}`}
+                  className="py-2.5 flex items-center gap-3 group"
+                >
+                  <Avatar name={m.full_name} url={m.photo_url} size={32} />
+                  <span className="flex-1 min-w-0 truncate text-base group-hover:text-plate-blue transition-colors">
+                    {m.full_name}
+                  </span>
+                  <span className="num text-tiny text-txt-faint shrink-0">
                     {formatTime(m.last_check_in_at)}
                   </span>
                 </Link>
@@ -337,9 +321,9 @@ export default async function PanelHome() {
 }
 
 // Las listas de cobro se llenan a lo ancho (tantas columnas como entren) y
-// recién cuando pasan el alto máximo se scrollea adentro de la tarjeta.
+// recién cuando pasan el alto máximo se scrollea adentro.
 const SCROLL_LIST =
-  "grid gap-x-6 content-start max-h-[20rem] overflow-y-auto overflow-x-hidden pr-1";
+  "grid gap-x-8 content-start max-h-[22rem] overflow-y-auto overflow-x-hidden";
 
 function ListRow({
   member: m,
@@ -353,11 +337,10 @@ function ListRow({
   const due = (m.days_left ?? 99) <= 3 ? dueLabel(m.days_left, m.period_end) : null;
   return (
     <li className="border-b border-line">
-      <Link href={`/panel/socios/${m.id}`} className="py-2 min-h-12 flex items-center gap-2.5 group">
+      <Link href={`/panel/socios/${m.id}`} className="py-2 min-h-12 flex items-center gap-3 group">
         <Avatar name={m.full_name} url={m.photo_url} size={28} />
-        {/* Ancho fijo para el nombre: así las entradas quedan al lado y alineadas, no al fondo de la tarjeta. */}
         <span className="flex-1 sm:flex-none sm:w-44 min-w-0">
-          <span className="block truncate text-base font-medium leading-tight group-hover:text-plate-blue transition-colors">
+          <span className="block truncate text-base leading-tight group-hover:text-plate-blue transition-colors">
             {m.full_name}
           </span>
           {(subtitle ?? due) && (
@@ -381,56 +364,23 @@ function ListHeader({
   count,
   hint,
   tone,
-  icon,
 }: {
   title: string;
   count: number;
   hint: string;
   tone: "amber" | "red";
-  icon?: React.ReactNode;
 }) {
   return (
-    <div className="mb-3">
+    <div className="pb-3 border-b border-line">
       <div className="flex items-center gap-2">
-        {icon && (
-          <span className="text-plate-red" aria-hidden="true">
-            {icon}
-          </span>
-        )}
-        <h2 className="h3">{title}</h2>
         <span
-          className={`ml-auto scoreboard text-title ${
-            tone === "amber" ? "text-plate-amberInk" : "text-plate-red"
-          }`}
-        >
-          {count}
-        </span>
+          className={`size-2 rounded-full shrink-0 ${tone === "amber" ? "bg-plate-amber" : "bg-plate-red"}`}
+          aria-hidden="true"
+        />
+        <h2 className="h3">{title}</h2>
+        <span className="num text-tiny text-txt-faint">{count}</span>
       </div>
-      <p className="mt-0.5 text-tiny text-txt-soft">{hint}</p>
+      <p className="mt-0.5 text-tiny text-txt-faint">{hint}</p>
     </div>
-  );
-}
-
-function QuickAction({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-control
-                 min-h-16 sm:min-h-12 px-2 py-2.5 text-tiny font-semibold text-txt text-center
-                 bg-surface-sunk/70 hover:bg-plate-blue/10 transition-colors"
-    >
-      <span className="text-plate-blue [&>svg]:size-5" aria-hidden="true">
-        {icon}
-      </span>
-      {label}
-    </Link>
   );
 }

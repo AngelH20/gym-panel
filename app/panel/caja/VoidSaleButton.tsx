@@ -27,7 +27,7 @@ export function VoidSaleButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="shrink-0 min-h-9 px-2 rounded-control text-tiny font-semibold text-txt-faint hover:text-plate-red hover:bg-plate-red/10 transition-colors"
+        className="shrink-0 min-h-8 px-2 rounded-control text-tiny font-medium text-txt-faint hover:text-plate-red hover:bg-surface-hover transition-colors"
       >
         Anular
       </button>
@@ -37,7 +37,7 @@ export function VoidSaleButton({
   return (
     <form
       action={action}
-      className="order-last basis-full mt-2 rounded-control border border-plate-red/40 bg-plate-red/8 p-3 space-y-2.5"
+      className="order-last basis-full mt-2 rounded-control border border-line-strong p-3 space-y-2.5"
     >
       <input type="hidden" name="payment_id" value={paymentId} />
       <p className="text-tiny text-plate-red">

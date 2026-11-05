@@ -21,10 +21,10 @@ export default function PanelError({
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-4">
       <span
-        className="flex size-14 items-center justify-center rounded-full bg-plate-red text-txt-onAccent"
+        className="flex size-10 items-center justify-center rounded-full border border-line text-plate-red"
         aria-hidden="true"
       >
-        <IconAlert className="size-7" />
+        <IconAlert className="size-5" />
       </span>
 
       <div className="space-y-1.5">

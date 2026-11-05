@@ -112,7 +112,7 @@ export function MemberActions({
               </select>
 
               {familySize >= 3 && plans.some((p) => p.is_family) && (
-                <p className="note border-plate-blue/35 bg-plate-blue/8">
+                <p className="note">
                   Su familia tiene {familySize} integrantes: si es del tercero en adelante, le
                   corresponde el pack familiar.
                 </p>
@@ -163,8 +163,8 @@ export function MemberActions({
       <div className="border-t border-line">
         <button
           onClick={() => setShowMore(!showMore)}
-          className="w-full px-5 min-h-12 flex items-center justify-between
-                     text-tiny font-semibold text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
+          className="w-full px-5 min-h-11 flex items-center justify-between
+                     text-tiny font-medium text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
           aria-expanded={showMore}
         >
           Más acciones

@@ -95,9 +95,9 @@ export function PaymentFields({
         {(["cash", "transfer", "split"] as const).map((m) => (
           <label
             key={m}
-            className={`flex flex-col gap-0.5 rounded-control border px-3 py-2.5 text-tiny font-semibold cursor-pointer transition-colors ${
+            className={`flex flex-col gap-0.5 rounded-control border px-3 py-2.5 text-tiny font-medium cursor-pointer transition-colors ${
               value.mode === m
-                ? "border-plate-blue bg-plate-blue/8 ring-1 ring-plate-blue"
+                ? "border-plate-blue ring-1 ring-plate-blue"
                 : "border-line-strong hover:border-txt-faint"
             }`}
           >
@@ -112,7 +112,7 @@ export function PaymentFields({
               />
               {MODE_LABEL[m]}
             </span>
-            <span className="font-mono text-micro font-normal text-txt-faint pl-5">
+            <span className="num text-micro font-normal text-txt-faint pl-5">
               {m === "split"
                 ? "Los dos"
                 : formatMoney(m === "cash" ? plan?.price_cash_cents : plan?.price_transfer_cents)}
@@ -156,7 +156,7 @@ export function PaymentFields({
             className={`rounded-control border border-line ${noteClass} px-3.5 py-3 text-tiny text-txt-soft flex items-center justify-between gap-3`}
           >
             <span>Total cobrado</span>
-            <span className="font-display text-title leading-none font-extrabold text-txt">
+            <span className="num text-lg font-semibold text-txt">
               {formatMoney(Math.round(total * 100))}
             </span>
           </p>

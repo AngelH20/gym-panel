@@ -12,8 +12,7 @@ import {
   paymentMethodLabel,
 } from "@/lib/labels";
 import { EmptyState } from "@/components/Form";
-import { StatCard } from "@/components/StatCard";
-import { IconCash, IconTransfer, IconWallet, IconActivity } from "@/components/icons";
+import { PageHeader } from "@/components/PageHeader";
 import { CloseRegisterForm } from "./CloseRegisterForm";
 import { OpenRegisterForm } from "./OpenRegisterForm";
 import { VoidSaleButton } from "./VoidSaleButton";
@@ -119,88 +118,92 @@ export default async function CajaPage({
   const expectedCashCents = (opening?.starting_cash_cents ?? 0) + totals.cash;
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="h1">Caja</h1>
-        <p className="mt-2 text-base text-txt-soft max-w-prose">
-          Caja y movimientos del día.
-        </p>
-      </div>
-
-      <div className="card p-1.5 flex items-center justify-between gap-2">
-        <Link href={`/panel/caja?date=${shiftDate(date, -1)}`} className="btn-ghost btn-sm border-transparent">
-          ← Anterior
-        </Link>
-        <span className="font-display text-title leading-none font-extrabold text-center">
-          {formatDate(date)}
-          {isToday && <span className="ml-1.5 text-tiny text-txt-faint font-sans font-medium">(hoy)</span>}
-        </span>
-        {!isToday ? (
-          <Link href={`/panel/caja?date=${shiftDate(date, 1)}`} className="btn-ghost btn-sm border-transparent">
-            Siguiente →
-          </Link>
-        ) : (
-          <span className="btn-ghost btn-sm border-transparent invisible">Siguiente →</span>
-        )}
-      </div>
-
-      <section className="card overflow-hidden">
-        <div className="p-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="h3">Estado de caja</h2>
-            <span
-              className={`badge mt-2 ${
-                closing
-                  ? "border-line-strong bg-surface-sunk text-txt-soft"
-                  : opening
-                    ? "border-plate-green/35 bg-plate-green/12 text-plate-green"
-                    : "border-plate-amber/35 bg-plate-amber/15 text-plate-amberInk"
-              }`}
+    <div className="space-y-6">
+      <PageHeader
+        title="Caja"
+        description="Caja y movimientos del día."
+        actions={
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/panel/caja?date=${shiftDate(date, -1)}`}
+              className="btn-ghost btn-sm px-2"
+              aria-label="Día anterior"
+              title="Día anterior"
             >
-              <span
-                className={`size-1.5 rounded-full ${
-                  closing ? "bg-txt-faint" : opening ? "bg-plate-green" : "bg-plate-amber"
-                }`}
-              />
-              {closing ? "Cerrada" : opening ? "Abierta" : "Sin abrir"}
+              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            </Link>
+            <span className="min-w-[7.5rem] px-1 text-center num text-base font-medium">
+              {formatDate(date)}
+              {isToday && <span className="ml-1 text-tiny font-normal text-txt-faint">(hoy)</span>}
             </span>
+            {!isToday ? (
+              <Link
+                href={`/panel/caja?date=${shiftDate(date, 1)}`}
+                className="btn-ghost btn-sm px-2"
+                aria-label="Día siguiente"
+                title="Día siguiente"
+              >
+                <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+              </Link>
+            ) : (
+              <span className="btn-ghost btn-sm px-2 invisible" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6" /></svg>
+              </span>
+            )}
           </div>
+        }
+      />
+
+      <section className="card">
+        <div className="px-5 pt-5 flex items-center justify-between gap-3">
+          <h2 className="h3">Estado de caja</h2>
+          <span className="inline-flex items-center gap-1.5 text-tiny font-medium text-txt-soft">
+            <span
+              className={`size-2 rounded-full ${
+                closing ? "bg-line-strong" : opening ? "bg-plate-green" : "bg-plate-amber"
+              }`}
+              aria-hidden="true"
+            />
+            {closing ? "Cerrada" : opening ? "Abierta" : "Sin abrir"}
+          </span>
         </div>
 
-        {opening && !closing && (
-          <div className="mx-5 mb-5 rounded-control border border-plate-green/35 bg-plate-green/10 p-4 flex flex-wrap items-end justify-between gap-4">
+        {opening && !closing ? (
+          <div className="px-5 pt-4 pb-5 flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
-              <p className="eyebrow text-plate-green">Efectivo en caja</p>
-              <p className="mt-2 scoreboard text-huge text-plate-green [overflow-wrap:anywhere]">
+              <p className="eyebrow">Efectivo en caja</p>
+              <p className="mt-1 num text-huge font-semibold [overflow-wrap:anywhere]">
                 {formatMoney(expectedCashCents)}
               </p>
-              <p className="mt-2 text-tiny font-medium text-plate-green">
+              <p className="mt-0.5 text-tiny text-txt-faint">
                 Apertura + ventas en efectivo
               </p>
             </div>
             <div className="text-right">
-              <p className="text-tiny text-txt-soft">Monto de apertura</p>
-              <p className="mt-1 font-mono text-lg font-semibold">
+              <p className="text-tiny text-txt-faint">Monto de apertura</p>
+              <p className="mt-0.5 num text-base font-medium">
                 {formatMoney(opening.starting_cash_cents)}
               </p>
             </div>
           </div>
+        ) : (
+          <div className="h-4" aria-hidden="true" />
         )}
 
-        <div className="grid grid-cols-3 divide-x divide-line border-t border-line">
-          <div className="px-2 py-4 text-center min-w-0">
-            <p className="eyebrow truncate">Efectivo</p>
-            <p className="mt-1 font-mono text-base sm:text-lg font-semibold [overflow-wrap:anywhere]">{formatMoney(totals.cash)}</p>
+        <dl className="grid grid-cols-3 divide-x divide-line border-t border-line">
+          <div className="px-3 sm:px-5 py-4 min-w-0">
+            <dt className="eyebrow truncate">Efectivo</dt>
+            <dd className="mt-0.5 num text-base sm:text-lg font-medium [overflow-wrap:anywhere]">{formatMoney(totals.cash)}</dd>
           </div>
-          <div className="px-2 py-4 text-center min-w-0">
-            <p className="eyebrow truncate">Transferencia</p>
-            <p className="mt-1 font-mono text-base sm:text-lg font-semibold [overflow-wrap:anywhere]">{formatMoney(totals.transfer)}</p>
+          <div className="px-3 sm:px-5 py-4 min-w-0">
+            <dt className="eyebrow truncate">Transferencia</dt>
+            <dd className="mt-0.5 num text-base sm:text-lg font-medium [overflow-wrap:anywhere]">{formatMoney(totals.transfer)}</dd>
           </div>
-          <div className="px-2 py-4 text-center min-w-0 bg-ink text-txt-onDark">
-            <p className="eyebrow truncate text-txt-onDarkSoft">Total</p>
-            <p className="mt-1 font-mono text-base sm:text-lg font-bold [overflow-wrap:anywhere]">{formatMoney(total)}</p>
+          <div className="px-3 sm:px-5 py-4 min-w-0">
+            <dt className="eyebrow truncate text-txt">Total</dt>
+            <dd className="mt-0.5 num text-base sm:text-lg font-semibold [overflow-wrap:anywhere]">{formatMoney(total)}</dd>
           </div>
-        </div>
+        </dl>
 
         {closing && (
           <div className="px-5 py-3 border-t border-line text-tiny text-txt-soft space-y-1">
@@ -213,7 +216,7 @@ export default async function CajaPage({
                 Efectivo contado: {formatMoney(closing.counted_cash_cents)}
                 {closing.difference_cents !== 0 && (
                   <span className={closing.difference_cents > 0 ? "text-plate-blue" : "text-plate-red"}>
-                    {" · "}
+                    {", "}
                     {closing.difference_cents > 0
                       ? `sobraron ${formatMoney(closing.difference_cents)}`
                       : `faltaron ${formatMoney(-closing.difference_cents)}`}
@@ -233,25 +236,13 @@ export default async function CajaPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard label="Efectivo" value={formatMoney(totals.cash)} accent="green" icon={<IconCash />} />
-        <StatCard
-          label="Transferencia"
-          value={formatMoney(totals.transfer)}
-          accent="blue"
-          icon={<IconTransfer />}
-        />
-        <StatCard label="Balance" value={formatMoney(total)} accent="amber" icon={<IconWallet />} />
-      </div>
-
       {/* Los dos listados, lado a lado en escritorio para no dejar media
           pantalla vacía */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
       <section className="card p-5">
         <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="h3 flex items-center gap-2">
-            <IconActivity className="size-[18px] text-plate-blue" />
-            Movimientos de esta caja ({active.length})
+          <h2 className="h3">
+            Movimientos de esta caja <span className="num font-normal text-txt-faint">{active.length}</span>
           </h2>
           {payments.length > 0 && (
             <a href={`/panel/caja/export?date=${date}`} className="btn-ghost btn-sm">
@@ -272,7 +263,7 @@ export default async function CajaPage({
               return (
                 <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3">
                   <div className={`flex-1 min-w-0 ${p.voided_at ? "opacity-60" : ""}`}>
-                    <p className={`text-base font-semibold truncate ${p.voided_at ? "line-through" : ""}`}>
+                    <p className={`text-base truncate ${p.voided_at ? "line-through" : ""}`}>
                       {memberName(p)}
                     </p>
                     <p className="mt-0.5 text-tiny text-txt-faint">
@@ -294,7 +285,7 @@ export default async function CajaPage({
                     />
                   )}
                   <span
-                    className={`font-mono text-lg font-semibold shrink-0 ${
+                    className={`num text-base font-medium shrink-0 ${
                       p.voided_at ? "line-through text-txt-faint" : ""
                     }`}
                   >
@@ -320,7 +311,7 @@ export default async function CajaPage({
                   href={`/panel/caja?date=${h.closing_date}`}
                   className="min-w-0 hover:text-plate-blue transition-colors"
                 >
-                  <p className="text-base font-semibold">{formatDate(h.closing_date)}</p>
+                  <p className="num text-base">{formatDate(h.closing_date)}</p>
                   <p className="mt-0.5 text-tiny text-txt-faint">
                     Efvo. {formatMoney(h.total_cash_cents)} · Transf.{" "}
                     {formatMoney(h.total_transfer_cents)} · {h.payments_count}{" "}
@@ -329,14 +320,14 @@ export default async function CajaPage({
                 </Link>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-mono text-lg font-semibold">
+                  <span className="num text-base font-medium">
                     {formatMoney(h.total_cash_cents + h.total_transfer_cents)}
                   </span>
                   <a
                     href={`/panel/caja/export?date=${h.closing_date}`}
                     title="Descargar CSV"
                     aria-label="Descargar CSV"
-                    className="flex size-10 items-center justify-center rounded-control text-txt-faint hover:text-plate-blue hover:bg-surface-hover transition-colors"
+                    className="flex size-9 items-center justify-center rounded-control text-txt-faint hover:text-txt hover:bg-surface-hover transition-colors"
                   >
                     <svg
                       viewBox="0 0 24 24"

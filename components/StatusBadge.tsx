@@ -5,34 +5,20 @@ import type { EffectiveStatus } from "@/lib/types";
  * Cada insignia lleva un punto de color además del texto: el color solo no
  * alcanza para quien no lo distingue, y el punto ayuda a escanear la lista.
  */
-const styles: Record<EffectiveStatus, { chip: string; dot: string }> = {
-  active: {
-    chip: "border-plate-green/35 bg-plate-green/12 text-plate-green",
-    dot: "bg-plate-green",
-  },
-  expired: {
-    chip: "border-plate-red/35 bg-plate-red/10 text-plate-red",
-    dot: "bg-plate-red",
-  },
-  exhausted: {
-    chip: "border-plate-red/35 bg-plate-red/10 text-plate-red",
-    dot: "bg-plate-red",
-  },
-  suspended: {
-    chip: "border-line bg-surface-sunk text-txt-soft",
-    dot: "bg-txt-faint",
-  },
-  no_membership: {
-    chip: "border-line bg-surface-sunk text-txt-soft",
-    dot: "bg-txt-faint",
-  },
+const styles: Record<EffectiveStatus, { text: string; dot: string }> = {
+  active: { text: "text-txt-soft", dot: "bg-plate-green" },
+  expired: { text: "text-plate-red", dot: "bg-plate-red" },
+  exhausted: { text: "text-plate-red", dot: "bg-plate-red" },
+  suspended: { text: "text-txt-faint", dot: "bg-line-strong" },
+  no_membership: { text: "text-txt-faint", dot: "bg-line-strong" },
 };
 
+/** Estado como punto + rótulo chico, sin fondo de color. */
 export function StatusBadge({ status }: { status: EffectiveStatus }) {
   const s = styles[status];
   return (
-    <span className={`badge ${s.chip}`}>
-      <span className={`size-2 rounded-full ${s.dot}`} aria-hidden="true" />
+    <span className={`inline-flex items-center gap-1.5 text-tiny font-medium whitespace-nowrap ${s.text}`}>
+      <span className={`size-1.5 rounded-full ${s.dot}`} aria-hidden="true" />
       {effectiveStatusLabel[status]}
     </span>
   );

@@ -53,9 +53,9 @@ export function PlanList({
         plans.length > 0 && (
           <button
             onClick={() => setEditing("new")}
-            className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border-2 border-dashed border-line-strong
-                       min-h-14 py-4 text-base font-semibold text-txt-soft
-                       hover:border-plate-blue hover:text-plate-blue hover:bg-plate-blue/4
+            className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border border-dashed border-line-strong
+                       min-h-12 py-3 text-tiny font-medium text-txt-soft
+                       hover:border-txt-faint hover:text-txt hover:bg-surface-hover
                        transition-colors"
           >
             + Agregar plan
@@ -97,13 +97,13 @@ function PlanRow({
       {/* Los dos números que definen el plan, con peso propio */}
       <div className="mt-4 flex items-baseline gap-6">
         <div>
-          <span className="scoreboard text-huge">
+          <span className="num text-huge font-semibold">
             {plan.uses_per_period}
           </span>
-          <span className="ml-1.5 text-tiny font-medium text-txt-soft">entradas</span>
+          <span className="ml-1.5 text-tiny text-txt-soft">entradas</span>
         </div>
         <div>
-          <span className="scoreboard text-title text-txt-faint">
+          <span className="num text-base font-medium text-txt-faint">
             {plan.period_days}
           </span>
           <span className="ml-1.5 text-tiny text-txt-faint">días (sin efecto)</span>
@@ -167,7 +167,7 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
   );
 
   return (
-    <form action={action} className="card p-5 space-y-4 border-plate-blue ring-[3px] ring-plate-blue/20">
+    <form action={action} className="card p-5 space-y-4 border-line-strong">
       <h2 className="h3">{plan ? "Editar plan" : "Nuevo plan"}</h2>
 
       {plan && <input type="hidden" name="id" value={plan.id} />}

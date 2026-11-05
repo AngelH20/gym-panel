@@ -310,10 +310,13 @@ export function NewMemberForm({
             </div>
 
             {!cajaAbierta && (
-              <div className="rounded-control border border-plate-amber/60 bg-plate-amber/15 p-3.5 space-y-2.5">
-                <p className="text-tiny font-medium text-plate-amberInk">
+              <div className="note space-y-2.5">
+                <p className="flex gap-2">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-plate-amber" aria-hidden="true" />
+                  <span>
                   La caja de hoy no está abierta. Abrila primero si querés cobrar y activar un pase
                   ahora — el socio se puede crear igual, y activás el pase después.
+                  </span>
                 </p>
                 <Link href="/panel/caja" className="btn-ghost btn-sm">
                   Ir a Caja
@@ -335,12 +338,12 @@ export function NewMemberForm({
                     aria-pressed={active}
                     className={`text-left rounded-control border px-3.5 py-3 transition-colors ${
                       active
-                        ? "border-plate-blue bg-plate-blue/8 ring-1 ring-plate-blue"
+                        ? "border-plate-blue ring-1 ring-plate-blue"
                         : "border-line-strong bg-surface hover:border-txt-faint"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-base font-semibold">{p.name}</span>
+                      <span className="text-base font-medium">{p.name}</span>
                       <span className="text-tiny text-txt-faint shrink-0">
                         {p.uses_per_period} entradas
                       </span>

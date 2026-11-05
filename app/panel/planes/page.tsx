@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Plan } from "@/lib/types";
 import { PlanList } from "./PlanList";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function PlanesPage() {
   const supabase = await createClient();
@@ -23,14 +24,11 @@ export default async function PlanesPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="h1">Planes</h1>
-        <p className="mt-1.5 text-base text-txt-soft max-w-prose">
-          Cuántas entradas trae cada pase. El vencimiento no se toca acá: depende del día en
-          que paga cada socio.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Planes"
+        description="Cuántas entradas trae cada pase. El vencimiento no se toca acá: depende del día en que paga cada socio."
+      />
 
       <PlanList plans={(plans ?? []) as Plan[]} usage={Object.fromEntries(counts)} />
     </div>

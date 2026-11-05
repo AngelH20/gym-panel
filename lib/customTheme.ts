@@ -15,39 +15,39 @@ export type ColorToken = {
 export const COLOR_TOKENS: ColorToken[] = [
   {
     cssVar: "--color-ink",
-    label: "Barra lateral y menú",
-    hint: "El cromo oscuro de la barra y la navegación.",
-    default: "19 38 74",
+    label: "Botones oscuros",
+    hint: "El relleno de los botones oscuros y del filtro elegido.",
+    default: "22 24 29",
   },
   {
     cssVar: "--color-txt",
     label: "Texto principal",
     hint: "El color de las letras sobre fondos claros.",
-    default: "13 24 43",
+    default: "22 24 29",
   },
   {
     cssVar: "--color-surface",
-    label: "Tarjetas y formularios",
-    hint: "El fondo de las tarjetas y los campos de carga.",
+    label: "Fondo y tarjetas",
+    hint: "El fondo de la pantalla, las tarjetas y los campos de carga.",
     default: "255 255 255",
   },
   {
     cssVar: "--color-surface-sunk",
-    label: "Fondo de pantalla",
-    hint: "El fondo general, detrás de las tarjetas.",
-    default: "233 237 242",
+    label: "Fondos suaves",
+    hint: "Bloques destacados, avisos y el ítem activo del menú.",
+    default: "245 246 248",
   },
   {
     cssVar: "--color-line",
     label: "Bordes",
     hint: "Separadores y contornos de los campos.",
-    default: "218 224 231",
+    default: "232 234 238",
   },
   {
     cssVar: "--color-plate-blue",
     label: "Color de acento",
     hint: "Botones principales, links y estados activos.",
-    default: "31 95 175",
+    default: "36 82 194",
   },
 ];
 
