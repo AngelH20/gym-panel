@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import {
   sellMembership,
@@ -191,6 +192,13 @@ export function MemberActions({
               <PaymentFields plan={selectedPlan} value={payment} onChange={setPayment} />
 
               <FormError message={state?.error} />
+              {/* "Abrí la caja antes de registrar cobros" / "ya está cerrada":
+                  el arreglo está en otra pantalla, se deja el atajo a mano. */}
+              {state?.error && /caja/i.test(state.error) && (
+                <Link href="/panel/caja" className="btn-ghost btn-sm">
+                  Ir a Caja
+                </Link>
+              )}
 
               {/* El monto en el botón: es la última mirada antes de cobrar. */}
               <SubmitButton
