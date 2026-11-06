@@ -117,7 +117,6 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           enterKeyHint="next"
           pattern="[0-9]{8}"
           minLength={8}
-          maxLength={8}
           title="8 dígitos numéricos"
           onChange={(e) => {
             // Si lo tipean o pegan con puntos ("30.123.456"), quedan los números.

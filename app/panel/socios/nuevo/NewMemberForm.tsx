@@ -119,7 +119,6 @@ export function NewMemberForm({
               enterKeyHint="next"
               pattern="[0-9]{8}"
               minLength={8}
-              maxLength={8}
               title="8 dígitos numéricos"
               className="field font-mono"
               value={dni}
