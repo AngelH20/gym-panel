@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { clientIpKey } from "@/lib/clientIp";
 
 /** Mismo texto para todo lo que sea "no podés entrar con esto": la pantalla
  *  de login es pública y no tiene que contarle a nadie si un email existe,
@@ -37,6 +40,41 @@ function safeReturnPath(raw: string): string {
   return "/panel";
 }
 
+const TOO_MANY = "Demasiados intentos fallidos. Esperá unos minutos y probá de nuevo.";
+
+/**
+ * Tope propio de intentos fallidos por IP (sql/39_login_rate_limit.sql).
+ *
+ * El signInWithPassword sale del servidor de Vercel, así que el límite de
+ * Supabase Auth ve la IP de Vercel y no la de quien prueba contraseñas: no
+ * frena a nadie en particular y, si alguien lo agota, deja afuera a todo el
+ * staff. Las funciones solo las puede llamar la service_role (sin sesión no
+ * hay otra), y reciben únicamente la IP: nada de lo que tipeó el usuario.
+ *
+ * Si la base todavía no tiene sql/39, o la consulta falla, el login sigue
+ * funcionando sin este tope (mejor eso que dejar a recepción sin entrar).
+ */
+type LoginLimiter = {
+  blocked: () => Promise<boolean>;
+  failed: () => Promise<void>;
+  succeeded: () => Promise<void>;
+};
+
+async function loginLimiter(): Promise<LoginLimiter> {
+  const ip = clientIpKey(await headers());
+  const admin = createAdminClient();
+  const call = async (fn: string) => {
+    const { data, error } = await admin.rpc(fn, { p_ip: ip });
+    if (error) console.error(`[login] ${fn} (¿falta sql/39?):`, error.message);
+    return error ? null : data;
+  };
+  return {
+    blocked: async () => (await call("login_rate_limited")) === true,
+    failed: async () => void (await call("login_record_failure")),
+    succeeded: async () => void (await call("login_record_success")),
+  };
+}
+
 export async function signIn(_prev: unknown, formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -45,11 +83,27 @@ export async function signIn(_prev: unknown, formData: FormData) {
   if (!email || !password) {
     return { error: "Completá el email y la contraseña." };
   }
+  // Nada de mandarle a Supabase un email o una contraseña de megas: ningún
+  // email válido pasa de 254 caracteres y bcrypt no mira más de 72 bytes.
+  if (email.length > 254 || password.length > 200) {
+    return { error: BAD_CREDENTIALS };
+  }
+
+  const limiter = await loginLimiter();
+  if (await limiter.blocked()) {
+    return { error: TOO_MANY };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // Solo cuentan los rechazos por credenciales: un error de red o de
+    // Supabase no es un intento de adivinar la contraseña.
+    const m = error.message.toLowerCase();
+    if (m.includes("invalid login credentials") || m.includes("email not confirmed")) {
+      await limiter.failed();
+    }
     // Queda en la terminal, con el detalle completo para depurar.
     console.error("[login] Error de Supabase:", {
       message: error.message,
@@ -76,9 +130,11 @@ export async function signIn(_prev: unknown, formData: FormData) {
     // contraseña mal puesta, para no confirmarle que sus credenciales sirven.
     console.error("[login] Usuario autenticado que no está en admins:", email);
     await supabase.auth.signOut();
+    await limiter.failed();
     return { error: BAD_CREDENTIALS };
   }
 
+  await limiter.succeeded();
   revalidatePath("/", "layout");
   // El celular del mostrador va siempre al QR, venga de donde venga.
   redirect(role === "celular" ? "/qr-movil" : safeReturnPath(volver));
