@@ -1,6 +1,6 @@
 /** Tipos compartidos. Reflejan el esquema de 01_schema.sql. */
 
-export type AdminRole = "programador" | "dueno" | "profesor";
+export type AdminRole = "programador" | "dueno" | "profesor" | "celular";
 export type MemberStatus = "active" | "suspended";
 export type MembershipStatus = "active" | "expired" | "cancelled";
 export type PlanPeriod = "month" | "week" | "day";

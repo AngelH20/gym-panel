@@ -16,6 +16,10 @@ import { SubmitButton } from "@/components/Form";
  *
  * "Volver al panel" cierra la sesión y manda a /login: para entrar al panel
  * de verdad hace falta la contraseña de nuevo, no alcanza con tocar un botón.
+ *
+ * Con una cuenta de rol "celular" (sql/38_rol_celular.sql) es lo ÚNICO que se
+ * ve: ni siquiera aparece "Volver al panel". Esa cuenta no puede entrar al
+ * panel (el layout la manda acá) ni leer nada en la base salvo el QR.
  */
 export default async function QrMovilPage() {
   const supabase = await createClient();
@@ -26,33 +30,37 @@ export default async function QrMovilPage() {
     {
       data: { user },
     },
-    { data: isAdmin },
+    { data: role },
     { data: token },
     { data: secondsLeft },
-    { data: secondsRow },
+    { data: rotateSeconds },
   ] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.rpc("is_admin"),
+    supabase.rpc("current_admin_role"),
     supabase.rpc("current_qr_token"),
     supabase.rpc("qr_token_seconds_left"),
-    supabase.from("settings").select("value").eq("key", "qr_rotate_seconds").maybeSingle(),
+    // Función y no settings directo: el celular no puede leer settings.
+    supabase.rpc("qr_rotate_seconds"),
   ]);
 
   if (!user) {
     redirect("/login?volver=/qr-movil");
   }
 
-  if (!isAdmin) {
+  // Cualquier rol del panel o el celular. Sin rol (no está en admins), afuera.
+  if (!role) {
     await supabase.auth.signOut();
     redirect("/login?volver=/qr-movil");
   }
+
+  const isQrDevice = role === "celular";
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const url = `${siteUrl}/c?t=${token ?? ""}`;
 
   const dataUrl = await qrDataUrl(url);
 
-  const periodSeconds = Math.max(5, Number(secondsRow?.value ?? 60));
+  const periodSeconds = Math.max(5, Number(rotateSeconds ?? 60));
 
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center gap-6 px-4 py-8 bg-surface">
@@ -72,11 +80,13 @@ export default async function QrMovilPage() {
         periodSeconds={periodSeconds}
       />
 
-      <form action={signOut}>
-        <SubmitButton pendingLabel="Saliendo…" className="btn-ghost btn-sm">
-          Volver al panel
-        </SubmitButton>
-      </form>
+      {!isQrDevice && (
+        <form action={signOut}>
+          <SubmitButton pendingLabel="Saliendo…" className="btn-ghost btn-sm">
+            Volver al panel
+          </SubmitButton>
+        </form>
+      )}
     </main>
   );
 }

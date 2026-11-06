@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { createStaffAccount, updateStaffRole, deleteStaffAccount } from "./actions";
 import { Field, FormError, SubmitButton, EmptyState } from "@/components/Form";
 import type { AdminRole, Staff } from "@/lib/types";
-import { ALL_ROLES, ROLE_HINT, ROLE_LABEL } from "@/lib/roles";
+import { ALL_ROLES, MANAGER_CREATABLE_ROLES, ROLE_HINT, ROLE_LABEL } from "@/lib/roles";
 
 export function UsersList({
   staff,
@@ -16,8 +16,8 @@ export function UsersList({
   actorRole: AdminRole;
 }) {
   const isProgramador = actorRole === "programador";
-  // El dueño solo crea cuentas de profesor.
-  const creatableRoles: AdminRole[] = isProgramador ? ALL_ROLES : ["profesor"];
+  // El dueño crea cuentas de profesor y de celular (el del QR del mostrador).
+  const creatableRoles: AdminRole[] = isProgramador ? ALL_ROLES : MANAGER_CREATABLE_ROLES;
   const [creating, setCreating] = useState(false);
 
   return (
@@ -35,7 +35,7 @@ export function UsersList({
               staff={s}
               isSelf={s.user_id === currentUserId}
               canChangeRole={isProgramador}
-              canDelete={isProgramador || s.role === "profesor"}
+              canDelete={isProgramador || MANAGER_CREATABLE_ROLES.includes(s.role)}
             />
           ))}
         </ul>

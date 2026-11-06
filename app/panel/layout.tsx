@@ -47,6 +47,12 @@ export default async function PanelLayout({
     redirect("/login");
   }
 
+  // El celular del mostrador no es staff: lo único que puede ver es el QR.
+  // (En la base tampoco puede leer nada: sql/38_rol_celular.sql.)
+  if (role === "celular") {
+    redirect("/qr-movil");
+  }
+
   const roleLabel = ROLE_LABEL[role];
   const displayName = staffDisplayName(me?.full_name, me?.email ?? userEmail);
 

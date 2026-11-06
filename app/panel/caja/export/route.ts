@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import type { Payment, CashClosing, CashOpening } from "@/lib/types";
+import type { AdminRole, Payment, CashClosing, CashOpening } from "@/lib/types";
+import { isStaffRole } from "@/lib/roles";
 import { formatDate, formatDateTime, paymentMethodLabel, todayLocal } from "@/lib/labels";
 import { cashMovementKindLabel, fetchCashMovements, movementTotalsFor } from "@/lib/cashMovements";
 
@@ -60,7 +61,9 @@ export async function GET(request: Request) {
       fetchCashMovements(supabase, date, true),
     ]);
 
-  if (!role) return new NextResponse("No autorizado", { status: 403 });
+  // El celular del mostrador tiene rol pero no es staff (y la RLS igual le
+  // devolvería todo vacío).
+  if (!isStaffRole(role as AdminRole | null)) return new NextResponse("No autorizado", { status: 403 });
 
   const payments = (paymentsRaw ?? []) as (Payment & {
     members: { full_name: string } | null;

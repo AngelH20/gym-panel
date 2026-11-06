@@ -14,11 +14,15 @@ import type { AdminRole } from "@/lib/types";
  *   profesor     El que está en la sala: socios, cobrar pases, abrir y cerrar
  *                la caja, QR. No toca la caja una vez cerrada, no anula ni
  *                modifica cobros, no ve precios ni cuentas.
+ *   celular      NO es staff: el teléfono del mostrador. Solo muestra el QR
+ *                de la entrada (/qr-movil). No entra al panel y en la base no
+ *                puede leer ni tocar nada más (sql/38_rol_celular.sql).
  */
 export const ROLE_LABEL: Record<AdminRole, string> = {
   programador: "Programador",
   dueno: "Dueño",
   profesor: "Profesor",
+  celular: "Celular (QR)",
 };
 
 export const ROLE_HINT: Record<AdminRole, string> = {
@@ -27,9 +31,19 @@ export const ROLE_HINT: Record<AdminRole, string> = {
     "Todo el gimnasio: precios, anular cobros, corregir vencimientos, reabrir la caja y cuentas de profesor.",
   profesor:
     "Socios, cobrar pases, abrir y cerrar la caja, QR. No anula ni modifica cobros, no reabre la caja, no ve precios ni cuentas.",
+  celular:
+    "Para el teléfono del mostrador: solo muestra el QR de la entrada. No ve socios, caja ni nada del panel.",
 };
 
 export const ALL_ROLES = Object.keys(ROLE_LABEL) as AdminRole[];
+
+/** Roles que el dueño puede crear y borrar (el programador, todos). */
+export const MANAGER_CREATABLE_ROLES: AdminRole[] = ["profesor", "celular"];
+
+/** Del staff: puede entrar al panel. El celular no. */
+export function isStaffRole(role: AdminRole | null | undefined): boolean {
+  return role != null && role !== "celular";
+}
 
 /** Dueño o programador: lo que antes era "admin o superadmin". */
 export function isManagerRole(role: AdminRole | null | undefined): boolean {

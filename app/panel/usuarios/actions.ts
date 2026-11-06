@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AdminRole } from "@/lib/types";
-import { ALL_ROLES, isManagerRole, isProgramadorRole } from "@/lib/roles";
+import { ALL_ROLES, MANAGER_CREATABLE_ROLES, isManagerRole, isProgramadorRole } from "@/lib/roles";
 
 type Result = { error?: string };
 
@@ -18,10 +18,11 @@ async function currentRole(): Promise<AdminRole | null> {
   return (data as AdminRole | null) ?? null;
 }
 
-/** El dueño solo maneja cuentas de profesor; el programador, todas. */
+/** El dueño maneja cuentas de profesor y de celular; el programador, todas.
+ *  Misma regla que la RLS de admins (sql/38_rol_celular.sql). */
 function canManageRole(actor: AdminRole | null, target: AdminRole): boolean {
   if (isProgramadorRole(actor)) return true;
-  return isManagerRole(actor) && target === "profesor";
+  return isManagerRole(actor) && MANAGER_CREATABLE_ROLES.includes(target);
 }
 
 /** ¿Sacar a esta cuenta (borrarla o bajarle el rol) dejaría el sistema sin
@@ -136,7 +137,7 @@ export async function deleteStaffAccount(_prev: unknown, formData: FormData): Pr
     .maybeSingle();
   if (!target) return { error: "No se pudo borrar: la cuenta ya no existe." };
   if (!canManageRole(actor, target.role as AdminRole)) {
-    return { error: "Solo podés borrar cuentas de profesor." };
+    return { error: "Solo podés borrar cuentas de profesor o de celular." };
   }
 
   if (await wouldLeaveNoProgramador(id)) {

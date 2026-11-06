@@ -60,8 +60,9 @@ export async function signIn(_prev: unknown, formData: FormData) {
     return { error: describeAuthError(error.message, error.status) };
   }
 
-  // Autenticó bien. Ahora verificamos que esté en la allowlist de admins.
-  const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
+  // Autenticó bien. Ahora verificamos que esté en la allowlist de admins:
+  // cualquier rol del panel, o el celular del mostrador (sql/38).
+  const { data: role, error: rpcError } = await supabase.rpc("current_admin_role");
 
   if (rpcError) {
     console.error("[login] Error al verificar admin:", rpcError);
@@ -69,7 +70,7 @@ export async function signIn(_prev: unknown, formData: FormData) {
     return { error: "No se pudo verificar tu acceso al panel. Probá de nuevo en un momento." };
   }
 
-  if (!isAdmin) {
+  if (!role) {
     // Usuario de Supabase Auth que no es del staff (por ejemplo, si el alta
     // pública del proyecto quedó habilitada): mismo mensaje que una
     // contraseña mal puesta, para no confirmarle que sus credenciales sirven.
@@ -79,7 +80,8 @@ export async function signIn(_prev: unknown, formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(safeReturnPath(volver));
+  // El celular del mostrador va siempre al QR, venga de donde venga.
+  redirect(role === "celular" ? "/qr-movil" : safeReturnPath(volver));
 }
 
 export async function signOut() {

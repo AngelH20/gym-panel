@@ -36,6 +36,9 @@ export async function GET(request: Request) {
     supabase.rpc("qr_token_seconds_left"),
   ]);
 
+  // Cualquier rol: el staff y también el celular del mostrador (rol
+  // "celular"), que existe justamente para esto. current_qr_token() aplica la
+  // misma regla en la base (sql/38_rol_celular.sql).
   if (!role) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403, headers: NO_STORE });
   }
