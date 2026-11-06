@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 /**
  * Sistema de diseño: neutro y minimalista.
@@ -102,7 +103,13 @@ const config: Config = {
       transitionDuration: { DEFAULT: "150ms" },
     },
   },
-  plugins: [],
+  plugins: [
+    // "coarse:" = pantalla táctil (celular, tablet). Para agrandar a 44px los
+    // botones de solo ícono sin cambiar cómo se ven con mouse.
+    plugin(({ addVariant }) => {
+      addVariant("coarse", "@media (pointer: coarse)");
+    }),
+  ],
 };
 
 export default config;

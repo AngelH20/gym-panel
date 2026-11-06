@@ -48,7 +48,7 @@ export function WhatsAppLink({
       rel="noopener noreferrer"
       title={title}
       aria-label={title}
-      className={`flex size-9 shrink-0 items-center justify-center rounded-control text-txt-faint hover:text-plate-green hover:bg-surface-hover transition-colors ${className}`}
+      className={`flex size-9 coarse:size-11 shrink-0 items-center justify-center rounded-control text-txt-faint hover:text-plate-green hover:bg-surface-hover transition-colors ${className}`}
     >
       <IconWhatsApp className="size-[18px]" />
     </a>
