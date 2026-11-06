@@ -366,7 +366,9 @@ export default async function CajaPage({
           }`}
         >
           {/* Reabrir una caja ya cerrada borra el cierre: solo dueño o programador. */}
-          {(!closing || isManager) && <OpenRegisterForm />}
+          {(!closing || isManager) && (
+            <OpenRegisterForm openedAt={opening && !closing ? opening.opened_at : null} />
+          )}
           <CloseRegisterForm expectedCashCents={expectedCashCents} />
           {/* Gastos e ingresos: solo con la caja de hoy abierta (la base igual lo exige). */}
           {opening && !closing && <CashMovementForm />}
@@ -466,7 +468,7 @@ export default async function CajaPage({
                     href={`/panel/caja/export?date=${h.closing_date}`}
                     title="Descargar CSV"
                     aria-label="Descargar CSV"
-                    className="flex size-9 items-center justify-center rounded-control text-txt-faint hover:text-txt hover:bg-surface-hover transition-colors"
+                    className="flex size-9 coarse:size-11 items-center justify-center rounded-control text-txt-faint hover:text-txt hover:bg-surface-hover transition-colors"
                   >
                     <svg
                       viewBox="0 0 24 24"
