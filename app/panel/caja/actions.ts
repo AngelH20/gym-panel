@@ -1,19 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { todayLocal } from "@/lib/labels";
 import { MAX_MOVEMENT_PESOS, MAX_MOVEMENT_REASON } from "@/lib/cashMovements";
+import { GENERIC_ERROR, dbErrorMessage, isIsoDate, isUuid, parsePesosToCents, requireRole } from "@/lib/actionGuard";
 
 type Result = { error?: string; ok?: boolean };
 
 /** Tope para notas y motivos: texto libre que queda guardado en la caja. */
 const MAX_TEXT = 500;
 
-/** Precio en pesos (input del form) -> centavos. */
+/** Precio en pesos (input del form) -> centavos. null si está vacío, no es
+ *  un número, es negativo o pasa el tope (ver parsePesosToCents). */
 function parseAmountCents(raw: FormDataEntryValue | null): number | null {
-  const n = Number(String(raw ?? "").trim());
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+  return parsePesosToCents(raw);
 }
 
 export async function openCashRegister(_prev: unknown, formData: FormData): Promise<Result> {
@@ -23,13 +23,14 @@ export async function openCashRegister(_prev: unknown, formData: FormData): Prom
   const notes = String(formData.get("notes") ?? "").trim();
   if (notes.length > MAX_TEXT) return { error: `Las notas no pueden pasar de ${MAX_TEXT} caracteres.` };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("open_cash_register", {
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("open_cash_register", {
     p_starting_cash_cents: startingCashCents,
     p_notes: notes || null,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("caja", error, "No se pudo abrir la caja. Probá de nuevo.") };
 
   revalidatePath("/panel/caja");
   return { ok: true };
@@ -42,18 +43,20 @@ export async function openCashRegister(_prev: unknown, formData: FormData): Prom
  */
 export async function voidSale(_prev: unknown, formData: FormData): Promise<Result> {
   const paymentId = String(formData.get("payment_id") ?? "");
+  if (!isUuid(paymentId)) return { error: "Cobro inválido. Recargá la página." };
   const reason = String(formData.get("reason") ?? "").trim();
   if (!reason) return { error: "Escribí el motivo de la anulación." };
   if (reason.length > MAX_TEXT) return { error: `El motivo no puede pasar de ${MAX_TEXT} caracteres.` };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("void_sale", {
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("void_sale", {
     p_payment_id: paymentId,
     p_reason: reason,
     p_cancel_membership: formData.get("cancel_membership") === "on",
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("caja", error, GENERIC_ERROR) };
 
   revalidatePath("/panel/caja");
   revalidatePath("/panel");
@@ -67,7 +70,7 @@ export async function voidSale(_prev: unknown, formData: FormData): Promise<Resu
  */
 export async function closeCashRegister(_prev: unknown, formData: FormData): Promise<Result> {
   const rawDate = String(formData.get("date") ?? "").trim();
-  if (rawDate && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return { error: "Fecha inválida." };
+  if (rawDate && !isIsoDate(rawDate)) return { error: "Fecha inválida." };
   const pastDate = rawDate && rawDate < todayLocal() ? rawDate : null;
 
   const rawCounted = String(formData.get("counted_cash") ?? "").trim();
@@ -79,7 +82,9 @@ export async function closeCashRegister(_prev: unknown, formData: FormData): Pro
   const notes = String(formData.get("notes") ?? "").trim();
   if (notes.length > MAX_TEXT) return { error: `Las notas no pueden pasar de ${MAX_TEXT} caracteres.` };
 
-  const supabase = await createClient();
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { supabase } = guard;
   const { error } = pastDate
     ? await supabase.rpc("close_past_cash_register", {
         p_date: pastDate,
@@ -91,7 +96,7 @@ export async function closeCashRegister(_prev: unknown, formData: FormData): Pro
         p_notes: notes || null,
       });
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("caja", error, "No se pudo cerrar la caja. Probá de nuevo.") };
 
   revalidatePath("/panel/caja");
   // El aviso de "caja sin cerrar" también está en Inicio.
@@ -126,15 +131,16 @@ export async function addCashMovement(_prev: unknown, formData: FormData): Promi
     return { error: `El motivo no puede pasar de ${MAX_MOVEMENT_REASON} caracteres.` };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("add_cash_movement", {
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("add_cash_movement", {
     p_kind: kind,
     p_amount_cents: pesos * 100,
     p_method: method,
     p_reason: reason,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("caja", error, GENERIC_ERROR) };
 
   revalidatePath("/panel/caja");
   return { ok: true };
@@ -145,16 +151,17 @@ export async function addCashMovement(_prev: unknown, formData: FormData): Promi
  *  recalcula el cierre. */
 export async function voidCashMovement(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("movement_id") ?? "");
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return { error: "Movimiento inválido." };
+  if (!isUuid(id)) return { error: "Movimiento inválido." };
 
   const reason = String(formData.get("reason") ?? "").trim();
   if (!reason) return { error: "Escribí el motivo de la anulación." };
   if (reason.length > MAX_TEXT) return { error: `El motivo no puede pasar de ${MAX_TEXT} caracteres.` };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("void_cash_movement", { p_id: id, p_reason: reason });
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("void_cash_movement", { p_id: id, p_reason: reason });
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("caja", error, GENERIC_ERROR) };
 
   revalidatePath("/panel/caja");
   return { ok: true };
