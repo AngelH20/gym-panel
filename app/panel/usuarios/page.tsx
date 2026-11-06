@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
+import { getSessionClaims } from "@/lib/supabase/claims";
 import type { Staff } from "@/lib/types";
 import { isManagerRole } from "@/lib/roles";
 import { UsersList } from "./UsersList";
@@ -15,14 +16,17 @@ export default async function UsuariosPage() {
   // (sql/28_roles_programador_dueno.sql).
   // Las tres consultas salen juntas: la lista ya la filtra la RLS, y si el rol
   // no alcanza se descarta sin mostrarse. Antes la lista esperaba al rol.
-  const [role, { data: staff }, { data: userData }] = await Promise.all([
+  const [role, { data: staff }, claims] = await Promise.all([
     // Cacheado por request: el layout ya lo pidió, no es otro viaje.
     getCurrentAdminRole(),
     supabase
       .from("admins")
       .select("id, user_id, email, full_name, role, created_at")
       .order("created_at"),
-    supabase.auth.getUser(),
+    // Quién soy, para marcar "vos" en la lista. getClaims verifica el JWT
+    // local (getUser iba hasta Supabase Auth) y el layout ya lo pidió:
+    // cacheado por request, no es otro viaje.
+    getSessionClaims(),
   ]);
   const actorRole = role;
   if (!isManagerRole(actorRole)) redirect("/panel");
@@ -40,7 +44,7 @@ export default async function UsuariosPage() {
 
       <UsersList
         staff={(staff ?? []) as Staff[]}
-        currentUserId={userData?.user?.id ?? null}
+        currentUserId={(claims?.sub as string | undefined) ?? null}
         actorRole={actorRole!}
       />
     </div>

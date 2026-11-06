@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
+import { getSessionClaims } from "@/lib/supabase/claims";
 import { getGymName } from "@/lib/gym";
 import { PanelNav, PanelTitle } from "./PanelNav";
 import { ROLE_LABEL } from "@/lib/roles";
@@ -28,17 +29,25 @@ export default async function PanelLayout({
   // dice si está en la allowlist (null = no es admin), así que no hace falta
   // preguntar is_admin() aparte. getCurrentAdminRole está cacheado por
   // request: si la página también pide el rol, no hay un segundo viaje.
+  // El rol y el nombre del gimnasio no dependen de quién es: arrancan ya,
+  // mientras se verifica el JWT. getClaims casi siempre es local, pero en un
+  // arranque en frío baja la clave pública (JWKS) de Supabase Auth, y ese
+  // viaje ya no frena a los otros dos.
+  // Cacheado por request: Inicio, Cumpleaños y la ficha piden el nombre para
+  // los mensajes de WhatsApp sin pagar otro viaje.
+  const rolePromise = getCurrentAdminRole();
+  const gymNamePromise = getGymName();
+
   // Quién está logueado, para mostrar su nombre abajo del menú. getClaims
-  // verifica el JWT acá mismo (sin ir a Supabase Auth).
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = (claimsData?.claims?.sub as string | undefined) ?? "";
-  const userEmail = (claimsData?.claims?.email as string | undefined) ?? "";
+  // verifica el JWT acá mismo (sin ir a Supabase Auth); cacheado por request
+  // para que Usuarios lo reuse.
+  const claims = await getSessionClaims();
+  const userId = (claims?.sub as string | undefined) ?? "";
+  const userEmail = (claims?.email as string | undefined) ?? "";
 
   const [role, gymName, { data: me }] = await Promise.all([
-    getCurrentAdminRole(),
-    // Cacheado por request: Inicio, Cumpleaños y la ficha lo usan para los
-    // mensajes de WhatsApp sin pagar otro viaje.
-    getGymName(),
+    rolePromise,
+    gymNamePromise,
     supabase.from("admins").select("full_name, email").eq("user_id", userId).maybeSingle(),
   ]);
 
