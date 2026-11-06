@@ -67,7 +67,7 @@ export default async function QrMovilPage() {
       <div className="text-center space-y-1">
         <h1 className="h1 inline-flex items-center gap-2 justify-center">
           <IconQr className="size-6 text-txt-faint" />
-          Acceso
+          QR de acceso
         </h1>
         <p className="text-base sm:text-lg text-txt-soft text-balance">
           Escaneá este código para registrar tu entrada al gimnasio.
@@ -81,10 +81,12 @@ export default async function QrMovilPage() {
       />
 
       {!isQrDevice && (
-        <form action={signOut}>
+        <form action={signOut} className="flex flex-col items-center gap-1.5">
           <SubmitButton pendingLabel="Saliendo…" className="btn-ghost btn-sm">
             Volver al panel
           </SubmitButton>
+          {/* Que no sorprenda: el botón cierra la sesión a propósito. */}
+          <p className="text-tiny text-txt-faint">Te va a pedir la contraseña de nuevo.</p>
         </form>
       )}
     </main>
