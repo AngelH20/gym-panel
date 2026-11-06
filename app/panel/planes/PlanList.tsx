@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { savePlan, togglePlan, deletePlan } from "./actions";
-import { Field, FormError, SubmitButton, EmptyState } from "@/components/Form";
+import { Field, FormError, MoneyInput, SubmitButton, EmptyState } from "@/components/Form";
 import { formatMoney } from "@/lib/labels";
 import type { Plan } from "@/lib/types";
 
@@ -23,7 +23,7 @@ export function PlanList({
             title="Todavía no hay planes"
             description="Creá el primero para poder darle un pase a un socio."
           >
-            <button onClick={() => setEditing("new")} className="btn-primary">
+            <button type="button" onClick={() => setEditing("new")} className="btn-primary">
               Crear plan
             </button>
           </EmptyState>
@@ -52,6 +52,7 @@ export function PlanList({
       ) : (
         plans.length > 0 && (
           <button
+            type="button"
             onClick={() => setEditing("new")}
             className="lg:col-span-2 2xl:col-span-3 w-full rounded-card border border-dashed border-line-strong
                        min-h-12 py-3 text-tiny font-medium text-txt-soft
@@ -75,6 +76,8 @@ function PlanRow({
   soldCount: number;
   onEdit: () => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   return (
     <div className={`card h-full p-5 ${plan.is_active ? "" : "opacity-65"}`}>
       <div className="flex items-start justify-between gap-3">
@@ -132,24 +135,47 @@ function PlanRow({
         </p>
       )}
 
-      <div className="mt-4 pt-4 border-t border-line flex flex-wrap gap-2">
-        <button onClick={onEdit} className="btn-ghost btn-sm">
-          Editar
-        </button>
-
-        <form action={togglePlan}>
-          <input type="hidden" name="id" value={plan.id} />
-          <input type="hidden" name="next" value={String(!plan.is_active)} />
-          <button className="btn-ghost btn-sm">
-            {plan.is_active ? "Desactivar" : "Reactivar"}
-          </button>
-        </form>
-
-        {soldCount === 0 && (
-          <form action={deletePlan}>
+      <div className="mt-4 pt-4 border-t border-line flex flex-wrap items-center gap-2">
+        {confirmDelete ? (
+          // Borrar no tiene vuelta atrás: se confirma en el lugar.
+          <form action={deletePlan} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="id" value={plan.id} />
-            <button className="btn-danger btn-sm">Borrar</button>
+            <span className="text-tiny text-plate-red">¿Borrar el plan {plan.name}?</span>
+            <SubmitButton className="btn-danger btn-sm" pendingLabel="Borrando…">
+              Sí, borrar
+            </SubmitButton>
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(false)}
+              className="btn-ghost btn-sm"
+            >
+              Cancelar
+            </button>
           </form>
+        ) : (
+          <>
+            <button type="button" onClick={onEdit} className="btn-ghost btn-sm">
+              Editar
+            </button>
+
+            <form action={togglePlan}>
+              <input type="hidden" name="id" value={plan.id} />
+              <input type="hidden" name="next" value={String(!plan.is_active)} />
+              <SubmitButton className="btn-ghost btn-sm" pendingLabel="Guardando…">
+                {plan.is_active ? "Desactivar" : "Reactivar"}
+              </SubmitButton>
+            </form>
+
+            {soldCount === 0 && (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="btn-danger btn-sm"
+              >
+                Borrar
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -157,6 +183,27 @@ function PlanRow({
 }
 
 function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
+  // Controlados: React 19 vacía (vuelve al valor inicial) los campos no
+  // controlados después de cada envío, también si vuelve un error, y se
+  // perdía lo que se había cambiado.
+  const [draft, setDraft] = useState({
+    name: plan?.name ?? "",
+    description: plan?.description ?? "",
+    uses_per_period: String(plan?.uses_per_period ?? 12),
+    period_days: String(plan?.period_days ?? 30),
+    price_cash: plan?.price_cash_cents != null ? String(plan.price_cash_cents / 100) : "",
+    price_transfer:
+      plan?.price_transfer_cents != null ? String(plan.price_transfer_cents / 100) : "",
+    is_active: plan?.is_active ?? true,
+  });
+  type TextKey = Exclude<keyof typeof draft, "is_active">;
+  const bind = (name: TextKey) => ({
+    name,
+    value: draft[name],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setDraft((d) => ({ ...d, [name]: e.target.value })),
+  });
+
   const [state, action] = useActionState(
     async (prev: unknown, fd: FormData) => {
       const res = await savePlan(prev, fd);
@@ -173,25 +220,22 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
       {plan && <input type="hidden" name="id" value={plan.id} />}
 
       <Field label="Nombre">
-        <input name="name" required defaultValue={plan?.name} className="field" />
+        <input {...bind("name")} required autoCapitalize="sentences" className="field" />
       </Field>
 
       <Field label="Descripción" hint="Opcional. Es lo que ve el socio.">
-        <input
-          name="description"
-          defaultValue={plan?.description ?? ""}
-          className="field"
-        />
+        <input {...bind("description")} className="field" />
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Entradas incluidas">
           <input
-            name="uses_per_period"
+            {...bind("uses_per_period")}
             type="number"
+            inputMode="numeric"
             min={1}
+            step="1"
             required
-            defaultValue={plan?.uses_per_period ?? 12}
             className="field font-mono"
           />
         </Field>
@@ -201,11 +245,12 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
           hint="No afecta el vencimiento: depende del día en que paga."
         >
           <input
-            name="period_days"
+            {...bind("period_days")}
             type="number"
+            inputMode="numeric"
             min={1}
+            step="1"
             required
-            defaultValue={plan?.period_days ?? 30}
             className="field font-mono"
           />
         </Field>
@@ -213,37 +258,20 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Precio efectivo" hint="En pesos, sin puntos.">
-          <input
-            name="price_cash"
-            type="number"
-            min={0}
-            step="1"
-            defaultValue={
-              plan?.price_cash_cents != null ? plan.price_cash_cents / 100 : ""
-            }
-            className="field font-mono"
-          />
+          <MoneyInput {...bind("price_cash")} />
         </Field>
 
         <Field label="Precio transferencia">
-          <input
-            name="price_transfer"
-            type="number"
-            min={0}
-            step="1"
-            defaultValue={
-              plan?.price_transfer_cents != null ? plan.price_transfer_cents / 100 : ""
-            }
-            className="field font-mono"
-          />
+          <MoneyInput {...bind("price_transfer")} />
         </Field>
       </div>
 
-      <label className="flex items-center gap-2.5 text-base cursor-pointer">
+      <label className="flex items-center gap-2.5 min-h-11 text-base cursor-pointer">
         <input
           type="checkbox"
           name="is_active"
-          defaultChecked={plan?.is_active ?? true}
+          checked={draft.is_active}
+          onChange={(e) => setDraft((d) => ({ ...d, is_active: e.target.checked }))}
           className="size-4 rounded accent-plate-blue"
         />
         Disponible para vender
@@ -252,7 +280,9 @@ function PlanForm({ plan, onDone }: { plan?: Plan; onDone: () => void }) {
       <FormError message={state?.error} />
 
       <div className="flex gap-2">
-        <SubmitButton className="btn-primary">Guardar plan</SubmitButton>
+        <SubmitButton className="btn-primary" pendingLabel="Guardando…">
+          Guardar plan
+        </SubmitButton>
         <button type="button" onClick={onDone} className="btn-ghost">
           Cancelar
         </button>
