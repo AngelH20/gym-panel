@@ -4,8 +4,8 @@ import { TIMEZONE } from "./labels";
 /**
  * Socios "inactivos": pagan (tienen un pase activo y vigente) pero no vienen.
  *
- * Es la ÚNICA definición: Inicio ("No vienen hace 15 días o más"), el filtro
- * "Inactivos" de Socios y el mensaje de WhatsApp de la ficha la usan. Si
+ * Es la ÚNICA definición: Inicio ("No vienen hace 15 días o más") y el filtro
+ * "Inactivos" de Socios la usan. Si
  * cambia la regla (por ejemplo, para dejar afuera a los pases pausados),
  * se cambia acá y listo.
  */

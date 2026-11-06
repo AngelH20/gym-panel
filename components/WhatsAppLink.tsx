@@ -2,8 +2,8 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { IconWhatsApp } from "@/components/icons";
 
 /**
- * Botón discreto para escribirle a un socio por WhatsApp con el mensaje ya
- * armado. Si el teléfono no se puede pasar al formato de wa.me (o no hay),
+ * Botón discreto para escribirle a un socio por WhatsApp: abre el chat
+ * vacío, sin mensaje prearmado. Si el teléfono no se puede pasar al formato de wa.me (o no hay),
  * no se muestra nada.
  *
  * Es un link común: va como hermano del link a la ficha, nunca adentro
@@ -11,20 +11,18 @@ import { IconWhatsApp } from "@/components/icons";
  */
 export function WhatsAppLink({
   phone,
-  message,
   name,
   label,
   className = "",
 }: {
   phone: string | null | undefined;
-  message: string;
   /** Para el aria-label: "Escribirle por WhatsApp a ...". */
   name: string;
   /** Con texto al lado del ícono (ficha). Sin esto, solo el ícono. */
   label?: string;
   className?: string;
 }) {
-  const href = whatsappLink(phone, message);
+  const href = whatsappLink(phone);
   if (!href) return null;
   const title = `Escribirle por WhatsApp a ${name}`;
 

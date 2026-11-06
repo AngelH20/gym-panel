@@ -36,8 +36,7 @@ export default async function PanelLayout({
 
   const [role, gymName, { data: me }] = await Promise.all([
     getCurrentAdminRole(),
-    // Cacheado por request: Inicio, Cumpleaños y la ficha lo usan para los
-    // mensajes de WhatsApp sin pagar otro viaje.
+    // El nombre del gimnasio para el encabezado del menú.
     getGymName(),
     supabase.from("admins").select("full_name, email").eq("user_id", userId).maybeSingle(),
   ]);

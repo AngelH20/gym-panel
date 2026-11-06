@@ -5,8 +5,6 @@ import { Avatar } from "@/components/Avatar";
 import { formatDayMonth, ageOnNextBirthday } from "@/lib/labels";
 import { PageHeader } from "@/components/PageHeader";
 import { WhatsAppLink } from "@/components/WhatsAppLink";
-import { getGymName } from "@/lib/gym";
-import { birthdayMessage } from "@/lib/whatsapp";
 
 /**
  * Listado de cumpleaños ordenado por el más cercano. La idea es que
@@ -18,7 +16,7 @@ export default async function CumpleañosPage() {
   const supabase = await createClient();
 
   // Las consultas son independientes: salen juntas.
-  const [{ data }, { count: sinFecha }, gymName] = await Promise.all([
+  const [{ data }, { count: sinFecha }] = await Promise.all([
     supabase
       .from("member_overview")
       .select(
@@ -32,8 +30,6 @@ export default async function CumpleañosPage() {
       .select("id", { count: "exact", head: true })
       .is("birth_date", null)
       .is("archived_at", null),
-    // Para el saludo por WhatsApp. Cacheado: el layout ya lo pidió.
-    getGymName(),
   ]);
 
   const all = (data ?? []) as Pick<
@@ -79,7 +75,6 @@ export default async function CumpleañosPage() {
                 <WhatsAppLink
                   phone={m.phone}
                   name={m.full_name}
-                  message={birthdayMessage({ fullName: m.full_name, gymName })}
                 />
               </li>
             ))}

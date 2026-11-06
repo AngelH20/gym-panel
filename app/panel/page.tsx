@@ -6,7 +6,6 @@ import { UsesTally } from "@/components/UsesTally";
 import { StatCard } from "@/components/StatCard";
 import { PageHeader } from "@/components/PageHeader";
 import { WhatsAppLink } from "@/components/WhatsAppLink";
-import { getGymName } from "@/lib/gym";
 import { fetchCheckInStats } from "@/lib/checkInStats";
 import {
   cameDuringCurrentPass,
@@ -14,7 +13,6 @@ import {
   INACTIVE_DAYS,
   isInactive,
 } from "@/lib/inactive";
-import { birthdayMessage, expiredMessage, expiringMessage, inactiveMessage } from "@/lib/whatsapp";
 import {
   IconPeople,
   IconPersonPlus,
@@ -91,7 +89,6 @@ export default async function PanelHome() {
     { data: paymentsToday },
     weekStats,
     { data: weekPayments },
-    gymName,
   ] = await Promise.all([
       supabase.from("member_overview").select(DASHBOARD_COLUMNS).is("archived_at", null),
       supabase
@@ -107,8 +104,6 @@ export default async function PanelHome() {
         .select("local_date, method, amount_cents")
         .gte("local_date", weekStart)
         .is("voided_at", null),
-      // Para los mensajes de WhatsApp. Cacheado: el layout ya lo pidió.
-      getGymName(),
     ]);
   const all = (data ?? []) as unknown as DashboardMember[];
   const pagos = paymentsToday ?? [];
@@ -240,13 +235,6 @@ export default async function PanelHome() {
                       <WhatsAppLink
                         phone={m.phone}
                         name={m.full_name}
-                        message={expiringMessage({
-                          fullName: m.full_name,
-                          gymName,
-                          periodEnd: m.period_end,
-                          daysLeft: m.days_left,
-                          usesRemaining: m.uses_remaining,
-                        })}
                       />
                     }
                   >
@@ -287,12 +275,6 @@ export default async function PanelHome() {
                       <WhatsAppLink
                         phone={m.phone}
                         name={m.full_name}
-                        message={expiredMessage({
-                          fullName: m.full_name,
-                          gymName,
-                          periodEnd: m.period_end,
-                          exhausted: m.effective_status === "exhausted",
-                        })}
                       />
                     }
                   />
@@ -337,7 +319,6 @@ export default async function PanelHome() {
                     <WhatsAppLink
                       phone={m.phone}
                       name={m.full_name}
-                      message={inactiveMessage({ fullName: m.full_name, gymName, days, neverCame })}
                     />
                   }
                 />
@@ -374,7 +355,6 @@ export default async function PanelHome() {
                 <WhatsAppLink
                   phone={m.phone}
                   name={m.full_name}
-                  message={birthdayMessage({ fullName: m.full_name, gymName })}
                 />
               </li>
             ))}
