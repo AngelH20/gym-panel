@@ -36,7 +36,7 @@ export default async function AccesoPage() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[70vh] gap-6">
       <div className="text-center space-y-1">
-        <h1 className="h1 sr-only md:not-sr-only">Acceso</h1>
+        <h1 className="h1 sr-only md:not-sr-only">QR de acceso</h1>
         <p className="text-base sm:text-lg text-txt-soft text-balance">
           Escaneá este código para registrar tu entrada al gimnasio.
         </p>

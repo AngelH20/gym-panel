@@ -24,14 +24,15 @@ export function ThemeToggle() {
   }
 
   // Evita parpadear al hidratar: no se sabe el tema real hasta el efecto.
-  if (isDark === null) return <span className="size-9" aria-hidden="true" />;
+  if (isDark === null) return <span className="size-9 coarse:size-11" aria-hidden="true" />;
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
       title={isDark ? "Modo claro" : "Modo oscuro"}
-      className="flex size-9 items-center justify-center rounded-control
+      className="flex size-9 coarse:size-11 items-center justify-center rounded-control
                  text-txt-soft hover:text-txt hover:bg-surface-hover
                  transition-colors"
     >

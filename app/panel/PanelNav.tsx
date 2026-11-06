@@ -190,23 +190,48 @@ function MoreSheet({
 }) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const active = links.some((l) => isActive(pathname, l.href));
 
   // Se cierra al navegar, con Escape y tocando afuera.
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
+    const trigger = triggerRef.current;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
+      // Hoja modal: con Tab el foco da la vuelta adentro, no se escapa a la
+      // página que quedó atrás del velo.
+      if (e.key === "Tab" && panelRef.current) {
+        const items = panelRef.current.querySelectorAll<HTMLElement>("a, button");
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
     }
     document.addEventListener("keydown", onKey);
     panelRef.current?.querySelector<HTMLElement>("a, button")?.focus();
-    return () => document.removeEventListener("keydown", onKey);
+    // Que no se scrollee la página de atrás mientras la hoja está abierta.
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+      // Al cerrar, el foco vuelve a "Más" (si no se navegó a otra pantalla).
+      if (trigger && document.activeElement === document.body) trigger.focus();
+    };
   }, [open]);
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
