@@ -1,7 +1,7 @@
 -- ============================================================================
 -- GIMNASIO - Parche: la plata y las entradas solo se escriben por funciones
 --
--- SIN APLICAR y SIN PROBAR contra producción (ver "Prueba" abajo).
+-- APLICADO el 2026-11-06 (policies previas en backups.policies_20261106). Probado antes con begin/rollback: OK.
 -- Corré esto DESPUÉS de 50 y de 41.
 -- Se puede correr más de una vez (revoke y "drop policy if exists" no fallan
 -- si ya está hecho). Va en una transacción: entra entero o no entra nada.
@@ -49,8 +49,15 @@
 --   create policy <tabla>_delete on <tabla> for delete to authenticated using (is_manager());
 --   (member_overview: grant insert, update, delete on member_overview to authenticated;)
 --
--- Prueba: PENDIENTE. La prueba con begin/rollback no se pudo correr de noche
--- (la herramienta pidió confirmación manual y nadie estaba para darla).
+-- Prueba (2026-11-06, begin/rollback, no persistió nada): como dueño, UPDATE/
+-- DELETE/INSERT directo en las tablas -> bloqueado; SELECT sigue andando;
+-- add/void_cash_movement, pause/resume_membership, set_membership_period_end,
+-- sell_membership_split, void_sale y close_cash_register -> OK; service_role
+-- conserva INSERT en check_ins. El rol "celular" no puede vender, pero eso es
+-- previo al 42 (is_admin() lo excluye). No había cuenta de profesor para probar.
+-- Al aplicarlo conviene guardar antes las policies en backups.policies_YYYYMMDD.
+--
+-- Guía original de la prueba:
 -- Antes de aplicarlo, correr en el SQL editor, en UNA sola ejecución:
 --   begin; <cuerpo de este archivo sin begin/commit>; <pruebas>; rollback;
 -- y verificar:
