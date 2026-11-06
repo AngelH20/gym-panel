@@ -160,13 +160,26 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
     null
   );
   const [role, setRole] = useState<AdminRole>("profesor");
+  // Controlados: React 19 vacía los campos no controlados después de cada
+  // envío, también con un error ("ya existe ese email"), y había que volver
+  // a escribir todo.
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <form action={action} className="card p-5 space-y-3 border-line-strong">
       <h2 className="h3">Nueva cuenta</h2>
 
       <Field label="Nombre (opcional)">
-        <input name="full_name" autoComplete="off" autoCapitalize="words" className="field" />
+        <input
+          name="full_name"
+          autoComplete="off"
+          autoCapitalize="words"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          className="field"
+        />
       </Field>
 
       <Field label="Email">
@@ -177,6 +190,8 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="field"
         />
       </Field>
@@ -190,6 +205,8 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
           required
           minLength={8}
           autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="field font-mono"
         />
       </Field>
