@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { AdminRole, Payment, CashClosing, CashOpening } from "@/lib/types";
 import { isStaffRole } from "@/lib/roles";
+import { isIsoDate } from "@/lib/actionGuard";
 import { formatDate, formatDateTime, paymentMethodLabel, todayLocal } from "@/lib/labels";
 import { cashMovementKindLabel, fetchCashMovements, movementTotalsFor } from "@/lib/cashMovements";
 
@@ -14,7 +15,12 @@ import { cashMovementKindLabel, fetchCashMovements, movementTotalsFor } from "@/
  *  números (montos, que pueden ser negativos) no pasan por acá. */
 function csvField(value: string | number): string {
   let s = String(value);
-  if (typeof value === "string" && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  // También con espacios adelante (" =1+1"): algunas planillas los recortan
+  // antes de decidir si es fórmula. Y los signos "de ancho completo" (＝ ＋ －
+  // ＠) que LibreOffice/Excel pueden normalizar a los comunes.
+  if (typeof value === "string" && /^[\s ]*[=+\-@＝＋－＠]|^[\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
   if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }
@@ -35,7 +41,7 @@ export async function GET(request: Request) {
   const rawDate = searchParams.get("date");
   // La fecha termina en el nombre del archivo (Content-Disposition): solo
   // se acepta AAAA-MM-DD, nada de comillas ni saltos de línea.
-  if (rawDate != null && !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+  if (rawDate != null && !isIsoDate(rawDate)) {
     return new NextResponse("Fecha inválida", { status: 400 });
   }
   const date = rawDate ?? todayLocal();

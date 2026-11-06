@@ -2,15 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { addDaysLocal, todayLocal } from "@/lib/labels";
+import {
+  GENERIC_ERROR,
+  dbErrorMessage,
+  isIsoDate,
+  isUuid,
+  parsePesosToCents,
+  requireRole,
+} from "@/lib/actionGuard";
 
 type Result = { error?: string };
 
-/** Precio en pesos (input del form) -> centavos. */
-function parseAmountCents(raw: FormDataEntryValue | null): number {
-  const n = Number(String(raw ?? "").trim());
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : 0;
+const BAD_AMOUNT = "Revisá el monto: tiene que ser un número en pesos, sin puntos.";
+const NOT_FOUND = "No se encontró el socio o el pase. Recargá la página.";
+
+/** Precio en pesos (input del form) -> centavos. Vacío = 0 (pase sin
+ *  cargo); cualquier otra cosa que no sea un monto válido (negativo, texto,
+ *  o más que el tope) -> null, y la acción corta con un error en vez de
+ *  registrar el cobro en $0 sin avisar, como pasaba antes. */
+function parseAmountCents(raw: FormDataEntryValue | null): number | null {
+  if (String(raw ?? "").trim() === "") return 0;
+  return parsePesosToCents(raw);
 }
 
 /** Cómo se repartió el cobro entre los dos medios.
@@ -19,20 +32,21 @@ function parseAmountCents(raw: FormDataEntryValue | null): number {
  *  de $100.000 pagado con $60.000 por transferencia y $40.000 en efectivo).
  *  En mixto vienen los dos montos por separado; en los otros dos, uno solo.
  *  Cada medio con monto mayor a cero termina siendo su propio movimiento en
- *  la caja del día (ver sell_membership_split en 19_split_payment_and_plan_fix.sql). */
-function parsePaymentSplit(formData: FormData): { cash: number; transfer: number } {
+ *  la caja del día (ver sell_membership_split en 19_split_payment_and_plan_fix.sql).
+ *  null = algún monto no es válido. */
+function parsePaymentSplit(formData: FormData): { cash: number; transfer: number } | null {
   // "method" es el nombre viejo del campo: se sigue aceptando por si quedó
   // alguna pantalla sin actualizar.
   const mode = String(formData.get("mode") ?? formData.get("method") ?? "cash");
 
   if (mode === "split") {
-    return {
-      cash: parseAmountCents(formData.get("amount_cash")),
-      transfer: parseAmountCents(formData.get("amount_transfer")),
-    };
+    const cash = parseAmountCents(formData.get("amount_cash"));
+    const transfer = parseAmountCents(formData.get("amount_transfer"));
+    return cash == null || transfer == null ? null : { cash, transfer };
   }
 
   const amount = parseAmountCents(formData.get("amount"));
+  if (amount == null) return null;
   return mode === "transfer" ? { cash: 0, transfer: amount } : { cash: amount, transfer: 0 };
 }
 
@@ -42,7 +56,7 @@ function parsePaymentSplit(formData: FormData): { cash: number; transfer: number
  *  sell_membership arranca el período hoy (su default). */
 function parseStartDate(raw: FormDataEntryValue | null): string | undefined {
   const value = String(raw ?? "").trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
+  if (!isIsoDate(value)) return undefined;
   return value <= todayLocal() ? value : undefined;
 }
 
@@ -54,11 +68,14 @@ function parseDni(raw: FormDataEntryValue | null): string | null {
   return /^\d{8}$/.test(digits) ? digits : null;
 }
 
-/** Fecha de nacimiento: opcional. Si viene vacía o mal formada, se guarda
- *  null en vez de cortar el alta/edición por un campo que no es obligatorio. */
+/** Fecha de nacimiento: opcional. Si viene vacía, mal formada, de un día que
+ *  no existe ("2000-02-30") o fuera de rango (futura o antes de 1900), se
+ *  guarda null en vez de cortar el alta/edición por un campo que no es
+ *  obligatorio. Antes un día inexistente llegaba a la base y volvía como
+ *  error crudo de Postgres. */
 function parseBirthDate(raw: FormDataEntryValue | null): string | null {
   const value = String(raw ?? "").trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+  return isIsoDate(value) && value >= "1900-01-01" && value <= todayLocal() ? value : null;
 }
 
 /** Topes de largo de los campos de texto libre del socio. No hay nada en la
@@ -110,6 +127,10 @@ function memberTextError(values: Partial<Record<MemberTextField, string | null>>
   return null;
 }
 
+/** Tope de entradas de un pase cargado a mano: ningún plan real se le
+ *  acerca, y evita que un número gigante llegue a la columna integer. */
+const MAX_USES = 1000;
+
 export async function createMember(_prev: unknown, formData: FormData): Promise<Result> {
   const full_name = String(formData.get("full_name") ?? "").trim();
   if (!full_name) return { error: "El socio necesita un nombre." };
@@ -127,7 +148,19 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
   const textError = memberTextError(texts);
   if (textError) return { error: textError };
 
-  const supabase = await createClient();
+  // Familiar y plan son opcionales, pero si vienen tienen que ser ids. Se
+  // valida todo ANTES de crear el socio, para no dejarlo a medias.
+  const relative_id = String(formData.get("relative_id") ?? "");
+  const plan_id = String(formData.get("plan_id") ?? "");
+  if ((relative_id && !isUuid(relative_id)) || (plan_id && !isUuid(plan_id))) {
+    return { error: "Revisá el familiar o el plan elegido y probá de nuevo." };
+  }
+  const split = plan_id ? parsePaymentSplit(formData) : null;
+  if (plan_id && !split) return { error: BAD_AMOUNT };
+
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { supabase } = guard;
 
   const { data: member, error } = await supabase
     .from("members")
@@ -155,7 +188,6 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
 
   // Si es familiar de otro socio, lo vinculamos antes de vender: el pack
   // familiar solo se puede vender si la familia ya tiene 3 integrantes.
-  const relative_id = String(formData.get("relative_id") ?? "");
   if (relative_id) {
     const { error: linkError } = await supabase.rpc("link_family_member", {
       p_member_id: member.id,
@@ -165,9 +197,7 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
   }
 
   // Si eligió un plan en el alta, le activamos el pase y registramos el cobro.
-  const plan_id = String(formData.get("plan_id") ?? "");
-  if (plan_id) {
-    const split = parsePaymentSplit(formData);
+  if (plan_id && split) {
     const { error: sellError } = await supabase.rpc("sell_membership_split", {
       p_member_id: member.id,
       p_plan_id: plan_id,
@@ -176,6 +206,7 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
       p_start: parseStartDate(formData.get("start_date")),
     });
     if (sellError) {
+      console.error("[socios] Error al cobrar el pase del alta:", sellError);
       revalidatePath("/panel/socios");
       redirect(`/panel/socios/${member.id}?aviso=pase_no_activado`);
     }
@@ -187,6 +218,8 @@ export async function createMember(_prev: unknown, formData: FormData): Promise<
 
 export async function updateMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
+  if (!isUuid(id)) return { error: NOT_FOUND };
+
   const full_name = String(formData.get("full_name") ?? "").trim();
   if (!full_name) return { error: "El socio necesita un nombre." };
 
@@ -204,15 +237,19 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
   const textError = memberTextError(texts);
   if (textError) return { error: textError };
 
-  const supabase = await createClient();
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
 
-  const { error } = await supabase
+  const { error, count } = await guard.supabase
     .from("members")
-    .update({
-      ...texts,
-      dni,
-      birth_date: parseBirthDate(formData.get("birth_date")),
-    })
+    .update(
+      {
+        ...texts,
+        dni,
+        birth_date: parseBirthDate(formData.get("birth_date")),
+      },
+      { count: "exact" }
+    )
     .eq("id", id);
 
   if (error) {
@@ -220,8 +257,11 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
       return { error: "Ya hay otro socio con ese DNI." };
     }
     console.error("[socios] Error al actualizar socio:", error);
-    return { error: "No se pudo guardar. Probá de nuevo en un momento." };
+    return { error: GENERIC_ERROR };
   }
+  // Un UPDATE que no encuentra la fila (o que la RLS filtra) no da error:
+  // sin esto la pantalla decía "guardado" sin haber guardado nada.
+  if (!count) return { error: NOT_FOUND };
 
   revalidatePath("/panel/socios");
   revalidatePath(`/panel/socios/${id}`);
@@ -232,10 +272,12 @@ export async function updateMember(_prev: unknown, formData: FormData): Promise<
 export async function setMemberStatus(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
   const status = String(formData.get("status"));
+  if (!isUuid(id)) return { error: NOT_FOUND };
   if (status !== "active" && status !== "suspended") return { error: "Estado inválido." };
 
-  const supabase = await createClient();
-  const { error, count } = await supabase
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error, count } = await guard.supabase
     .from("members")
     .update({ status }, { count: "exact" })
     .eq("id", id);
@@ -258,10 +300,14 @@ export async function setMemberStatus(_prev: unknown, formData: FormData): Promi
 export async function sellMembership(_prev: unknown, formData: FormData): Promise<Result> {
   const member_id = String(formData.get("member_id"));
   const plan_id = String(formData.get("plan_id"));
+  if (!isUuid(member_id)) return { error: NOT_FOUND };
+  if (!isUuid(plan_id)) return { error: "Elegí un plan." };
   const split = parsePaymentSplit(formData);
+  if (!split) return { error: BAD_AMOUNT };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("sell_membership_split", {
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("sell_membership_split", {
     p_member_id: member_id,
     p_plan_id: plan_id,
     p_cash_cents: split.cash,
@@ -273,7 +319,9 @@ export async function sellMembership(_prev: unknown, formData: FormData): Promis
   revalidatePath(`/panel/socios/${member_id}`);
   revalidatePath("/panel/caja");
 
-  if (error) return { error: error.message };
+  if (error) {
+    return { error: dbErrorMessage("socios", error, "No se pudo registrar el cobro. Probá de nuevo.") };
+  }
   return {};
 }
 
@@ -285,12 +333,14 @@ export async function updateMembershipEnd(_prev: unknown, formData: FormData): P
   const member_id = String(formData.get("member_id"));
   const period_end = String(formData.get("period_end") ?? "").trim();
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(period_end)) {
+  if (!isUuid(membership_id) || !isUuid(member_id)) return { error: NOT_FOUND };
+  if (!isIsoDate(period_end)) {
     return { error: "Elegí una fecha válida." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("set_membership_period_end", {
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("set_membership_period_end", {
     p_membership_id: membership_id,
     p_period_end: period_end,
   });
@@ -298,7 +348,7 @@ export async function updateMembershipEnd(_prev: unknown, formData: FormData): P
   revalidatePath("/panel/socios");
   revalidatePath(`/panel/socios/${member_id}`);
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
   return {};
 }
 
@@ -311,19 +361,21 @@ export async function updateMembershipPlan(_prev: unknown, formData: FormData): 
   const member_id = String(formData.get("member_id"));
   const plan_id = String(formData.get("plan_id") ?? "");
 
-  if (!plan_id) return { error: "Elegí un plan." };
+  if (!isUuid(membership_id) || !isUuid(member_id)) return { error: NOT_FOUND };
+  if (!isUuid(plan_id)) return { error: "Elegí un plan." };
 
   // Entradas: vacío = las que traiga el plan elegido. Se puede pisar a mano
   // para el caso en que el socio ya gastó más entradas de las que trae el
   // plan nuevo, que si no quedaría bloqueado.
   const rawUses = String(formData.get("uses_total") ?? "").trim();
   const uses = Number(rawUses);
-  if (rawUses && (!Number.isInteger(uses) || uses < 1)) {
-    return { error: "Las entradas tienen que ser un número entero de 1 o más." };
+  if (rawUses && (!Number.isInteger(uses) || uses < 1 || uses > MAX_USES)) {
+    return { error: `Las entradas tienen que ser un número entero entre 1 y ${MAX_USES}.` };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("set_membership_plan", {
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("set_membership_plan", {
     p_membership_id: membership_id,
     p_plan_id: plan_id,
     p_uses_override: rawUses ? uses : null,
@@ -332,7 +384,7 @@ export async function updateMembershipPlan(_prev: unknown, formData: FormData): 
   revalidatePath("/panel/socios");
   revalidatePath(`/panel/socios/${member_id}`);
 
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
   return {};
 }
 
@@ -344,7 +396,7 @@ function pauseRpcError(error: { code?: string; message: string }): string {
   if (error.code === "PGRST202" || error.code === "42883") {
     return "Falta aplicar la actualización de la base para pausar pases (sql/33).";
   }
-  return error.message;
+  return dbErrorMessage("socios", error, GENERIC_ERROR);
 }
 
 /** Pausa el pase vigente hasta una fecha de vuelta. Los días de pausa se le
@@ -354,8 +406,8 @@ export async function pauseMembership(_prev: unknown, formData: FormData): Promi
   const until = String(formData.get("until") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
 
-  if (!membership_id) return { error: "No se encontró el pase." };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(until)) return { error: "Elegí la fecha de vuelta." };
+  if (!isUuid(membership_id)) return { error: "No se encontró el pase." };
+  if (!isIsoDate(until)) return { error: "Elegí la fecha de vuelta." };
 
   const today = todayLocal();
   if (until <= today) return { error: "La fecha de vuelta tiene que ser posterior a hoy." };
@@ -366,8 +418,9 @@ export async function pauseMembership(_prev: unknown, formData: FormData): Promi
     return { error: "El motivo es demasiado largo (máximo 300 caracteres)." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("pause_membership", {
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("pause_membership", {
     p_membership_id: membership_id,
     p_until: until,
     p_reason: reason || null,
@@ -383,10 +436,11 @@ export async function pauseMembership(_prev: unknown, formData: FormData): Promi
  *  se le restan del vencimiento. */
 export async function resumeMembership(_prev: unknown, formData: FormData): Promise<Result> {
   const membership_id = String(formData.get("membership_id") ?? "");
-  if (!membership_id) return { error: "No se encontró el pase." };
+  if (!isUuid(membership_id)) return { error: "No se encontró el pase." };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("resume_membership", {
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("resume_membership", {
     p_membership_id: membership_id,
   });
 
@@ -400,28 +454,32 @@ export async function resumeMembership(_prev: unknown, formData: FormData): Prom
 export async function linkFamily(_prev: unknown, formData: FormData): Promise<Result> {
   const member_id = String(formData.get("member_id"));
   const relative_id = String(formData.get("relative_id") ?? "");
-  if (!relative_id) return { error: "Elegí al familiar." };
+  if (!isUuid(member_id)) return { error: NOT_FOUND };
+  if (!isUuid(relative_id)) return { error: "Elegí al familiar." };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("link_family_member", {
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("link_family_member", {
     p_member_id: member_id,
     p_relative_id: relative_id,
   });
 
   revalidatePath("/panel/socios", "layout");
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
   return {};
 }
 
 /** Saca al socio de su familia. Los pases ya vendidos no se tocan. */
 export async function unlinkFamily(_prev: unknown, formData: FormData): Promise<Result> {
   const member_id = String(formData.get("member_id"));
+  if (!isUuid(member_id)) return { error: NOT_FOUND };
 
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("unlink_family_member", { p_member_id: member_id });
+  const guard = await requireRole("staff");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("unlink_family_member", { p_member_id: member_id });
 
   revalidatePath("/panel/socios", "layout");
-  if (error) return { error: error.message };
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
   return {};
 }
 
@@ -429,10 +487,13 @@ export async function unlinkFamily(_prev: unknown, formData: FormData): Promise<
  *  entrar), lo saca de su familia y lo oculta de las listas. */
 export async function archiveMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("archive_member", { p_member_id: id });
+  if (!isUuid(id)) return { error: NOT_FOUND };
 
-  if (error) return { error: error.message };
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("archive_member", { p_member_id: id });
+
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
 
   revalidatePath("/panel", "layout");
   return {};
@@ -441,10 +502,13 @@ export async function archiveMember(_prev: unknown, formData: FormData): Promise
 /** Vuelve a las listas. Para que pueda entrar, se le vende un pase. */
 export async function unarchiveMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("unarchive_member", { p_member_id: id });
+  if (!isUuid(id)) return { error: NOT_FOUND };
 
-  if (error) return { error: error.message };
+  const guard = await requireRole("manager");
+  if (!guard.ok) return { error: guard.error };
+  const { error } = await guard.supabase.rpc("unarchive_member", { p_member_id: id });
+
+  if (error) return { error: dbErrorMessage("socios", error, GENERIC_ERROR) };
 
   revalidatePath("/panel", "layout");
   return {};
@@ -454,8 +518,11 @@ export async function unarchiveMember(_prev: unknown, formData: FormData): Promi
  *  Los cobros quedan en la caja con el nombre del socio. */
 export async function deleteMember(_prev: unknown, formData: FormData): Promise<Result> {
   const id = String(formData.get("id"));
-  const supabase = await createClient();
-  const { error, count } = await supabase
+  if (!isUuid(id)) return { error: NOT_FOUND };
+
+  const guard = await requireRole("programador");
+  if (!guard.ok) return { error: guard.error };
+  const { error, count } = await guard.supabase
     .from("members")
     .delete({ count: "exact" })
     .eq("id", id);

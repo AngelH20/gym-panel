@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentAdminRole } from "@/lib/supabase/role";
+import { isUuid } from "@/lib/actionGuard";
 import type { AdminRole } from "@/lib/types";
 import { ALL_ROLES, MANAGER_CREATABLE_ROLES, isManagerRole, isProgramadorRole } from "@/lib/roles";
 
@@ -13,10 +15,10 @@ type Result = { error?: string };
  *  para devolver un mensaje claro y, sobre todo, antes de tocar Supabase
  *  Auth con la service_role, que no pasa por RLS. */
 async function currentRole(): Promise<AdminRole | null> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("current_admin_role");
-  return (data as AdminRole | null) ?? null;
+  return getCurrentAdminRole();
 }
+
+const ACCOUNT_NOT_FOUND = "No se encontró la cuenta. Recargá la página.";
 
 /** El dueño maneja cuentas de profesor y de celular; el programador, todas.
  *  Misma regla que la RLS de admins (sql/38_rol_celular.sql). */
@@ -73,7 +75,13 @@ export async function createStaffAccount(_prev: unknown, formData: FormData): Pr
     if (msg.includes("already") || msg.includes("registered")) {
       return { error: "Ya existe un usuario de Supabase Auth con ese email." };
     }
-    return { error: `No se pudo crear el usuario: ${createError.message}` };
+    // El texto crudo de Supabase Auth (políticas de contraseña, límites,
+    // configuración) queda en el log, no en pantalla.
+    console.error("[usuarios] Error al crear el usuario de Auth:", createError);
+    if (msg.includes("password")) {
+      return { error: "Supabase rechazó la contraseña. Probá con una más larga o más difícil." };
+    }
+    return { error: "No se pudo crear el usuario. Probá de nuevo en un momento." };
   }
 
   const { error: insertError } = await admin.from("admins").insert({
@@ -103,6 +111,7 @@ export async function updateStaffRole(_prev: unknown, formData: FormData): Promi
 
   const id = String(formData.get("id"));
   const role = String(formData.get("role")) as AdminRole;
+  if (!isUuid(id)) return { error: ACCOUNT_NOT_FOUND };
   if (!ALL_ROLES.includes(role)) return { error: "Rol inválido." };
 
   if (role !== "programador" && (await wouldLeaveNoProgramador(id))) {
@@ -110,12 +119,17 @@ export async function updateStaffRole(_prev: unknown, formData: FormData): Promi
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("admins").update({ role }).eq("id", id);
+  const { error, count } = await supabase
+    .from("admins")
+    .update({ role }, { count: "exact" })
+    .eq("id", id);
 
   if (error) {
     console.error("[usuarios] Error al cambiar el rol:", error);
     return { error: "No se pudo cambiar el rol." };
   }
+  // 0 filas no es error para PostgREST: la cuenta ya no existe.
+  if (!count) return { error: ACCOUNT_NOT_FOUND };
 
   revalidatePath("/panel/usuarios");
   return {};
@@ -128,6 +142,7 @@ export async function deleteStaffAccount(_prev: unknown, formData: FormData): Pr
   }
 
   const id = String(formData.get("id"));
+  if (!isUuid(id)) return { error: ACCOUNT_NOT_FOUND };
   const supabase = await createClient();
 
   const { data: target } = await supabase
