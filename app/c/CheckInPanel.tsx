@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { checkIn } from "./actions";
 import { Field, SubmitButton } from "@/components/Form";
 import { UsesTally } from "@/components/UsesTally";
@@ -15,12 +15,19 @@ import { Avatar } from "@/components/Avatar";
 export function CheckInPanel({ qrToken }: { qrToken: string }) {
   const [state, action] = useActionState(checkIn, null);
   const [dismissed, setDismissed] = useState(false);
+  // El resultado reemplaza al formulario: el foco va al mensaje, así un
+  // lector de pantalla lo lee y el foco no queda perdido en la nada.
+  const messageRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (state) setDismissed(false);
   }, [state]);
 
   const result = dismissed ? null : state;
+
+  useEffect(() => {
+    if (result) messageRef.current?.focus();
+  }, [result]);
 
   if (result) {
     const success = result.ok;
@@ -88,7 +95,14 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
           </span>
         )}
 
-        <p className="text-title font-semibold text-balance">{result.message}</p>
+        <p
+          ref={messageRef}
+          tabIndex={-1}
+          role="status"
+          className="text-title font-semibold text-balance focus:outline-none"
+        >
+          {result.message}
+        </p>
 
         {result.code === "CHECKED_IN" &&
           result.uses_total != null &&
@@ -129,13 +143,19 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
             name="dni"
             inputMode="numeric"
             autoComplete="off"
+            enterKeyHint="go"
             required
             pattern="[0-9]{8}"
             minLength={8}
-            maxLength={8}
             title="8 dígitos numéricos"
             className="field min-h-14 text-center num text-[1.5rem] font-medium tracking-[0.12em]"
             autoFocus
+            onChange={(e) => {
+              // Si lo tipean o pegan con puntos ("30.123.456"), quedan los
+              // números (con puntos no entraba: el campo corta en 8).
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
+              if (digits !== e.target.value) e.target.value = digits;
+            }}
           />
         </Field>
 

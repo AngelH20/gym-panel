@@ -2,8 +2,9 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { addCashMovement } from "./actions";
-import { Field, FormError, SubmitButton } from "@/components/Form";
+import { Field, FormError, FormSuccess, MoneyInput, SubmitButton } from "@/components/Form";
 import { MAX_MOVEMENT_PESOS, MAX_MOVEMENT_REASON } from "@/lib/cashMovements";
+import { formatMoney } from "@/lib/labels";
 
 /**
  * "Registrar gasto o ingreso": plata que sale o entra de la caja sin ser la
@@ -12,6 +13,8 @@ import { MAX_MOVEMENT_PESOS, MAX_MOVEMENT_REASON } from "@/lib/cashMovements";
  */
 export function CashMovementForm() {
   const [open, setOpen] = useState(false);
+  // Lo último que se guardó, para confirmarlo con la tarjeta ya plegada.
+  const [saved, setSaved] = useState<string | null>(null);
 
   if (!open) {
     return (
@@ -22,7 +25,15 @@ export function CashMovementForm() {
             Plata que sale o entra de la caja y no es un pase.
           </p>
         </div>
-        <button type="button" onClick={() => setOpen(true)} className="btn-ghost w-full border border-line">
+        <FormSuccess message={saved} />
+        <button
+          type="button"
+          onClick={() => {
+            setSaved(null);
+            setOpen(true);
+          }}
+          className="btn-ghost w-full border border-line"
+        >
           Registrar gasto o ingreso
         </button>
       </div>
@@ -31,10 +42,24 @@ export function CashMovementForm() {
 
   // Se monta de cero cada vez que se abre: sin el error ni los datos de la
   // vez anterior.
-  return <OpenForm onClose={() => setOpen(false)} />;
+  return (
+    <OpenForm
+      onClose={() => setOpen(false)}
+      onSaved={(message) => {
+        setSaved(message);
+        setOpen(false);
+      }}
+    />
+  );
 }
 
-function OpenForm({ onClose }: { onClose: () => void }) {
+function OpenForm({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
   const [state, action] = useActionState(addCashMovement, null);
   const [kind, setKind] = useState<"expense" | "income">("expense");
   // Controlados a propósito: React 19 vacía los campos no controlados de un
@@ -44,10 +69,18 @@ function OpenForm({ onClose }: { onClose: () => void }) {
   const [method, setMethod] = useState("cash");
   const [reason, setReason] = useState("");
 
-  // Guardado: se pliega solo y queda listo para el próximo.
+  // Guardado: se pliega solo, avisa qué quedó anotado y queda listo para el
+  // próximo.
   useEffect(() => {
-    if (state?.ok) onClose();
-  }, [state, onClose]);
+    if (state?.ok) {
+      const pesos = Math.round(Number(amount) || 0);
+      onSaved(
+        `${kind === "expense" ? "Gasto" : "Ingreso"} de ${formatMoney(pesos * 100)} registrado.`
+      );
+    }
+    // Solo cuando vuelve la respuesta: amount/kind son los que se mandaron.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <div className="card p-5 space-y-3">
@@ -64,7 +97,8 @@ function OpenForm({ onClose }: { onClose: () => void }) {
           ).map(([value, label]) => (
             <label
               key={value}
-              className={`flex min-h-9 cursor-pointer items-center justify-center rounded-control border text-tiny font-medium transition-colors ${
+              className={`flex min-h-10 coarse:min-h-11 cursor-pointer items-center justify-center rounded-control border text-tiny font-medium transition-colors
+                has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-plate-blue ${
                 kind === value ? "border-txt text-txt" : "border-line text-txt-soft hover:bg-surface-hover"
               }`}
             >
@@ -82,17 +116,14 @@ function OpenForm({ onClose }: { onClose: () => void }) {
         </fieldset>
 
         <Field label="Monto">
-          <input
+          <MoneyInput
             name="amount"
-            type="number"
-            inputMode="numeric"
             min={1}
             max={MAX_MOVEMENT_PESOS}
-            step="1"
             required
+            enterKeyHint="next"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="field font-mono"
             autoFocus
           />
         </Field>
@@ -113,6 +144,8 @@ function OpenForm({ onClose }: { onClose: () => void }) {
           <input
             name="reason"
             required
+            enterKeyHint="done"
+            placeholder={kind === "expense" ? "Ej: artículos de limpieza" : "Ej: venta de agua"}
             maxLength={MAX_MOVEMENT_REASON}
             value={reason}
             onChange={(e) => setReason(e.target.value)}

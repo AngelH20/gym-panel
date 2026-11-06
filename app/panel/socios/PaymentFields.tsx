@@ -1,6 +1,6 @@
 "use client";
 
-import { Field } from "@/components/Form";
+import { Field, MoneyInput } from "@/components/Form";
 import { formatMoney } from "@/lib/labels";
 import type { Plan } from "@/lib/types";
 
@@ -91,58 +91,55 @@ export function PaymentFields({
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
-        {(["cash", "transfer", "split"] as const).map((m) => (
-          <label
-            key={m}
-            className={`flex flex-col gap-0.5 rounded-control border px-3 py-2.5 text-tiny font-medium cursor-pointer transition-colors ${
-              value.mode === m
-                ? "border-plate-blue ring-1 ring-plate-blue"
-                : "border-line-strong hover:border-txt-faint"
-            }`}
-          >
-            <span className="flex items-center gap-1.5">
-              <input
-                type="radio"
-                name="mode"
-                value={m}
-                checked={value.mode === m}
-                onChange={() => setMode(m)}
-                className="accent-plate-blue"
-              />
-              {MODE_LABEL[m]}
-            </span>
-            <span className="num text-micro font-normal text-txt-faint pl-5">
-              {m === "split"
-                ? "Los dos"
-                : formatMoney(m === "cash" ? plan?.price_cash_cents : plan?.price_transfer_cents)}
-            </span>
-          </label>
-        ))}
-      </div>
+      <fieldset>
+        <legend className="block mb-1.5 text-tiny font-medium text-txt">Cómo pagó</legend>
+        <div className="grid grid-cols-3 gap-2">
+          {(["cash", "transfer", "split"] as const).map((m) => (
+            <label
+              key={m}
+              className={`flex flex-col gap-0.5 min-h-11 rounded-control border px-3 py-2.5 text-tiny font-medium cursor-pointer transition-colors ${
+                value.mode === m
+                  ? "border-plate-blue ring-1 ring-plate-blue"
+                  : "border-line-strong hover:border-txt-faint"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <input
+                  type="radio"
+                  name="mode"
+                  value={m}
+                  checked={value.mode === m}
+                  onChange={() => setMode(m)}
+                  className="accent-plate-blue"
+                />
+                {MODE_LABEL[m]}
+              </span>
+              <span className="num text-micro font-normal text-txt-faint pl-5">
+                {m === "split"
+                  ? "Los dos"
+                  : formatMoney(m === "cash" ? plan?.price_cash_cents : plan?.price_transfer_cents)}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {value.mode === "split" ? (
         <>
           <div className="grid grid-cols-2 gap-2">
             <Field label="En efectivo">
-              <input
+              <MoneyInput
                 name="amount_cash"
-                type="number"
-                min={0}
-                step="1"
-                inputMode="numeric"
+                enterKeyHint="next"
                 value={value.cash}
                 onChange={(e) => onChange({ ...value, cash: e.target.value })}
                 className={inputClass}
               />
             </Field>
             <Field label="Por transferencia">
-              <input
+              <MoneyInput
                 name="amount_transfer"
-                type="number"
-                min={0}
-                step="1"
-                inputMode="numeric"
+                enterKeyHint="done"
                 value={value.transfer}
                 onChange={(e) => onChange({ ...value, transfer: e.target.value })}
                 className={inputClass}
@@ -161,12 +158,9 @@ export function PaymentFields({
         </>
       ) : (
         <Field label="Monto cobrado">
-          <input
+          <MoneyInput
             name="amount"
-            type="number"
-            min={0}
-            step="1"
-            inputMode="numeric"
+            enterKeyHint="done"
             required
             value={value.amount}
             onChange={(e) => onChange({ ...value, amount: e.target.value })}

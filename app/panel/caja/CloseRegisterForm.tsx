@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { closeCashRegister } from "./actions";
-import { Field, FormError, SubmitButton } from "@/components/Form";
+import { Field, FormError, MoneyInput, SubmitButton } from "@/components/Form";
 import { formatDate, formatMoney } from "@/lib/labels";
 
 /**
@@ -49,7 +49,7 @@ export function CloseRegisterForm({
               : "Contá el efectivo del cajón y comparalo con lo esperado."}
           </p>
         </div>
-        <button onClick={() => setConfirm(true)} className="btn-dark w-full">
+        <button type="button" onClick={() => setConfirm(true)} className="btn-dark w-full">
           {pastDate ? "Cerrar esa caja" : "Cerrar caja"}
         </button>
         <FormError message={state?.error} />
@@ -75,33 +75,46 @@ export function CloseRegisterForm({
           label={pastDate ? "Efectivo contado (opcional)" : "Efectivo contado"}
           hint={pastDate ? "Si no lo contaste ese día, dejalo vacío: el cierre queda sin diferencia." : undefined}
         >
-          <input
+          <MoneyInput
             name="counted_cash"
-            type="number"
-            min={0}
-            step="1"
             required={!pastDate}
+            enterKeyHint="next"
             value={counted}
             onChange={(e) => setCounted(e.target.value)}
-            className="field font-mono"
             autoFocus
           />
         </Field>
 
-        {diff != null && diff !== 0 && (
-          <p className={`text-tiny font-medium ${diff > 0 ? "text-plate-blue" : "text-plate-red"}`}>
-            {diff > 0
+        {/* Siempre presente (aunque vacío) para que el lector de pantalla
+            anuncie la diferencia a medida que se tipea lo contado. */}
+        <p
+          aria-live="polite"
+          className={`text-tiny font-medium empty:hidden ${
+            diff == null
+              ? ""
+              : diff > 0
+                ? "text-plate-blue"
+                : diff < 0
+                  ? "text-plate-red"
+                  : "text-plate-green"
+          }`}
+        >
+          {diff == null
+            ? null
+            : diff > 0
               ? `Sobran ${formatMoney(diff)} respecto de lo esperado.`
-              : `Faltan ${formatMoney(-diff)} respecto de lo esperado.`}
-          </p>
-        )}
+              : diff < 0
+                ? `Faltan ${formatMoney(-diff)} respecto de lo esperado.`
+                : "Coincide con lo esperado."}
+        </p>
 
         <Field label="Notas (opcional)">
           <input
             name="notes"
+            enterKeyHint="done"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="field text-tiny"
+            className="field"
           />
         </Field>
 

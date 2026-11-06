@@ -70,7 +70,13 @@ export function FamilyCard({
       {candidates.length > 0 && (
         <form action={linkAction} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="member_id" value={memberId} />
-          <select name="relative_id" required defaultValue="" className="field flex-1 min-w-48">
+          <select
+            name="relative_id"
+            required
+            defaultValue=""
+            aria-label="Familiar para vincular"
+            className="field flex-1 min-w-48"
+          >
             <option value="" disabled>
               Vincular con un familiar…
             </option>

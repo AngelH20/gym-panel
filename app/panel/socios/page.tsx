@@ -201,7 +201,7 @@ export default async function SociosPage({
                 className={active ? "chip chip-on" : "chip"}
               >
                 {filter.label}
-                {count && (
+                {count != null && (
                   <span
                     className={`num text-micro ${active ? "text-txt-onDarkSoft" : "text-txt-faint"}`}
                   >
@@ -236,8 +236,15 @@ export default async function SociosPage({
         </dl>
       )}
 
+      {/* Para lectores de pantalla: cuántos quedaron después de buscar o
+          filtrar (la región existe siempre, así se anuncia cada cambio). */}
+      <p className="sr-only" aria-live="polite">
+        {members.length === 1 ? "1 socio" : `${members.length} socios`}
+      </p>
+
       {members.length === 0 ? (
         <EmptyState
+          headingLevel={2}
           title={
             q
               ? "Ningún socio coincide"
@@ -278,7 +285,9 @@ export default async function SociosPage({
                       className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full
                                  bg-plate-green ring-2 ring-surface"
                       title="Entró hoy"
-                    />
+                    >
+                      <span className="sr-only">Entró hoy</span>
+                    </span>
                   )}
                 </div>
 
@@ -318,7 +327,9 @@ export default async function SociosPage({
                         className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full
                                    bg-plate-green ring-2 ring-surface"
                         title="Entró hoy"
-                      />
+                      >
+                        <span className="sr-only">Entró hoy</span>
+                      </span>
                     )}
                   </div>
 

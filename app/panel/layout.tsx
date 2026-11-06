@@ -67,7 +67,7 @@ export default async function PanelLayout({
     <form action={signOut}>
       <button
         title="Salir"
-        className="inline-flex items-center gap-2 min-h-9 px-2.5 rounded-control text-tiny font-medium
+        className="inline-flex items-center gap-2 min-h-9 coarse:min-h-11 px-2.5 rounded-control text-tiny font-medium
                    text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
       >
         <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

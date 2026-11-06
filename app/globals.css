@@ -268,6 +268,33 @@
   .datalist {
     @apply divide-y divide-line;
   }
+
+  /* --- Pantallas táctiles (celular, tablet) --------------------------------
+     En el mostrador se opera con el pulgar y apurado: botones y campos de
+     44px como mínimo, y los campos en 16px para que el iPhone no haga zoom
+     al tocarlos (con menos de 16px agranda la página y hay que achicarla a
+     mano). Va en "components", así una clase utilitaria más grande
+     (min-h-12, por ejemplo) sigue ganando. */
+  @media (pointer: coarse) {
+    .field {
+      min-height: 44px;
+      font-size: max(16px, 1rem);
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-dark,
+    .btn-success,
+    .btn-ghost,
+    .btn-danger,
+    .btn-sm {
+      min-height: 44px;
+    }
+
+    .chip {
+      min-height: 40px;
+    }
+  }
 }
 
 @layer utilities {

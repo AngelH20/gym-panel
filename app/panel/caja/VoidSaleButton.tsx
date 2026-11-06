@@ -30,7 +30,7 @@ export function VoidSaleButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="shrink-0 min-h-8 px-2 rounded-control text-tiny font-medium text-txt-faint hover:text-plate-red hover:bg-surface-hover transition-colors"
+        className="shrink-0 min-h-8 coarse:min-h-11 px-2 coarse:px-3 rounded-control text-tiny font-medium text-txt-faint hover:text-plate-red hover:bg-surface-hover transition-colors"
       >
         Anular
       </button>
@@ -53,9 +53,10 @@ export function VoidSaleButton({
           name="reason"
           required
           autoFocus
+          enterKeyHint="done"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="field text-tiny"
+          className="field"
         />
       </Field>
       <label className="flex items-center gap-2.5 min-h-9 text-tiny text-txt-soft cursor-pointer">

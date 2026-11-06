@@ -38,7 +38,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="-ml-1.5 inline-flex min-h-8 items-center gap-1 rounded-control px-1.5 text-tiny font-medium text-txt-soft hover:text-txt transition-colors"
+      className="-ml-1.5 inline-flex min-h-8 coarse:min-h-11 items-center gap-1 rounded-control px-1.5 text-tiny font-medium text-txt-soft hover:text-txt transition-colors"
     >
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M15 18l-6-6 6-6" />
