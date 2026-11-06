@@ -55,7 +55,7 @@ export function VoidSaleButton({
           autoFocus
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="field text-tiny"
+          className="field"
         />
       </Field>
       <label className="flex items-center gap-2.5 min-h-9 text-tiny text-txt-soft cursor-pointer">

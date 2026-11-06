@@ -67,7 +67,7 @@ export function OpenRegisterForm() {
             name="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="field text-tiny"
+            className="field"
           />
         </Field>
 

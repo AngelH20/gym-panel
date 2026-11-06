@@ -54,7 +54,7 @@ export function VoidMovementButton({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           maxLength={500}
-          className="field text-tiny"
+          className="field"
         />
       </Field>
       <FormError message={state?.error} />

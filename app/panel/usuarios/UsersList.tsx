@@ -102,7 +102,8 @@ function StaffRow({
               <select
                 name="role"
                 defaultValue={staff.role}
-                className="field text-tiny min-h-9 py-1.5 w-auto"
+                className="field md:text-tiny md:min-h-9 py-1.5 w-auto"
+                aria-label={`Rol de ${staff.full_name || staff.email}`}
               >
                 {ALL_ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -165,15 +166,32 @@ function CreateForm({ roles, onDone }: { roles: AdminRole[]; onDone: () => void 
       <h2 className="h3">Nueva cuenta</h2>
 
       <Field label="Nombre (opcional)">
-        <input name="full_name" className="field" />
+        <input name="full_name" autoComplete="off" autoCapitalize="words" className="field" />
       </Field>
 
       <Field label="Email">
-        <input name="email" type="email" required className="field" />
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          className="field"
+        />
       </Field>
 
       <Field label="Contraseña" hint="Al menos 8 caracteres. Se la pasás vos a esa persona.">
-        <input name="password" type="password" required minLength={8} className="field font-mono" />
+        {/* new-password: que el navegador no la guarde como la contraseña de
+            quien la está creando (ni la autocomplete con la suya). */}
+        <input
+          name="password"
+          type="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          className="field font-mono"
+        />
       </Field>
 
       <Field label="Rol" hint={ROLE_HINT[role]}>
