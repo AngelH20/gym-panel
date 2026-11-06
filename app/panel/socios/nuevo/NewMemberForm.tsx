@@ -111,7 +111,7 @@ export function NewMemberForm({
             />
           </Field>
 
-          <Field label="DNI" hint="8 dígitos, sin puntos ni espacios.">
+          <Field label="DNI" hint="8 dígitos. Los puntos se sacan solos.">
             <input
               name="dni"
               required

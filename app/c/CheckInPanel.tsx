@@ -138,7 +138,7 @@ export function CheckInPanel({ qrToken }: { qrToken: string }) {
       <form action={action} className="space-y-5">
         <input type="hidden" name="qr_token" value={qrToken} />
 
-        <Field label="Tu DNI" hint="8 dígitos, sin puntos ni espacios.">
+        <Field label="Tu DNI" hint="8 dígitos. Los puntos se sacan solos.">
           <input
             name="dni"
             inputMode="numeric"

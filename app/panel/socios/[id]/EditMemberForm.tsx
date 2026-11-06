@@ -107,7 +107,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
         />
       </Field>
 
-      <Field label="DNI" hint="8 dígitos, sin puntos ni espacios. Es lo que tipea en el kiosco de la entrada.">
+      <Field label="DNI" hint="8 dígitos. Los puntos se sacan solos. Es lo que tipea en el kiosco de la entrada.">
         <input
           name="dni"
           value={draft.dni}
