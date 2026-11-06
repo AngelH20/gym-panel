@@ -2,46 +2,8 @@
 
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { clientIpKey } from "@/lib/clientIp";
 import type { CheckInResult } from "@/lib/types";
-
-const IP_FORMAT = /^[0-9a-fA-F:.]+$/;
-
-/**
- * Clave del rate limit: la IPv4 tal cual, o el /64 de una IPv6.
- *
- * Con IPv6 cada conexión hogareña o celular recibe un /64 entero (2^64
- * direcciones) y puede usar una distinta en cada pedido: contando por
- * dirección exacta, el tope de intentos de perform_check_in_by_dni() no
- * frenaba a nadie. Se manda como red ("2001:db8:1:2::/64"), que la columna
- * inet de checkin_attempts guarda y compara igual que una IP suelta.
- */
-function rateLimitKey(ip: string): string {
-  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
-  if (mapped) return mapped[1];
-  if (!ip.includes(":")) return ip;
-
-  const [head, tail, ...rest] = ip.split("::");
-  if (rest.length > 0) return ip;
-  const groupsOf = (part: string | undefined) =>
-    part ? part.split(":").flatMap((g) => (g.includes(".") ? ["0", "0"] : [g])) : [];
-  const left = groupsOf(head);
-  const right = groupsOf(tail);
-  const missing = 8 - left.length - right.length;
-  if (tail === undefined ? missing !== 0 : missing < 1) return ip;
-
-  const groups = [...left, ...Array(tail === undefined ? 0 : missing).fill("0"), ...right];
-  if (!groups.every((g) => /^[0-9a-f]{1,4}$/i.test(g))) return ip;
-  return `${groups.slice(0, 4).map((g) => parseInt(g, 16).toString(16)).join(":")}::/64`;
-}
-
-/** IP real del que escanea, para el rate limit de perform_check_in_by_dni().
- *  Vercel siempre manda x-forwarded-for (y pisa el que mande el cliente);
- *  el primer valor es el cliente. */
-function clientIp(headerList: Headers): string | null {
-  const forwarded = headerList.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const candidate = forwarded || headerList.get("x-real-ip");
-  return candidate && IP_FORMAT.test(candidate) ? rateLimitKey(candidate) : null;
-}
 
 /**
  * Invoca perform_check_in_by_dni() con el service_role: esta ruta es pública
@@ -78,10 +40,11 @@ export async function checkIn(
     // mandando un User-Agent de megas.
     p_user_agent: headerList.get("user-agent")?.slice(0, 256) ?? null,
     p_qr_token: qrToken,
-    p_client_ip: clientIp(headerList),
+    p_client_ip: clientIpKey(headerList),
   });
 
-  if (error) {
+  if (error || !data) {
+    console.error("[check-in] perform_check_in_by_dni:", error);
     return {
       ok: false,
       code: "INVALID_DNI",
@@ -89,5 +52,33 @@ export async function checkIn(
     };
   }
 
-  return data as CheckInResult;
+  return publicResult(data as CheckInResult);
+}
+
+/** "Juan Pablo Pérez" -> "Juan P.": alcanza para el saludo y para las mismas
+ *  iniciales del avatar ("JP"), sin mandar el nombre completo. */
+function shortName(fullName: string): string {
+  const [first = "", second] = fullName.trim().split(/\s+/);
+  return second ? `${first} ${second[0]}.` : first;
+}
+
+/**
+ * Lo que vuelve al navegador, campo por campo. La página es pública y
+ * cualquiera con un QR vigente puede probar DNIs (con el tope de intentos por
+ * IP de la base): no tiene sentido mandarle el nombre completo, el plan, el
+ * vencimiento ni ids internos que la pantalla no muestra. Lo que no está en
+ * esta lista no sale, aunque mañana la función de la base devuelva más cosas.
+ */
+function publicResult(r: CheckInResult): CheckInResult {
+  return {
+    ok: r.ok === true,
+    code: r.code,
+    message: typeof r.message === "string" ? r.message : "",
+    member_name: r.member_name ? shortName(r.member_name) : undefined,
+    photo_url: r.photo_url ?? null,
+    uses_remaining: r.uses_remaining,
+    uses_total: r.uses_total,
+    visits_today: r.visits_today,
+    is_birthday: r.is_birthday === true,
+  };
 }
