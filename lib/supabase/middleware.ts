@@ -32,10 +32,15 @@ function supabaseImgOrigin(): string {
 
 const SUPABASE_IMG_ORIGIN = supabaseImgOrigin();
 
+/** En `next dev` React y el recargado en caliente usan eval() (stack traces,
+ *  Fast Refresh): sin 'unsafe-eval' la CSP los bloquea y la página no termina
+ *  de cargar. Solo en desarrollo: el build de producción no lo necesita. */
+const IS_DEV = process.env.NODE_ENV !== "production";
+
 function applySecurityHeaders(response: NextResponse, nonce: string): NextResponse {
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${IS_DEV ? " 'unsafe-eval'" : ""}`,
     // Los estilos inline (barras de progreso, previews de color) no se
     // pueden noncear fácilmente con las props style={} de React; es el
     // trade-off estándar que documenta el propio Next.js para este caso.
@@ -47,7 +52,10 @@ function applySecurityHeaders(response: NextResponse, nonce: string): NextRespon
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
+    // Solo en producción (siempre HTTPS en Vercel). En dev, probando desde el
+    // celular por http://192.168.x.x:3000, pasaba los pedidos a https:// y
+    // no cargaba nada.
+    ...(IS_DEV ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 
   response.headers.set("Content-Security-Policy", csp);
