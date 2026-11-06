@@ -6,6 +6,7 @@ import { createMember } from "../actions";
 import {
   PaymentFields,
   EMPTY_PAYMENT,
+  paymentTotal,
   suggestAmounts,
   type PaymentDraft,
 } from "../PaymentFields";
@@ -101,6 +102,8 @@ export function NewMemberForm({
             <input
               name="full_name"
               required
+              autoCapitalize="words"
+              enterKeyHint="next"
               className="field"
               autoFocus
               value={fullName}
@@ -113,13 +116,15 @@ export function NewMemberForm({
               name="dni"
               required
               inputMode="numeric"
+              enterKeyHint="next"
               pattern="[0-9]{8}"
               minLength={8}
               maxLength={8}
               title="8 dígitos numéricos"
               className="field font-mono"
               value={dni}
-              onChange={(e) => setDni(e.target.value)}
+              // Si lo tipean o pegan con puntos ("30.123.456"), quedan los números.
+              onChange={(e) => setDni(e.target.value.replace(/\D/g, "").slice(0, 8))}
             />
           </Field>
 
@@ -127,6 +132,9 @@ export function NewMemberForm({
             <Field label="Teléfono">
               <input
                 name="phone"
+                type="tel"
+                inputMode="tel"
+                enterKeyHint="next"
                 className="field font-mono"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -137,6 +145,9 @@ export function NewMemberForm({
               <input
                 name="email"
                 type="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                enterKeyHint="next"
                 className="field"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -147,6 +158,11 @@ export function NewMemberForm({
           <Field label="Foto (URL)" hint="Opcional. La subida de archivos llega más adelante.">
             <input
               name="photo_url"
+              type="url"
+              inputMode="url"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="https://…"
               className="field"
               value={photoUrl}
               onChange={(e) => setPhotoUrl(e.target.value)}
@@ -309,7 +325,12 @@ export function NewMemberForm({
       <FormError message={state?.error} />
 
       <SubmitButton className="btn-primary w-full py-3.5 text-base" pendingLabel="Creando…">
-        Crear socio
+        {cajaAbierta && selectedPlan ? "Crear socio y activar pase" : "Crear socio"}
+        {cajaAbierta && selectedPlan && paymentTotal(payment) > 0 && (
+          <span className="num font-semibold">
+            · {formatMoney(Math.round(paymentTotal(payment) * 100))}
+          </span>
+        )}
       </SubmitButton>
     </form>
   );

@@ -12,11 +12,12 @@ import {
 import {
   PaymentFields,
   EMPTY_PAYMENT,
+  paymentTotal,
   suggestAmounts,
   type PaymentDraft,
 } from "../PaymentFields";
-import { Field, FormError, SubmitButton } from "@/components/Form";
-import { formatDate, projectedRenewalEnd } from "@/lib/labels";
+import { Field, FormError, FormSuccess, SubmitButton } from "@/components/Form";
+import { formatDate, formatMoney, projectedRenewalEnd } from "@/lib/labels";
 import type { AdminRole, MemberOverview, Membership, Plan } from "@/lib/types";
 import { isManagerRole, isProgramadorRole } from "@/lib/roles";
 
@@ -78,6 +79,26 @@ export function MemberActions({
   }, [today]);
 
   const projectedEnd = selectedPlan ? projectedRenewalEnd(startDate) : null;
+  const totalCents = Math.round(paymentTotal(payment) * 100);
+
+  // Cobro hecho: en vez de dejar el formulario listo para un segundo toque
+  // (y un segundo cobro en la caja), se muestra qué quedó registrado y hay
+  // que pedir a propósito "Cargar otro cobro". Lo que se mandó se guarda al
+  // enviar, porque la respuesta de la acción no trae esos datos.
+  const submitted = useRef<{ end: string | null; cents: number; renewal: boolean } | null>(null);
+  const [done, setDone] = useState<typeof submitted.current>(null);
+  useEffect(() => {
+    if (state && !state.error && submitted.current) {
+      setDone(submitted.current);
+      submitted.current = null;
+    }
+  }, [state]);
+
+  function startAnother() {
+    setDone(null);
+    setStartDate(today);
+    setPayment((current) => suggestAmounts(current, selectedPlan));
+  }
 
   return (
     <section className="card overflow-hidden">
@@ -91,27 +112,52 @@ export function MemberActions({
         ) : (
           <>
             <p className="mt-1.5 mb-4 text-base text-txt-soft">
-              Se cierra el período actual y arranca uno nuevo desde hoy, con las
-              entradas del plan completas. Se registra en caja, pero acá no se
-              cobra nada de verdad.
+              Arranca un período nuevo con todas las entradas del plan, y el cobro
+              queda anotado en la caja del día.
             </p>
 
-            <form action={action} className="space-y-3">
+            {done ? (
+              <div className="space-y-3">
+                <div className="rounded-control border border-plate-green/40 bg-plate-green/6 px-3.5 py-3">
+                  <FormSuccess
+                    message={`${done.renewal ? "Pase renovado" : "Pase activado"}${
+                      done.end ? ` hasta el ${formatDate(done.end)}` : ""
+                    }. ${
+                      done.cents > 0
+                        ? `Quedó anotado en la caja: ${formatMoney(done.cents)}.`
+                        : "Sin cobro en la caja."
+                    }`}
+                  />
+                </div>
+                <button type="button" onClick={startAnother} className="btn-ghost w-full">
+                  Cargar otro cobro
+                </button>
+              </div>
+            ) : (
+            <form
+              action={action}
+              onSubmit={() => {
+                submitted.current = { end: projectedEnd, cents: totalCents, renewal: !needsRenewal };
+              }}
+              className="space-y-3"
+            >
               <input type="hidden" name="member_id" value={member.id} />
 
-              <select
-                name="plan_id"
-                required
-                className="field"
-                value={planId}
-                onChange={(e) => setPlanId(e.target.value)}
-              >
-                {plans.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.uses_per_period} entradas
-                  </option>
-                ))}
-              </select>
+              <Field label="Plan">
+                <select
+                  name="plan_id"
+                  required
+                  className="field"
+                  value={planId}
+                  onChange={(e) => setPlanId(e.target.value)}
+                >
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — {p.uses_per_period} entradas
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
               {familySize >= 3 && plans.some((p) => p.is_family) && (
                 <p className="note">
@@ -122,7 +168,7 @@ export function MemberActions({
 
               <Field
                 label="Fecha de pago"
-                hint="Si cobraste este pago hace unos días (por ejemplo, sin internet) poné la fecha real en que te pagaron. El pase arranca ese día."
+                hint="Si te pagaron otro día (por ejemplo, sin internet), poné esa fecha: el pase arranca ese día."
               >
                 <input
                   name="start_date"
@@ -146,13 +192,18 @@ export function MemberActions({
 
               <FormError message={state?.error} />
 
+              {/* El monto en el botón: es la última mirada antes de cobrar. */}
               <SubmitButton
                 className={needsRenewal ? "btn-primary w-full" : "btn-dark w-full"}
-                pendingLabel="Activando…"
+                pendingLabel={needsRenewal ? "Activando…" : "Renovando…"}
               >
                 {needsRenewal ? "Activar pase" : "Renovar"}
+                {totalCents > 0 && (
+                  <span className="num font-semibold">· {formatMoney(totalCents)}</span>
+                )}
               </SubmitButton>
             </form>
+            )}
           </>
         )}
       </div>
@@ -164,7 +215,9 @@ export function MemberActions({
       */}
       <div className="border-t border-line">
         <button
+          type="button"
           onClick={() => setShowMore(!showMore)}
+          aria-controls="socio-mas-acciones"
           className="w-full px-5 min-h-11 flex items-center justify-between
                      text-tiny font-medium text-txt-soft hover:text-txt hover:bg-surface-hover transition-colors"
           aria-expanded={showMore}
@@ -184,7 +237,7 @@ export function MemberActions({
         </button>
 
         {showMore && (
-          <div className="px-5 pb-4 pt-1 space-y-2">
+          <div id="socio-mas-acciones" className="px-5 pb-4 pt-1 space-y-2">
             <form action={statusAction}>
               <input type="hidden" name="id" value={member.id} />
               <input
