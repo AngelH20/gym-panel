@@ -88,20 +88,17 @@ export default async function PanelHome() {
 
   const [
     { data },
-    { data: paymentsToday },
     weekStats,
     { data: weekPayments },
     gymName,
   ] = await Promise.all([
       supabase.from("member_overview").select(DASHBOARD_COLUMNS).is("archived_at", null),
-      supabase
-        .from("payments")
-        .select("amount_cents, method")
-        .eq("local_date", today)
-        .is("voided_at", null),
       // Entradas por día, ya contadas en Postgres (sql/50; ver
       // lib/checkInStats.ts). Antes venía una fila por entrada de la semana.
       fetchCheckInStats(supabase, weekStart),
+      // Los cobros de la semana. Los de hoy (la tarjeta "Pagos hoy") salen de
+      // acá mismo: antes eran otra consulta a la misma tabla con el mismo
+      // filtro, solo que de un día.
       supabase
         .from("payments")
         .select("local_date, method, amount_cents")
@@ -111,7 +108,7 @@ export default async function PanelHome() {
       getGymName(),
     ]);
   const all = (data ?? []) as unknown as DashboardMember[];
-  const pagos = paymentsToday ?? [];
+  const pagos = (weekPayments ?? []).filter((p) => p.local_date === today);
 
   // Los últimos 7 días, más viejo primero, con la etiqueta del eje ya lista.
   const week: { date: string; label: string }[] = Array.from({ length: WEEK_LENGTH }, (_, i) => {
