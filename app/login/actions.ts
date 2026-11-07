@@ -64,7 +64,7 @@ type LoginLimiter = {
   blocked: boolean;
   /** El intento no fue de credenciales (red, Supabase caído): no cuenta. */
   discard: () => Promise<void>;
-  /** Entró: se limpian los intentos de la IP. */
+  /** Entró: se libera la reserva de este intento (no los fallos previos). */
   succeeded: () => Promise<void>;
 };
 
@@ -88,9 +88,14 @@ async function reserveLoginAttempt(): Promise<LoginLimiter> {
       const { error: e } = await admin.rpc("login_attempt_discard", { p_id: attemptId });
       if (e) log("login_attempt_discard", e.message);
     },
+    // Solo se libera la reserva de ESTE intento. Si se borraran todos los
+    // intentos de la IP (login_record_success), alguien con una cuenta válida
+    // (por ejemplo la del celular del mostrador) podría probar contraseñas de
+    // otra cuenta, entrar con la suya para poner el contador en cero y repetir
+    // sin límite. Los fallos previos vencen solos a los 15 minutos.
     succeeded: async () => {
-      const { error: e } = await admin.rpc("login_record_success", { p_ip: ip });
-      if (e) log("login_record_success", e.message);
+      const { error: e } = await admin.rpc("login_attempt_discard", { p_id: attemptId });
+      if (e) log("login_attempt_discard", e.message);
     },
   };
 }
