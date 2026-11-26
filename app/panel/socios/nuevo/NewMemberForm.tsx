@@ -11,6 +11,7 @@ import {
   type PaymentDraft,
 } from "../PaymentFields";
 import { Field, FormError, SubmitButton } from "@/components/Form";
+import { PHONE_HINT, PHONE_PATTERN } from "@/lib/formats";
 import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
 import type { Plan } from "@/lib/types";
 
@@ -134,6 +135,9 @@ export function NewMemberForm({
                 type="tel"
                 inputMode="tel"
                 enterKeyHint="next"
+                pattern={PHONE_PATTERN}
+                maxLength={40}
+                title={PHONE_HINT}
                 className="field font-mono"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -144,6 +148,7 @@ export function NewMemberForm({
               <input
                 name="email"
                 type="email"
+                maxLength={254}
                 autoCapitalize="none"
                 spellCheck={false}
                 enterKeyHint="next"

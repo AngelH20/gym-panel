@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateMember } from "../actions";
 import { Field, FormError, FormSuccess, SubmitButton } from "@/components/Form";
+import { PHONE_HINT, PHONE_PATTERN } from "@/lib/formats";
 import { formatDate, todayLocal } from "@/lib/labels";
 import type { MemberOverview } from "@/lib/types";
 
@@ -134,6 +135,9 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
             type="tel"
             inputMode="tel"
             autoComplete="off"
+            pattern={PHONE_PATTERN}
+            maxLength={40}
+            title={PHONE_HINT}
             className="field font-mono"
           />
         </Field>
@@ -141,6 +145,7 @@ export function EditMemberForm({ member }: { member: MemberOverview }) {
           <input
             {...bind("email")}
             type="email"
+            maxLength={254}
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}

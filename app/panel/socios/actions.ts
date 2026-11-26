@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { addDaysLocal, todayLocal } from "@/lib/labels";
+import { PHONE_HINT, isValidEmail, isValidPhone } from "@/lib/formats";
 import {
   GENERIC_ERROR,
   dbErrorMessage,
@@ -113,6 +114,14 @@ function memberTextError(values: Partial<Record<MemberTextField, string | null>>
     if (value && value.length > MAX_LEN[field]) {
       return `El campo ${FIELD_LABEL[field]} es demasiado largo (máximo ${MAX_LEN[field]} caracteres).`;
     }
+  }
+  // Formato (lib/formats.ts, la misma regla que el pattern de los inputs):
+  // el email se usa para contactar al socio y el teléfono para WhatsApp.
+  if (values.email && !isValidEmail(values.email)) {
+    return "El email no tiene un formato válido (ejemplo: nombre@gmail.com).";
+  }
+  if (values.phone && !isValidPhone(values.phone)) {
+    return `Revisá el teléfono: ${PHONE_HINT.toLowerCase()}`;
   }
   const photo = values.photo_url;
   if (photo) {
