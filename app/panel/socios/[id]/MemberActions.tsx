@@ -47,6 +47,8 @@ export function MemberActions({
   // Un pase pausado sigue vigente: se renueva, no se "activa".
   const needsRenewal =
     member.effective_status !== "active" && member.effective_status !== "paused";
+  // Entradas del pase vigente que se perderían al cobrar uno nuevo.
+  const remainingUses = needsRenewal ? 0 : member.uses_remaining ?? 0;
 
   const [state, action] = useActionState(sellMembership, null);
   const [statusState, statusAction] = useActionState(setMemberStatus, null);
@@ -186,6 +188,28 @@ export function MemberActions({
                 <p className="note">
                   Con esta fecha, el pase va a valer hasta el{" "}
                   <span className="font-medium text-txt">{formatDate(projectedEnd)}</span>.
+                </p>
+              )}
+
+              {/* Vender un pase da de baja el que está vigente (renew_membership
+                  pasa el activo a 'expired'): que no se pierdan entradas sin
+                  que recepción lo note, por ejemplo al cobrar un "Día". */}
+              {remainingUses > 0 && (
+                <p role="status" className="flex gap-2 rounded-control border border-line px-3.5 py-3 text-tiny text-txt-soft">
+                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-plate-amber" aria-hidden="true" />
+                  <span>
+                    Tiene{" "}
+                    <span className="num font-medium text-txt">
+                      {remainingUses} {remainingUses === 1 ? "entrada" : "entradas"}
+                    </span>
+                    {member.plan_name && <> de {member.plan_name}</>}
+                    {member.period_end && (
+                      <>
+                        {" "}hasta el <span className="num font-medium text-txt">{formatDate(member.period_end)}</span>
+                      </>
+                    )}
+                    . Si cobrás este pase, {remainingUses === 1 ? "la pierde" : "las pierde"}.
+                  </span>
                 </p>
               )}
 
