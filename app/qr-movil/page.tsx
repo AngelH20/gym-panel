@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { qrDataUrl } from "@/lib/qr";
@@ -92,3 +93,5 @@ export default async function QrMovilPage() {
     </main>
   );
 }
+
+export const metadata: Metadata = { title: "QR de acceso" };

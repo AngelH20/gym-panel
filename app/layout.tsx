@@ -13,9 +13,32 @@ const geist = Geist({
   display: "swap",
 });
 
+const SITE_DESCRIPTION =
+  "Panel de gestión y registro de entradas de CAREF, Centro de Alto Rendimiento y Entrenamiento de la Fuerza.";
+
 export const metadata: Metadata = {
-  title: "CAREF · Panel",
-  description: "Gestión de socios, pases y entradas.",
+  // Base para las URLs absolutas de og:image y og:url. Sin la variable (en
+  // local) Next usa localhost y avisa en la consola; en Vercel está cargada.
+  metadataBase: process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
+    : undefined,
+  title: { default: "CAREF", template: "%s · CAREF" },
+  description: SITE_DESCRIPTION,
+  applicationName: "CAREF",
+  // Es un sistema interno con datos de socios: nada de esto tiene que
+  // aparecer en buscadores. robots.ts además lo bloquea para los crawlers.
+  robots: { index: false, follow: false, nocache: true },
+  // Tarjeta al compartir un link (WhatsApp, Telegram, etc.). La imagen sale
+  // de app/opengraph-image.jpg, que Next enlaza solo.
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    siteName: "CAREF",
+    title: "CAREF",
+    description: SITE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: { card: "summary_large_image", title: "CAREF", description: SITE_DESCRIPTION },
   // iOS detecta números "tipo teléfono" (como el DNI) y los envuelve en un
   // link <a href="tel:..."> ANTES de que React hidrate, lo que rompe el
   // árbol y tira "A tree hydrated but some attributes... didn't match".

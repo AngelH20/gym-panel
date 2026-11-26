@@ -4,7 +4,7 @@ import { LegalDocument } from "@/components/LegalDocument";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Términos de uso · CAREF",
+  title: "Términos de uso",
   description: "Reglas de uso del registro de entradas por QR y del panel de gestión de CAREF.",
 };
 

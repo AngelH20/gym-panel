@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import type { Plan } from "@/lib/types";
 import { todayLocal } from "@/lib/labels";
@@ -36,3 +37,5 @@ export default async function NuevoSocioPage() {
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Nuevo socio" };

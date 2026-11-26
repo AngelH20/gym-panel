@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
@@ -303,3 +304,5 @@ export default async function SocioPage({
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Ficha de socio" };

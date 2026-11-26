@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
 import { LegalFooter } from "@/components/LegalFooter";
 
@@ -55,3 +56,5 @@ export default async function LoginPage({
     </main>
   );
 }
+
+export const metadata: Metadata = { title: "Entrar al panel" };

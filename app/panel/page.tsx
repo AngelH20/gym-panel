@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview } from "@/lib/types";
@@ -479,3 +480,5 @@ function ListHeader({
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Inicio" };

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
@@ -50,3 +51,5 @@ export default async function UsuariosPage() {
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Usuarios" };

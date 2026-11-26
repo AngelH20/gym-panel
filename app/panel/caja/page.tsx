@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdminRole } from "@/lib/supabase/role";
@@ -753,3 +754,5 @@ function BackToCaja({ href }: { href: string }) {
     </a>
   );
 }
+
+export const metadata: Metadata = { title: "Caja" };

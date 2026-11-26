@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberOverview } from "@/lib/types";
@@ -161,3 +162,5 @@ export default async function MetricasPage({
     </div>
   );
 }
+
+export const metadata: Metadata = { title: "Métricas" };

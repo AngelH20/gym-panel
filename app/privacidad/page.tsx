@@ -3,7 +3,7 @@ import { LegalDocument } from "@/components/LegalDocument";
 import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Política de privacidad · CAREF",
+  title: "Política de privacidad",
   description: "Qué datos personales guarda CAREF de sus socios, para qué los usa y cómo pedir verlos, corregirlos o borrarlos.",
 };
 

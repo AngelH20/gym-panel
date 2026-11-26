@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckInPanel } from "./CheckInPanel";
@@ -80,3 +81,5 @@ export default async function CheckInPage({
     </main>
   );
 }
+
+export const metadata: Metadata = { title: "Registrar entrada" };
