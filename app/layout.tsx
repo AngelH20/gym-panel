@@ -100,7 +100,14 @@ export default async function RootLayout({
   return (
     <html lang="es-AR" suppressHydrationWarning>
       <body className={geist.variable}>
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* suppressHydrationWarning: el navegador oculta el nonce después de
+            usarlo (el atributo queda vacío en el DOM, por seguridad), y React
+            lo tomaba como una diferencia server/cliente en cada página. */}
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
         {children}
       </body>
     </html>

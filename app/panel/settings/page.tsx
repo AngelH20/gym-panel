@@ -137,7 +137,7 @@ export default function SettingsPage() {
         <div className="card overflow-hidden">
           <div className="border-b border-line px-4 py-3 flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-caref.svg" alt="" className="size-6 object-contain" />
+            <img src="/logo-caref.webp" alt="" className="size-6 object-contain" />
             <span className="text-base font-semibold">CAREF</span>
             <span className="ml-auto inline-flex items-center gap-1.5 text-tiny font-medium text-txt-soft">
               <span className="size-1.5 rounded-full bg-plate-green" aria-hidden="true" />

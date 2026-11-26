@@ -48,6 +48,7 @@ const config: Config = {
         line: {
           DEFAULT: withOpacity("--color-line"),
           strong: withOpacity("--color-line-strong"),
+          field: withOpacity("--color-line-field"),
         },
         // Acento único (plate-blue) y los tres colores de estado.
         plate: {

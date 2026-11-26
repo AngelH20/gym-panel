@@ -108,7 +108,7 @@ export default async function PanelLayout({
           className="mx-3 mt-4 mb-4 flex items-center gap-2.5 min-h-10 px-2 rounded-control"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-caref.svg" alt="" className="size-8 shrink-0 object-contain" />
+          <img src="/logo-caref.webp" alt="" className="size-8 shrink-0 object-contain" />
           <span className="text-base font-semibold truncate">{gymName}</span>
         </Link>
 
@@ -124,7 +124,7 @@ export default async function PanelLayout({
           <div className="px-4 h-14 flex items-center gap-3">
             <Link href="/panel" aria-label={`${gymName}, inicio`} className="shrink-0 rounded-control">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-caref.svg" alt="" className="size-7 object-contain" />
+              <img src="/logo-caref.webp" alt="" className="size-7 object-contain" />
             </Link>
             <PanelTitle />
           </div>
