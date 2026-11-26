@@ -295,6 +295,23 @@
       min-height: 40px;
     }
   }
+
+  /* Texto corrido de /privacidad y /terminos (components/LegalDocument.tsx). */
+  .legal {
+    @apply text-base text-txt-soft space-y-4;
+  }
+  .legal h2 {
+    @apply h3 pt-4;
+  }
+  .legal ul {
+    @apply list-disc pl-5 space-y-1.5;
+  }
+  .legal strong {
+    @apply font-semibold text-txt;
+  }
+  .legal a {
+    @apply text-plate-blue underline underline-offset-2;
+  }
 }
 
 @layer utilities {

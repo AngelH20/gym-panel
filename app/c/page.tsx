@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckInPanel } from "./CheckInPanel";
+import { LegalFooter } from "@/components/LegalFooter";
 
 /**
  * El nombre del gimnasio es igual para todos y casi nunca cambia (no hay
@@ -74,6 +75,8 @@ export default async function CheckInPage({
 
         <CheckInPanel qrToken={t ?? ""} />
       </div>
+
+      <LegalFooter className="mt-auto pb-6" />
     </main>
   );
 }

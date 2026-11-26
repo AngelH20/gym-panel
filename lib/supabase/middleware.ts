@@ -87,7 +87,13 @@ export async function updateSession(request: NextRequest) {
   // El check-in de los socios (/c) es público y no usa la sesión: no tiene
   // sentido pagar el viaje a Supabase Auth en cada entrada que se registra
   // desde el celular. Solo lleva las cabeceras de seguridad.
-  if (path === "/c" || path.startsWith("/c/")) {
+  // Lo mismo para los textos legales: estáticos y sin sesión.
+  if (
+    path === "/c" ||
+    path.startsWith("/c/") ||
+    path === "/privacidad" ||
+    path === "/terminos"
+  ) {
     return applySecurityHeaders(NextResponse.next({ request }), nonce);
   }
 

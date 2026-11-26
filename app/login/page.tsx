@@ -1,4 +1,5 @@
 import { LoginForm } from "./LoginForm";
+import { LegalFooter } from "@/components/LegalFooter";
 
 /** Los tokens del tema claro, fijos: la pantalla de entrada se ve siempre
  *  igual, tenga el dispositivo el modo oscuro o no. */
@@ -48,6 +49,8 @@ export default async function LoginPage({
         </p>
 
         <LoginForm volver={volver ?? "/panel"} />
+
+        <LegalFooter className="mt-10" />
       </div>
     </main>
   );
