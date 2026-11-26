@@ -131,6 +131,17 @@ export function projectedRenewalEnd(startIso: string): string {
   return new Date(Date.UTC(y, m, day)).toISOString().slice(0, 10);
 }
 
+/** Replica membership_end_for_plan() (sql/44_day_plan_same_day.sql): los
+ *  planes por día vencen a los period_days - 1 días (el mismo día con 1); el
+ *  resto, como projectedRenewalEnd. Solo para la vista previa del formulario. */
+export function projectedEndForPlan(
+  startIso: string,
+  plan: { period: string; period_days: number }
+): string {
+  if (plan.period === "day") return addDaysLocal(startIso, Math.max(plan.period_days, 1) - 1);
+  return projectedRenewalEnd(startIso);
+}
+
 /** "2026-08-14" -> "vie". Mediodía UTC evita que el huso corra el día. */
 export function weekdayShort(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);

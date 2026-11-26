@@ -12,7 +12,7 @@ import {
 } from "../PaymentFields";
 import { Field, FormError, SubmitButton } from "@/components/Form";
 import { PHONE_HINT, PHONE_PATTERN } from "@/lib/formats";
-import { formatMoney, formatDate, projectedRenewalEnd } from "@/lib/labels";
+import { formatMoney, formatDate, projectedEndForPlan } from "@/lib/labels";
 import type { Plan } from "@/lib/types";
 
 /** Un socio existente al que se puede vincular como familiar. */
@@ -82,7 +82,7 @@ export function NewMemberForm({
     }
   }, [today]);
 
-  const projectedEnd = selectedPlan ? projectedRenewalEnd(startDate) : null;
+  const projectedEnd = selectedPlan ? projectedEndForPlan(startDate, selectedPlan) : null;
 
   function choosePlan(plan: Plan) {
     if (!cajaAbierta) return;

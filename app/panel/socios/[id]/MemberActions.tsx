@@ -18,7 +18,7 @@ import {
   type PaymentDraft,
 } from "../PaymentFields";
 import { Field, FormError, FormSuccess, SubmitButton } from "@/components/Form";
-import { formatDate, formatMoney, projectedRenewalEnd } from "@/lib/labels";
+import { formatDate, formatMoney, projectedEndForPlan } from "@/lib/labels";
 import type { AdminRole, MemberOverview, Membership, Plan } from "@/lib/types";
 import { isManagerRole, isProgramadorRole } from "@/lib/roles";
 
@@ -79,7 +79,7 @@ export function MemberActions({
     }
   }, [today]);
 
-  const projectedEnd = selectedPlan ? projectedRenewalEnd(startDate) : null;
+  const projectedEnd = selectedPlan ? projectedEndForPlan(startDate, selectedPlan) : null;
   const totalCents = Math.round(paymentTotal(payment) * 100);
 
   // Cobro hecho: en vez de dejar el formulario listo para un segundo toque
